@@ -29,4 +29,7 @@ public class Lesson {
 
     @Column(nullable = false)
     private Byte status;
+    
+    @OneToOne(mappedBy = "lesson")
+    private LessonFeedback feedback;
 }

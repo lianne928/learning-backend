@@ -13,7 +13,6 @@ import java.sql.Date;
 @Getter
 @Setter
 public class Lesson {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -39,6 +38,6 @@ public class Lesson {
     @Column(name = "slot_locked")
     private Boolean slotLocked;
     
-    @OneToOne(mappedBy = "lesson")
-    private LessonFeedback feedback;
+//    @OneToOne(mappedBy = "lesson")
+//    private LessonFeedback feedback;
 }

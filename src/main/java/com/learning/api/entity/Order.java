@@ -16,7 +16,7 @@ public class Order {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "booking_id", nullable = false)
+    @Column(name = "course_id", nullable = false)
     private Long courseId;
 
     @Column(name = "unit_price", nullable = false)

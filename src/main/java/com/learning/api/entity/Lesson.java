@@ -1,4 +1,5 @@
 package com.learning.api.entity;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,5 +33,7 @@ public class Lesson {
 
     @Column(nullable = false)
     private Byte status;
-    
+
+    //@OneToOne(mappedBy = "lesson")
+    //private LessonFeedback feedback;
 }

@@ -6,6 +6,8 @@ import lombok.Setter;
 
 import java.sql.Date;
 
+
+
 @Entity
 @Table(name = "lessons")
 @Getter
@@ -29,10 +31,13 @@ public class Lesson {
     private Date date;
 
     @Column(nullable = false)
-    private Byte hour;
+    private Integer hour;
 
     @Column(nullable = false)
-    private Byte status;
+    private Integer status;
+
+    @Column(name = "slot_locked", nullable = false)
+    private Boolean slotLocked;
     
     @OneToOne(mappedBy = "lesson")
     private LessonFeedback feedback;

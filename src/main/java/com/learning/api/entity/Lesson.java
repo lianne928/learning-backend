@@ -36,7 +36,7 @@ public class Lesson {
     @Column(nullable = false)
     private Integer status;
 
-    @Column(name = "slot_locked", nullable = false)
+    @Column(name = "slot_locked")
     private Boolean slotLocked;
     
     @OneToOne(mappedBy = "lesson")

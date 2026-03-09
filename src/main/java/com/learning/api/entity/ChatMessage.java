@@ -20,7 +20,7 @@ public class ChatMessage {
     private Long bookingId;
 
     @Column(nullable = false)
-    private Byte role;
+    private Integer role;
 
     @Column(nullable = false, length = 1000)
     private String message;

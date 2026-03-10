@@ -18,8 +18,8 @@ public class TutorSchedule {
     private Long tutorId;
 
     @Column(nullable = false)
-    private Integer weekday;
+    private Integer weekday;//1-7
 
     @Column(nullable = false)
-    private Integer hour;
+    private Integer hour;//9-21(開放時段)
 }

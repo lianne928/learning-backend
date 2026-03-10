@@ -33,9 +33,9 @@ public class Booking {
     private Integer hour;
 
     @Column(nullable = false)
-    private Integer status;
+    private Integer status; //1 scheduled 2completed 3cancelled
 
     @Column(name = "slot_locked")
-    private Boolean slotLocked;
+    private Boolean slotLocked;//請假OR退款SETNULL
 
 }

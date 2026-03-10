@@ -1,6 +1,6 @@
 package com.learning.api.entity;
+
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,16 +13,16 @@ public class LessonFeedback {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "lesson_id", insertable = false, updatable = false)
-    private Long lessonId;
+    @Column(name = "booking_id", nullable = false)
+    private Long bookingId;
 
     @Column(nullable = false)
     private Byte rating;
 
     @Column(nullable = true, length = 1000)
     private String comment;
-    
-//    @OneToOne
-//    @JoinColumn(name = "lesson_id")
-//    private Lesson lesson;
+
+    //@OneToOne
+    //@JoinColumn(name = "lesson_id")
+    //private Lesson lesson;
 }

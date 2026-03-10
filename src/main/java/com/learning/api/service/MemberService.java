@@ -1,12 +1,10 @@
 package com.learning.api.service;
 
-import com.learning.api.entity.Member;
+import com.learning.api.entity.User;
 import com.learning.api.repo.MemberRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 @Service
 public class MemberService {
@@ -30,7 +28,7 @@ public class MemberService {
     }
 
     // if repo == null -> register
-    public boolean register(Member member){
+    public boolean register(User member){
         // check null
         if (member == null || member.getEmail() == null || member.getPassword() == null) {
             return false;
@@ -68,7 +66,7 @@ public class MemberService {
     }
 
     // after register -> login
-    public boolean login(Member member){
+    public boolean login(User member){
         if (member == null) return false;
 
         return true;
@@ -80,7 +78,7 @@ public class MemberService {
         String rawEmail = email.toLowerCase().trim();
         String rawPassword = password.trim();
 
-        Member member = memberRepo.findByEmail(rawEmail).orElse(null);
+        User member = memberRepo.findByEmail(rawEmail).orElse(null);
 
         if (member == null) return false;
 

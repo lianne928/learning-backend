@@ -1,6 +1,6 @@
 package com.learning.api.controller;
 
-import com.learning.api.entity.Member;
+import com.learning.api.entity.User;
 import com.learning.api.service.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +17,9 @@ public class MemberController {
     private MemberService memberService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Member member){
+    public ResponseEntity<?> register(@RequestBody User user){
 
-        if (!memberService.register(member)) {
+        if (!memberService.register(user)) {
             return ResponseEntity.status(400).body(Map.of("msg", "註冊失敗"));
         }
 
@@ -28,7 +28,7 @@ public class MemberController {
 
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Member member){
+    public ResponseEntity<?> login(@RequestBody User member){
 
         if (!memberService.login(member)){
             return ResponseEntity.status(401).body(Map.of("msg", "帳號或密碼錯誤"));

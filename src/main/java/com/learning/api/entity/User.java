@@ -1,6 +1,5 @@
 package com.learning.api.entity;
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,11 +27,17 @@ public class User {
     private LocalDate birthday;
 
     @Column(nullable = false)
-    private Integer role;
+    private int role;
+
+    @Column(name = "is_admin", nullable = false)
+    private byte isAdmin;
+
+    @Column(nullable = false)
+    private long wallet;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
     
-    @OneToOne(mappedBy = "user")
-    private Tutor tutor;
+/*     @OneToOne(mappedBy = "user")
+    private Tutor tutor; */
 }

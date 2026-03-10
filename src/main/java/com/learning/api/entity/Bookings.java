@@ -1,21 +1,23 @@
 package com.learning.api.entity;
+
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.sql.Date;
 
 @Entity
-@Table(name = "lessons")
+@Table(name = "bookings")
 @Getter
 @Setter
-public class Lesson {
+public class Bookings {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "booking_id", nullable = false)
+    
+    @Column(name = "order_id", nullable = false)
     private Long bookingId;
 
     @Column(name = "tutor_id", nullable = false)
@@ -30,9 +32,12 @@ public class Lesson {
     @Column(nullable = false)
     private Byte hour;
 
+    @Column(name = "slot_locked")
+    private Byte slotLocked;
+
     @Column(nullable = false)
     private Byte status;
-    
-//    @OneToOne(mappedBy = "lesson")
-//    private LessonFeedback feedback;
+
+    //@OneToOne(mappedBy = "lesson")
+    //private LessonFeedback feedback;
 }

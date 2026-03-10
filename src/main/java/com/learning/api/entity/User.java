@@ -30,6 +30,7 @@ public class User {
     @Column(nullable = false)
     private Integer role; //1:student/2:teacher/3admin
 
+    private Integer role;
 
     @Column(nullable=false)
     private Integer wallet;

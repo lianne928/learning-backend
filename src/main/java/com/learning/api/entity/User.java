@@ -28,16 +28,17 @@ public class User {
     private LocalDate birthday;
 
     @Column(nullable = false)
-    private Integer role;
+    private Integer role; //1:student/2:teacher/3admin
 
-    @Column(nullable = false ,name="is_admin")
-    private Boolean IsAdmin;
 
     @Column(nullable=false)
     private Integer wallet;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
+    
+    @Column(name = "updated_at", insertable = false, updatable = true)
+    private LocalDateTime updatedAt;
     
 
 }

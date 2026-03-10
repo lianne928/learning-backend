@@ -1,19 +1,21 @@
 package com.learning.api.entity;
 import jakarta.persistence.*;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "orders")
+@Table(name = "bookings")
 @Getter
 @Setter
-public class Order {
+public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    // 先 true
+    @Column(name = "order_id", nullable = true)
+    private Long orderId;
 
     @Column(name = "course_id", nullable = false)
     private Long courseId;
@@ -21,15 +23,12 @@ public class Order {
     @Column(name = "unit_price", nullable = false)
     private Integer unitPrice;
 
-    @Column(name = "discount_price", nullable = true)
+    @Column(name = "discount_price", nullable = false)
     private Integer discountPrice;
 
     @Column(name = "lesson_count", nullable = false)
     private Integer lessonCount;
-
-    @Column(name = "lesson_used", nullable = false)
-    private Integer lessonused;
     
     @Column(name = "status", nullable = false)
-    private Byte status;
+    private Integer status;
 }

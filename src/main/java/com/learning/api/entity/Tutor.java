@@ -12,7 +12,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Tutor {
-
     @Id
     private Long id;
 

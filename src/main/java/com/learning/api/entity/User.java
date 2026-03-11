@@ -3,8 +3,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+
 
 @Entity
 @Table(name = "users")
@@ -27,12 +28,18 @@ public class User {
     private LocalDate birthday;
 
     @Column(nullable = false)
-    // 1=學生 2=老師 3=admin
-    private Integer role;
+    private Integer role; //1:student/2:teacher/3admin
+
+
+
+    @Column(nullable=false)
+    private Integer wallet;
 
     @Column(name = "created_at", insertable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
+    
+    @Column(name = "updated_at", insertable = false, updatable = true)
+    private Instant updatedAt;
+    
 
-    @Column(name = "updated_at", insertable = false, updatable = false)
-    private LocalDateTime updatedAt;
 }

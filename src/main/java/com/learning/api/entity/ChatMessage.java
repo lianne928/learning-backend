@@ -3,8 +3,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
 
+import java.time.Instant;
 
 @Entity
 @Table(name = "chat_messages")
@@ -19,10 +19,7 @@ public class ChatMessage {
     private Long orderId;
 
     @Column(nullable = false)
-    private Integer role; //1Student 2tutor
-
-    @Column(name = "message_type", nullable = false)
-    private Integer messageType = 1; // 1=text, 2=sticker
+    private Byte role;
 
     @Column(length = 1000)
     private String message;
@@ -31,5 +28,5 @@ public class ChatMessage {
     private String mediaUrl;
 
     @Column(name = "created_at", insertable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 }

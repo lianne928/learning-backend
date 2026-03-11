@@ -1,4 +1,5 @@
 package com.learning.api.entity;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,5 +35,8 @@ public class User {
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
-    
+
+    @Column(name = "update_at", insertable = false, updatable = false)
+    private LocalDateTime updateAt;
+
 }

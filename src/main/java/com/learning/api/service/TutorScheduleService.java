@@ -35,8 +35,7 @@ public class TutorScheduleService {
             return "排班失敗：您在這個時段已經排過班囉！";
         }
 
-        // 4. 強制把狀態設為「可預約」，然後存檔
-        schedule.setStatus("available");
+        // 4. 存檔
         scheduleRepo.save(schedule);
 
         return "success";

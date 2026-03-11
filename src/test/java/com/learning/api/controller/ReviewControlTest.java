@@ -10,7 +10,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
-import com.learning.api.entity.Review;
+import com.learning.api.entity.Reviews;
 import com.learning.api.repo.ReviewRepository;
 import com.learning.api.repo.CourseRepository;
 import com.learning.api.repo.UserRepository;
@@ -41,7 +41,7 @@ class ReviewControlTest {
     private ObjectMapper objectMapper;
 
     private MockMvc mockMvc;
-    private Review savedReview;
+    private Reviews savedReview;
     private Long savedUserId;
     private Long savedCourseId;
     private Long savedCourseId2;
@@ -59,7 +59,6 @@ class ReviewControlTest {
         testUser.setEmail("testuser@example.com");
         testUser.setPassword("hashedpassword");
         testUser.setRole(1);
-        testUser.setIsAdmin((byte) 0);
         testUser.setWallet(0);
         testUser = userRepository.save(testUser);
         savedUserId = testUser.getId();
@@ -70,7 +69,6 @@ class ReviewControlTest {
         tutorUser.setEmail("testtutor@example.com");
         tutorUser.setPassword("hashedpassword");
         tutorUser.setRole(2);
-        tutorUser.setIsAdmin((byte) 0);
         tutorUser.setWallet(0);
         tutorUser = userRepository.save(tutorUser);
 
@@ -99,10 +97,12 @@ class ReviewControlTest {
 
         reviewRepository.deleteAll();
 
-        Review review = new Review();
+        Reviews review = new Reviews();
         review.setUserId(savedUserId);
         review.setCourseId(savedCourseId);
-        review.setRating(4);
+        review.setFocusScore(4);
+        review.setComprehensionScore(3);
+        review.setConfidence_score(5);
         review.setComment("Initial comment");
         savedReview = reviewRepository.save(review);
     }
@@ -115,7 +115,7 @@ class ReviewControlTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
                 .andExpect(jsonPath("$[0].id").exists())
-                .andExpect(jsonPath("$[0].rating").isNumber());
+                .andExpect(jsonPath("$[0].focusScore").isNumber());
     }
 
     @Test
@@ -125,7 +125,8 @@ class ReviewControlTest {
                 .andExpect(jsonPath("$.id").value(savedReview.getId()))
                 .andExpect(jsonPath("$.userId").value(savedUserId))
                 .andExpect(jsonPath("$.courseId").value(savedCourseId))
-                .andExpect(jsonPath("$.rating").value(4))
+                .andExpect(jsonPath("$.focusScore").value(4))
+                .andExpect(jsonPath("$.comprehensionScore").value(3))
                 .andExpect(jsonPath("$.comment").value("Initial comment"));
     }
 
@@ -166,7 +167,9 @@ class ReviewControlTest {
         Map<String, Object> body = Map.of(
                 "userId", savedUserId,
                 "courseId", savedCourseId2,
-                "rating", 5,
+                "focusScore", 5,
+                "comprehensionScore", 4,
+                "confidenceScore", 3,
                 "comment", "Excellent session"
         );
 
@@ -177,7 +180,7 @@ class ReviewControlTest {
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.userId").value(savedUserId))
                 .andExpect(jsonPath("$.courseId").value(savedCourseId2))
-                .andExpect(jsonPath("$.rating").value(5))
+                .andExpect(jsonPath("$.focusScore").value(5))
                 .andExpect(jsonPath("$.comment").value("Excellent session"));
     }
 
@@ -185,7 +188,9 @@ class ReviewControlTest {
     void post_missingUserId_shouldReturn400() throws Exception {
         Map<String, Object> body = Map.of(
                 "courseId", savedCourseId,
-                "rating", 5
+                "focusScore", 5,
+                "comprehensionScore", 4,
+                "confidenceScore", 3
         );
 
         mockMvc.perform(post("/api/reviews")
@@ -199,7 +204,9 @@ class ReviewControlTest {
     void post_missingCourseId_shouldReturn400() throws Exception {
         Map<String, Object> body = Map.of(
                 "userId", savedUserId,
-                "rating", 3
+                "focusScore", 3,
+                "comprehensionScore", 3,
+                "confidenceScore", 3
         );
 
         mockMvc.perform(post("/api/reviews")
@@ -210,28 +217,30 @@ class ReviewControlTest {
     }
 
     @Test
-    void post_missingRating_shouldReturn400() throws Exception {
+    void post_missingFocusScore_shouldReturn400() throws Exception {
         Map<String, Object> body = Map.of(
                 "userId", savedUserId,
                 "courseId", savedCourseId,
-                "comment", "No rating provided"
+                "comment", "No scores provided"
         );
 
         mockMvc.perform(post("/api/reviews")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("rating")));
+                .andExpect(jsonPath("$.message").value(containsString("專注分數")));
     }
 
     // ===================== PUT =====================
 
     @Test
     void put_existingId_shouldReturn200WithUpdatedReview() throws Exception {
-        Review updateBody = new Review();
+        Reviews updateBody = new Reviews();
         updateBody.setUserId(savedReview.getUserId());
         updateBody.setCourseId(savedReview.getCourseId());
-        updateBody.setRating(2);
+        updateBody.setFocusScore(2);
+        updateBody.setComprehensionScore(2);
+        updateBody.setConfidence_score(2);
         updateBody.setComment("Updated comment");
 
         mockMvc.perform(put("/api/reviews/{id}", savedReview.getId())
@@ -239,18 +248,20 @@ class ReviewControlTest {
                         .content(objectMapper.writeValueAsString(updateBody)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(savedReview.getId()))
-                .andExpect(jsonPath("$.rating").value(2))
+                .andExpect(jsonPath("$.focusScore").value(2))
                 .andExpect(jsonPath("$.comment").value("Updated comment"));
     }
 
     @Test
     void put_nonExistingId_shouldReturn404() throws Exception {
-        Review updateBody = new Review();
+        Reviews updateBody = new Reviews();
         updateBody.setUserId(savedUserId);
         updateBody.setCourseId(savedCourseId);
-        updateBody.setRating(3);
+        updateBody.setFocusScore(3);
+        updateBody.setComprehensionScore(3);
+        updateBody.setConfidence_score(3);
         updateBody.setComment("Update comment");
-    
+
         mockMvc.perform(put("/api/reviews/{id}", 999999L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateBody)))

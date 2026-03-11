@@ -15,7 +15,7 @@ public class ChatMessage {
     private Long id;
 
     @Column(name = "order_id", nullable = false)
-    private Long bookingId;
+    private Long orderId;
 
     @Column(nullable = false)
     private Byte role;

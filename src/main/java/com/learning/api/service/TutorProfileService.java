@@ -39,8 +39,10 @@ public class TutorProfileService {
         Tutor tutor = tutorRepo.findById(dto.getTutorId()).orElse(new Tutor());
         tutor.setId(dto.getTutorId()); // 綁定 ID
         tutor.setIntro(dto.getIntro());
-        tutor.setCertificate(dto.getCertificate());
+        tutor.setCertificate1(dto.getCertificate());
         tutor.setVideoUrl1(dto.getVideo());
+        tutor.setCertificate2(dto.getCertificate());
+        tutor.setVideoUrl2(dto.getVideo());
 
         tutorRepo.save(tutor);
 

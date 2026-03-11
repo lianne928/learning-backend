@@ -2,7 +2,7 @@ package com.learning.api.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import com.learning.api.entity.Review;
+import com.learning.api.entity.Reviews;
 import com.learning.api.repo.ReviewRepository;
 import java.util.List;
 import java.util.Optional;
@@ -13,23 +13,21 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
 
-    private static final int MIN_RATING = 1;
-    private static final int MAX_RATING = 5;
     private static final int MAX_COMMENT_LENGTH = 500;
 
-    public List<Review> findAll() {
+    public List<Reviews> findAll() {
         return reviewRepository.findAll();
     }
 
-    public Optional<Review> findById(Long id) {
+    public Optional<Reviews> findById(Long id) {
         return reviewRepository.findById(id);
     }
 
-    public List<Review> findByUserId(Long userId) {
+    public List<Reviews> findByUserId(Long userId) {
         return reviewRepository.findByUserId(userId);
     }
 
-    public List<Review> findByCourseId(Long courseId) {
+    public List<Reviews> findByCourseId(Long courseId) {
         return reviewRepository.findByCourseId(courseId);
     }
 
@@ -38,15 +36,17 @@ public class ReviewService {
         return average != null ? average : 0.0;
     }
 
-    public Review save(Review review) {
+    public Reviews save(Reviews review) {
         validateReview(review);
         return reviewRepository.save(review);
     }
 
-    public Optional<Review> update(Long id, Review updatedReview) {
+    public Optional<Reviews> update(Long id, Reviews updatedReview) {
         return reviewRepository.findById(id).map(existing -> {
             validateReview(updatedReview);
-            existing.setRating(updatedReview.getRating());
+            existing.setFocusScore(updatedReview.getFocusScore());
+            existing.setComprehensionScore(updatedReview.getComprehensionScore());
+            existing.setConfidence_score(updatedReview.getConfidence_score());
             existing.setComment(updatedReview.getComment());
             return reviewRepository.save(existing);
         });
@@ -60,12 +60,15 @@ public class ReviewService {
         return false;
     }
 
-    private void validateReview(Review review) {
-        if (review.getRating() == null) {
-            throw new IllegalArgumentException("評分不能為空");
+    private void validateReview(Reviews review) {
+        if (review.getFocusScore() == null) {
+            throw new IllegalArgumentException("專注分數不能為空");
         }
-        if (review.getRating() < MIN_RATING || review.getRating() > MAX_RATING) {
-            throw new IllegalArgumentException("評分必須在 " + MIN_RATING + " 到 " + MAX_RATING + " 之間");
+        if (review.getComprehensionScore() == null) {
+            throw new IllegalArgumentException("理解分數不能為空");
+        }
+        if (review.getConfidence_score() == null) {
+            throw new IllegalArgumentException("自信分數不能為空");
         }
         if (review.getComment() != null && review.getComment().length() > MAX_COMMENT_LENGTH) {
             throw new IllegalArgumentException("評論不能超過 " + MAX_COMMENT_LENGTH + " 個字元");

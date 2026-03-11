@@ -12,7 +12,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import com.learning.api.entity.Order;
 import com.learning.api.entity.ChatMessage;
+<<<<<<< HEAD
 import com.learning.api.repo.OrderRepository;
+=======
+import com.learning.api.repo.OrderRepo;
+>>>>>>> 873d81eeb5bae0eb2a6d9f604e4a0f533f7b70df
 import com.learning.api.repo.ChatMessageRepository;
 import com.learning.api.repo.CourseRepository;
 import com.learning.api.repo.UserRepository;
@@ -62,7 +66,6 @@ class ChatMessageControllerTest {
         testUser.setEmail("testtutor@example.com");
         testUser.setPassword("hashedpassword");
         testUser.setRole(2);
-        testUser.setIsAdmin((byte) 0);
         testUser.setWallet(0);
         testUser = userRepository.save(testUser);
 
@@ -85,10 +88,10 @@ class ChatMessageControllerTest {
         testBooking.setLessonCount(1);
         testBooking.setLessonUsed(0);
         testBooking.setStatus(1);
-        testBooking = bookingRepository.save(testBooking);
+        testBooking = orderRepo.save(testBooking);
 
         ChatMessage msg = new ChatMessage();
-        msg.setBookingId(testBooking.getId());
+        msg.setOrderId(testBooking.getId());
         msg.setRole((byte) 1);
         msg.setMessage("Initial message");
         savedMessage = chatMessageRepository.save(msg);
@@ -101,7 +104,7 @@ class ChatMessageControllerTest {
         mockMvc.perform(get("/api/chatMessage/booking/{bookingId}", testBooking.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
-                .andExpect(jsonPath("$[0].bookingId").value(testBooking.getId()))
+                .andExpect(jsonPath("$[0].orderId").value(testBooking.getId()))
                 .andExpect(jsonPath("$[0].role").value(1))
                 .andExpect(jsonPath("$[0].message").value("Initial message"));
     }
@@ -118,7 +121,7 @@ class ChatMessageControllerTest {
     @Test
     void getByBookingId_messagesOrderedByCreatedAtAsc() throws Exception {
         ChatMessage msg2 = new ChatMessage();
-        msg2.setBookingId(testBooking.getId());
+        msg2.setOrderId(testBooking.getId());
         msg2.setRole((byte) 2);
         msg2.setMessage("Second message");
         chatMessageRepository.save(msg2);
@@ -145,7 +148,7 @@ class ChatMessageControllerTest {
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.bookingId").value(testBooking.getId()))
+                .andExpect(jsonPath("$.orderId").value(testBooking.getId()))
                 .andExpect(jsonPath("$.role").value(1))
                 .andExpect(jsonPath("$.message").value("Hello tutor"));
     }
@@ -235,7 +238,7 @@ class ChatMessageControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(savedMessage.getId()))
                 .andExpect(jsonPath("$.message").value("Updated message content"))
-                .andExpect(jsonPath("$.bookingId").value(testBooking.getId()));
+                .andExpect(jsonPath("$.orderId").value(testBooking.getId()));
     }
 
     @Test

@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.learning.api.dto.ReviewRequest;
-import com.learning.api.entity.Review;
+import com.learning.api.entity.Reviews;
 import com.learning.api.service.ReviewService;
 import java.util.List;
 import java.util.Map;
@@ -19,24 +19,24 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @GetMapping
-    public List<Review> getAll() {
+    public List<Reviews> getAll() {
         return reviewService.findAll();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Review> getById(@PathVariable Long id) {
+    public ResponseEntity<Reviews> getById(@PathVariable Long id) {
         return reviewService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/user/{userId}")
-    public List<Review> getByUserId(@PathVariable Long userId) {
+    public List<Reviews> getByUserId(@PathVariable Long userId) {
         return reviewService.findByUserId(userId);
     }
 
     @GetMapping("/course/{courseId}")
-    public List<Review> getByCourseId(@PathVariable Long courseId) {
+    public List<Reviews> getByCourseId(@PathVariable Long courseId) {
         return reviewService.findByCourseId(courseId);
     }
 
@@ -60,18 +60,16 @@ public class ReviewController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(new ErrorResponse("驗證失敗: courseId 不能為空"));
             }
-            if (request.getRating() == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new ErrorResponse("驗證失敗: rating 不能為空"));
-            }
 
-            Review review = new Review();
+            Reviews review = new Reviews();
             review.setUserId(request.getUserId());
             review.setCourseId(request.getCourseId());
-            review.setRating(request.getRating());
+            review.setFocusScore(request.getFocusScore());
+            review.setComprehensionScore(request.getComprehensionScore());
+            review.setConfidence_score(request.getConfidenceScore());
             review.setComment(request.getComment());
 
-            Review saved = reviewService.save(review);
+            Reviews saved = reviewService.save(review);
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
         } catch (NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -86,7 +84,7 @@ public class ReviewController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Review> update(@PathVariable Long id, @RequestBody Review review) {
+    public ResponseEntity<Reviews> update(@PathVariable Long id, @RequestBody Reviews review) {
         return reviewService.update(id, review)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

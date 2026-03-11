@@ -31,13 +31,13 @@ public class Tutor {
     private String certificate1;//位址
 
     @Column(name ="certificate_name_1" ,length = 500)
-    private String certificate_name1;//證照名稱
+    private String certificateName1;//證照名稱
 
     @Column(name ="certificate_2" ,length = 500)
     private String certificate2;//位址
     
     @Column(name ="certificate_name_2" ,length = 500)
-    private String certificate_name2;//證照名稱
+    private String certificateName2;//證照名稱
 
     @Column(name = "video_url_1", length = 500)
     private String videoUrl1; //自我介紹影片url

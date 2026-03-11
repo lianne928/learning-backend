@@ -1,7 +1,7 @@
 package com.learning.api.service;
 
 import com.learning.api.entity.User;
-import com.learning.api.repo.UserRepo;
+import com.learning.api.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     @Autowired
-    private UserRepo userRepo;
+    private UserRepository userRepo;
 
     // 註冊邏輯
     public boolean register(User user) {
@@ -44,7 +44,7 @@ public class UserService {
             user.setWallet(0L); // 預設錢包為 0
         }
         if (user.getIsAdmin() == null) {
-            user.setIsAdmin(0); // 預設不是管理員
+            user.setIsAdmin((byte) 0); // 預設不是管理員
         }
 
         user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));

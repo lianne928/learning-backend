@@ -27,13 +27,13 @@ public class User {
     private LocalDate birthday;
 
     @Column(nullable = false)
-    private int role;
+    private Integer role;
 
     @Column(name = "is_admin", nullable = false)
-    private byte isAdmin;
+    private Byte isAdmin;
 
     @Column(nullable = false)
-    private long wallet;
+    private Long wallet;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -21,4 +21,7 @@ public class TutorSchedule {
 
     @Column(nullable = false)
     private Byte hour;
+
+    @Column(nullable = false, length = 20)
+    private String status;
 }

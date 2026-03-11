@@ -13,15 +13,12 @@ public class BookingService {
     private MemberRepo memberRepo;
 
     @Autowired
-    private CourseRepo courseRepo;
+    private CourseRepository courseRepo;
 
     @Autowired
-    private BookingRepo bookingRepo;
+    private OrderRepository orderRepo;
 
-    @Autowired
-    private OrderRepo orderRepo;
-
-    // 之後 JWT 做完 改掉 bookingReq.getUserId() -> 這是前端送 id
+    // 之後 JWT 做完 改掉 OrderReq.getUserId() -> 這是前端送 id
     public boolean sendBooking(BookingReq bookingReq){
 
         if (bookingReq == null) return false;
@@ -42,33 +39,33 @@ public class BookingService {
         // check courseId isActive
         if (!course.isActive()) return false;
 
-        // buildBooking
-        Booking booking = buildBooking(bookingReq, course);
-        bookingRepo.save(booking);
+        // buildOrder
+        Order order = buildOrder(bookingReq, course);
+        orderRepo.save(order);
 
         return true;
     }
 
-    private Booking buildBooking(BookingReq bookingReq, Course course){
-        Booking booking = new Booking();
+    private Order buildOrder(BookingReq bookingReq, Course course){
+        Order order = new Order();
 
-        // set & save
-        booking.setOrderId(null);
-        booking.setCourseId(bookingReq.getCourseId());
+        order.setUserId(bookingReq.getUserId());
+        order.setCourseId(bookingReq.getCourseId());
 
         // price unitPrice discountPrice
         Integer originalPrice = course.getPrice();
         Integer discount = afterDiscPrice(originalPrice, bookingReq.getLessonCount());
 
-        booking.setUnitPrice(originalPrice);
-        booking.setDiscountPrice(discount);
+        order.setUnitPrice(originalPrice);
+        order.setDiscountPrice(discount);
 
         // lessonCount
-        booking.setLessonCount(bookingReq.getLessonCount());
+        order.setLessonCount(bookingReq.getLessonCount());
+        order.setLessonused(0);
         // status first send -> 1
-        booking.setStatus(1);
+        order.setStatus((byte) 1);
 
-        return booking;
+        return order;
     }
 
     private Integer afterDiscPrice(Integer originalPrice, Integer lessonCount){

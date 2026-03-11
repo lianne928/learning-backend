@@ -8,6 +8,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface LessonFeedbackRepository extends JpaRepository<LessonFeedback, Long> {
+        // 檢查這堂課是不是已經寫過回饋了 (防呆)
+    boolean existsByLessonId(Long lessonId);
+    boolean existsByBookingId(Long bookingId);
+    
     List<LessonFeedback> findByBookingId(Long bookingId);
     Optional<LessonFeedback> findFirstByBookingId(Long bookingId);
 

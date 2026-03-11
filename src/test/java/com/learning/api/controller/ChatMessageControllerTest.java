@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import com.learning.api.entity.Order;
 import com.learning.api.entity.ChatMessage;
-import com.learning.api.repo.BookingRepository;
+import com.learning.api.repo.OrderRepository;
 import com.learning.api.repo.ChatMessageRepository;
 import com.learning.api.repo.CourseRepository;
 import com.learning.api.repo.UserRepository;
@@ -31,7 +31,7 @@ class ChatMessageControllerTest {
     private WebApplicationContext webApplicationContext;
 
     @Autowired
-    private BookingRepository bookingRepository;
+    private OrderRepository bookingRepository;
 
     @Autowired
     private ChatMessageRepository chatMessageRepository;

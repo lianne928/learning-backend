@@ -1,7 +1,7 @@
 package com.learning.api.controller;
 
 import com.learning.api.entity.LessonFeedback;
-import com.learning.api.repo.LessonFeedbackRepo;
+import com.learning.api.repo.LessonFeedbackRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +14,7 @@ import java.util.Map;
 public class TutorFeedbackController {
 
     @Autowired
-    private LessonFeedbackRepo feedbackRepo;
+    private LessonFeedbackRepository feedbackRepo;
 
     // [POST] 老師送出課後回饋
     @PostMapping
@@ -27,7 +27,7 @@ public class TutorFeedbackController {
         }
 
         // 2. 檢查是否已經填寫過
-        if (feedbackRepo.existsByLessonId(feedback.getLessonId())) {
+        if (feedbackRepo.existsByBookingId(feedback.getBookingId())) {
             return ResponseEntity.status(400).body(Map.of("msg", "這堂課已經填寫過回饋囉！"));
         }
 

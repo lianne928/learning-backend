@@ -39,6 +39,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/lesson-feedbacks/**").permitAll()
                         // WebSocket (SockJS handshake + STOMP)
                         .requestMatchers("/ws/**").permitAll()
+                        // 測試用靜態頁面
+                        .requestMatchers("/*.html").permitAll()
                         
                         
                         .anyRequest().authenticated()

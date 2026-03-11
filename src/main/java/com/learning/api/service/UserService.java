@@ -1,18 +1,16 @@
 package com.learning.api.service;
 
-import com.learning.api.entity.Member;
-import com.learning.api.repo.MemberRepo;
+import com.learning.api.entity.*;
+import com.learning.api.repo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 @Service
-public class MemberService {
+public class UserService {
 
     @Autowired
-    private MemberRepo memberRepo;
+    private UserRepo userRepo;
 
     // check email - findByEmail ( checkEmail != null return email )
     public boolean checkEmail (String email){
@@ -26,27 +24,27 @@ public class MemberService {
             return false;
         }
 
-        return memberRepo.existsByEmail(email);
+        return userRepo.existsByEmail(email);
     }
 
     // if repo == null -> register
-    public boolean register(Member member){
+    public boolean register(User user){
         // check null
-        if (member == null || member.getEmail() == null || member.getPassword() == null) {
+        if (user == null || user.getEmail() == null || user.getPassword() == null) {
             return false;
         }
 
-        String email = member.getEmail().trim().toLowerCase();
+        String email = user.getEmail().trim().toLowerCase();
 
         //check rule
-        if (!(email.contains("@")) || email.isEmpty() || memberRepo.existsByEmail(email)) {
+        if (!(email.contains("@")) || email.isEmpty() || userRepo.existsByEmail(email)) {
             return false;
         }
 
-        member.setEmail(email);
+        user.setEmail(email);
 
         // password
-        String password = member.getPassword();
+        String password = user.getPassword();
 
         // check null
         if(password == null){
@@ -60,16 +58,16 @@ public class MemberService {
             return false;
         }
 
-        member.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
+        user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
 
-        memberRepo.save(member);
+        userRepo.save(user);
 
         return true;
     }
 
     // after register -> login
-    public boolean login(Member member){
-        if (member == null) return false;
+    public boolean login(User user){
+        if (user == null) return false;
 
         return true;
     }
@@ -80,11 +78,11 @@ public class MemberService {
         String rawEmail = email.toLowerCase().trim();
         String rawPassword = password.trim();
 
-        Member member = memberRepo.findByEmail(rawEmail).orElse(null);
+        User user = userRepo.findByEmail(rawEmail).orElse(null);
 
-        if (member == null) return false;
+        if (user == null) return false;
 
-        return BCrypt.checkpw(rawPassword, member.getPassword());
+        return BCrypt.checkpw(rawPassword, user.getPassword());
     }
 
 }

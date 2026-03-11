@@ -4,7 +4,8 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.sql.Timestamp;
+
+import java.time.Instant;
 
 @Entity
 @Table(name = "chat_messages")
@@ -25,5 +26,5 @@ public class ChatMessage {
     private String message;
 
     @Column(name = "created_at", insertable = false, updatable = false)
-    private Timestamp createdAt;
+    private Instant createdAt;
 }

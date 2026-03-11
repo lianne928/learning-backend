@@ -1,6 +1,5 @@
 package com.learning.api.entity;
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,11 +27,12 @@ public class User {
     private LocalDate birthday;
 
     @Column(nullable = false)
+    // 1=學生 2=老師 3=admin
     private Integer role;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
-    
-    @OneToOne(mappedBy = "user")
-    private Tutor tutor;
+
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    private LocalDateTime updatedAt;
 }

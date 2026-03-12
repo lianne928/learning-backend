@@ -59,4 +59,15 @@ public class OrderDto {
         private Integer lessonUsed;
         private Integer status;
     }
+
+    /**
+     * 訂單餘額
+     * { "userId": 3, "courseId": 5 }
+     */
+    @Getter @Setter
+    public static class Remaining {
+        private Long userId;
+        private Long courseId;
+        private Integer remaining;
+    }
 }

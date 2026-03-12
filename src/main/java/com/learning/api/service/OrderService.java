@@ -3,8 +3,8 @@ package com.learning.api.service;
 import com.learning.api.dto.OrderDto;
 import com.learning.api.entity.Course;
 import com.learning.api.entity.Order;
-import com.learning.api.repo.CourseRepository;
-import com.learning.api.repo.MemberRepo;
+import com.learning.api.repo.CourseRepo;
+import com.learning.api.repo.UserRepository;
 import com.learning.api.repo.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,8 +17,8 @@ import java.util.stream.Collectors;
 public class OrderService {
 
     private final OrderRepository orderRepo;
-    private final MemberRepo memberRepo;
-    private final CourseRepository courseRepo;
+    private final UserRepository userRepo;
+    private final CourseRepo courseRepo;
 
     // 新增訂單
     public boolean createOrder(OrderDto.Req req) {
@@ -26,7 +26,7 @@ public class OrderService {
         if (req.getUserId() == null || req.getCourseId() == null || req.getLessonCount() == null) return false;
         if (req.getLessonCount() <= 0) return false;
 
-        if (!memberRepo.existsById(req.getUserId())) return false;
+        if (!userRepo.existsById(req.getUserId())) return false;
 
         Course course = courseRepo.findById(req.getCourseId()).orElse(null);
         if (course == null || !course.getActive()) return false;
@@ -113,6 +113,19 @@ public class OrderService {
         if (order.getStatus() != 1) return false;
 
         orderRepo.deleteById(id);
+        return true;
+    }
+
+    // 支付訂單
+    public boolean payOrder(Long id) {
+        Order order = orderRepo.findById(id).orElse(null);
+        if (order == null) return false;
+
+        // 僅 pending(1) 可支付
+        if (order.getStatus() != 1) return false;
+
+        order.setStatus(2); // paid
+        orderRepo.save(order);
         return true;
     }
 

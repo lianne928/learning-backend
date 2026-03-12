@@ -28,7 +28,7 @@ public class Booking {
     private Long studentId;
 
     @Column(nullable = false)
-    private LocalDate date;
+    private LocalDate date; //一定存taipei/asia的
 
     @Column(nullable = false)
     private Integer hour;

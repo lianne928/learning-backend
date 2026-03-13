@@ -391,4 +391,4 @@ license: MIT
 - `references/complexity-metrics.md`：複雜度評分標準與計算方式
 - `references/health-scoring.md`：各面向健康度評分細則
 - `references/security-patterns.md`：安全風險掃描模式清單
-- `references/Program Analysis.md`:對程式碼進行**多維度靜態分析**，協助開發者快速理解程式結構、找出潛在問題、評估維護成本。
+- `references/Program Analysis.md`:對程式碼進行**多維度靜態分析**，協助開發者快速理解程式結構、找出潛在問題、評估維護成本並搭配 `mvn dependency-check:check` 和 APM 工具取得更精確的依賴漏洞與效能數據。

@@ -1,13 +1,15 @@
 package com.learning.api.service;
 
 
-import com.learning.api.entity.*;
-import com.learning.api.repo.*;
+import com.learning.api.entity.Course;
+import com.learning.api.entity.Order;
+import com.learning.api.repo.CourseRepo;
+import com.learning.api.repo.OrderRepo;
+import com.learning.api.repo.UserRepo;
 import com.learning.api.dto.BookingReq;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-////Test功能 暫時註解
 @Service
 public class BookingService {
 
@@ -16,9 +18,6 @@ public class BookingService {
 
     @Autowired
     private CourseRepo courseRepo;
-
-    @Autowired
-    private BookingRepo bookingRepo;
 
     @Autowired
     private OrderRepo orderRepo;
@@ -44,33 +43,34 @@ public class BookingService {
         // check courseId isActive
         if (!Boolean.TRUE.equals(course.getActive())) return false;
 
-        // buildBooking
-        Booking booking = buildBooking(bookingReq, course);
-        bookingRepo.save(booking);
+        // buildOrder
+        Order order = buildOrder(bookingReq, course);
+        orderRepo.save(order);
 
         return true;
     }
 
-    private Booking buildBooking(BookingReq bookingReq, Course course){
-        Booking booking = new Booking();
-        
-        // set & save
-        booking.setOrderId(null);
-        //booking.setCourseId(bookingReq.getCourseId());
+    private Order buildOrder(BookingReq bookingReq, Course course){
+        Order order = new Order();
+
+        order.setUserId(bookingReq.getUserId());
+        order.setCourseId(bookingReq.getCourseId());
 
         // price unitPrice discountPrice
         Integer originalPrice = course.getPrice();
         Integer discount = afterDiscPrice(originalPrice, bookingReq.getLessonCount());
 
-        //booking.setUnitPrice(originalPrice);
-        //booking.setDiscountPrice(discount);
+        order.setUnitPrice(originalPrice);
+        order.setDiscountPrice(discount);
 
         // lessonCount
-        //booking.setLessonCount(bookingReq.getLessonCount());
-        // status first send -> 1
-        booking.setStatus(1);
+        order.setLessonCount(bookingReq.getLessonCount());
+        order.setLessonUsed(0);
 
-        return booking;
+        // status first send -> 1 (pending)
+        order.setStatus(1);
+
+        return order;
     }
 
     private Integer afterDiscPrice(Integer originalPrice, Integer lessonCount){

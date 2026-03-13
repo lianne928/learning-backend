@@ -21,9 +21,6 @@ public class ChatMessage {
     @Column(nullable = false)
     private Integer role; // 1Student 2tutor
 
-    @Column(name = "message_type", nullable = false)
-    private Integer messageType = 1; // 1=text, 2=sticker
-
     @Column(length = 1000)
     private String message;
 

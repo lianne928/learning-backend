@@ -4,12 +4,19 @@ import com.learning.api.dto.*;
 import com.learning.api.entity.*;
 import com.learning.api.repo.UserRepository;
 import com.learning.api.repo.CourseRepo;
+import com.learning.api.repo.OrderRepository;
+import com.learning.api.repo.BookingRepository;
+import com.learning.api.repo.LessonFeedbackRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+<<<<<<< HEAD
 import java.util.Optional;
 import java.util.Set;
+=======
+import java.util.stream.Collectors;
+>>>>>>> 8192b919c2562565f031421a6f99a8b9395b67f2
 
 @Service
 public class CourseService {
@@ -19,10 +26,24 @@ public class CourseService {
     @Autowired
     private CourseRepo courseRepo;
 
+<<<<<<< HEAD
     private static final Set<Integer> VALID_SUBJECTS = Set.of(11, 12, 13, 21, 22, 23, 31);
 
     // POST 建立課程
     public boolean sendCourses(CourseReq courseReq) {
+=======
+    @Autowired
+    private OrderRepository orderRepo;
+
+    @Autowired
+    private BookingRepository bookingRepo;
+
+    @Autowired
+    private LessonFeedbackRepository feedbackRepo;
+
+    // bookingReq.getUserId() -> 這是前端送 id
+    public boolean sendCourses(CourseReq courseReq){
+>>>>>>> 8192b919c2562565f031421a6f99a8b9395b67f2
 
         if (courseReq == null) {
             System.out.println("courseReq is null");
@@ -65,10 +86,54 @@ public class CourseService {
         return true;
     }
 
-    // GET 全部課程
-    public List<Course> findAll() {
-        return courseRepo.findAll();
+    public List<CourseResp> getAllCourses() {
+        return courseRepo.findAll().stream()
+                .map(this::buildCourseResp)
+                .collect(Collectors.toList());
     }
+
+    public CourseResp getCourseById(Long courseId) {
+        Course course = courseRepo.findById(courseId).orElse(null);
+        if (course == null) return null;
+        return buildCourseResp(course);
+    }
+
+    private CourseResp buildCourseResp(Course course) {
+        List<Long> orderIds = orderRepo.findByCourseId(course.getId()).stream()
+                .map(Order::getId)
+                .collect(Collectors.toList());
+
+        List<Long> bookingIds = orderIds.isEmpty()
+                ? List.of()
+                : bookingRepo.findByOrderIdIn(orderIds).stream()
+                        .map(Bookings::getId)
+                        .collect(Collectors.toList());
+
+        List<LessonFeedback> feedbacks = bookingIds.isEmpty()
+                ? List.of()
+                : feedbackRepo.findByBookingIdIn(bookingIds);
+
+        Double avgRating = bookingIds.isEmpty()
+                ? null
+                : feedbackRepo.findAverageRatingByBookingIdIn(bookingIds);
+
+        CourseResp resp = new CourseResp();
+        resp.setId(course.getId());
+        resp.setTutorId(course.getTutorId());
+        resp.setName(course.getName());
+        resp.setSubject(course.getSubject());
+        resp.setLevel(course.getLevel());
+        resp.setDescription(course.getDescription());
+        resp.setPrice(course.getPrice());
+        resp.setActive(course.getActive());
+        resp.setAvgRating(avgRating);
+        resp.setFeedbacks(feedbacks.stream()
+                .map(f -> new CourseResp.FeedbackItem(f.getRating(), f.getComment()))
+                .collect(Collectors.toList()));
+        return resp;
+    }
+
+    private Course buildCourses(CourseReq courseReq){
 
     // GET 單筆課程
     public Optional<Course> findById(Long id) {

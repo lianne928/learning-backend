@@ -19,11 +19,21 @@ public class CourseController {
     @Autowired
     private CourseService courseService;
 
-    // GET 全部課程
     @GetMapping
-    public List<Course> getAll() {
-        return courseService.findAll();
+    public ResponseEntity<?> getAllCourses() {
+        return ResponseEntity.ok(courseService.getAllCourses());
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getCourseById(@PathVariable Long id) {
+        CourseResp resp = courseService.getCourseById(id);
+        if (resp == null) return ResponseEntity.status(404).body(Map.of("msg", "課程不存在"));
+        return ResponseEntity.ok(resp);
+    }
+
+    @PostMapping
+    public ResponseEntity<?> sendCourses(@RequestBody CourseReq courseReq){
+        if (!courseService.sendCourses(courseReq)) return ResponseEntity.status(400).body(Map.of("msg", "建立失敗"));
 
     // GET 單筆課程
     @GetMapping("/{id}")

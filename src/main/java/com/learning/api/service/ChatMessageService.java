@@ -45,7 +45,7 @@ public class ChatMessageService {
 
         return chatMessageRepository.save(chatMessage);
     }
-
+    //fix
     public Optional<ChatMessage> update(Long id, String message) {
         return chatMessageRepository.findById(id).map(existing -> {
             if (message == null || message.trim().isEmpty()) {

@@ -1,9 +1,10 @@
 package com.learning.api.entity;
 
-import java.time.Instant;
-
 import jakarta.persistence.*;
-import lombok.Data;
+<<<<<<< HEAD
+import java.time.Instant;
+=======
+>>>>>>> upstream/feature/Review
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,8 +18,8 @@ public class LessonFeedback {
     private Long id;
 
     
-    @JoinColumn(name = "booking_id")
-    private Long bookId;
+    @Column(name = "booking_id")
+    private Long bookingId;
 
     @Column(name="focus_score" ,nullable = false)
     private Integer focusScore;
@@ -31,6 +32,9 @@ public class LessonFeedback {
 
     @Column(nullable = true, length = 1000)
     private String comment; 
+
+    @Column(nullable = false)
+    private Integer rating;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private Instant createdAt;

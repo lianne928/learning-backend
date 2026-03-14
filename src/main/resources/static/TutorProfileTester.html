@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="data:," />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TutorProfile API Tester</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1a1d2e;
+      border-bottom: 1px solid #2d3748;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header h1 { font-size: 18px; font-weight: 600; color: #90cdf4; }
+    header span { font-size: 13px; color: #718096; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      padding: 16px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .panel {
+      background: #1a1d2e;
+      border: 1px solid #2d3748;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #2d3748;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .panel-header h2 { font-size: 14px; font-weight: 600; }
+    .panel-body { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+
+    .section {
+      background: #0f1117;
+      border: 1px solid #2d3748;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .section-title {
+      background: #171923;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #90cdf4;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .section-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+
+    label { font-size: 12px; color: #a0aec0; margin-bottom: 2px; display: block; }
+    input, select {
+      width: 100%;
+      background: #1a1d2e;
+      border: 1px solid #2d3748;
+      border-radius: 6px;
+      color: #e2e8f0;
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+    input:focus { outline: none; border-color: #4299e1; }
+
+    .row { display: flex; gap: 8px; }
+    .row > * { flex: 1; }
+
+    button {
+      padding: 7px 14px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      width: 100%;
+    }
+    button:hover { opacity: 0.85; }
+    button:active { transform: scale(0.97); }
+
+    .btn-get    { background: #48bb78; color: #1a202c; }
+    .btn-post   { background: #4299e1; color: #fff; }
+    .btn-put    { background: #ed8936; color: #1a202c; }
+    .btn-delete { background: #fc8181; color: #1a202c; }
+    .btn-clear  { background: #2d3748; color: #a0aec0; font-size: 11px; padding: 4px 10px; width: auto; }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: #171923;
+      border-top: 1px solid #2d3748;
+    }
+    .log-title { font-size: 12px; font-weight: 600; color: #90cdf4; text-transform: uppercase; letter-spacing: 0.5px; }
+    .log-box {
+      min-height: 180px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: #0a0c14;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .log-box::-webkit-scrollbar { width: 4px; }
+    .log-box::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 2px; }
+
+    .log-entry { display: flex; flex-direction: column; gap: 2px; border-bottom: 1px solid #1a1d2e; padding-bottom: 6px; }
+    .log-meta  { display: flex; gap: 8px; align-items: center; }
+    .log-time  { color: #4a5568; }
+    .log-tag   { padding: 1px 6px; border-radius: 3px; font-size: 11px; font-weight: 700; }
+    .tag-2xx   { background: #1c4532; color: #68d391; }
+    .tag-4xx   { background: #742a2a; color: #fc8181; }
+    .tag-err   { background: #44337a; color: #d6bcfa; }
+    .log-msg   { color: #cbd5e0; white-space: pre-wrap; word-break: break-all; }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    .badge-get    { background: #1c4532; color: #68d391; }
+    .badge-post   { background: #1a365d; color: #90cdf4; }
+    .badge-put    { background: #7b3f00; color: #fbd38d; }
+    .badge-delete { background: #742a2a; color: #fc8181; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>TutorProfile API Tester</h1>
+  <span>GET · POST · PUT · DELETE — /api/teacher/profile</span>
+</header>
+
+<div class="layout">
+
+  <!-- ════════════ LEFT: 輸入表單 ════════════ -->
+  <div class="panel">
+    <div class="panel-header">
+      <h2>老師個人檔案設定</h2>
+    </div>
+    <div class="panel-body">
+
+      <!-- 共用 Tutor ID -->
+      <div class="section">
+        <div class="section-title">老師 ID（必填）</div>
+        <div class="section-body">
+          <label>tutorId — 對應 users 表的 id</label>
+          <input id="tutorId" type="number" placeholder="例：1" min="1" />
+        </div>
+      </div>
+
+      <!-- 基本資料 -->
+      <div class="section">
+        <div class="section-title">基本資料</div>
+        <div class="section-body">
+          <div class="row">
+            <div>
+              <label>姓名（name）</label>
+              <input id="name" type="text" placeholder="例：王小明" />
+            </div>
+            <div>
+              <label>個人檔案標題（title）</label>
+              <input id="title" type="text" placeholder="例：資深英文老師" />
+            </div>
+          </div>
+          <label>大頭照網址（avatar）</label>
+          <input id="avatar" type="text" placeholder="https://example.com/avatar.jpg" />
+          <label>個人簡介（intro）</label>
+          <input id="intro" type="text" placeholder="例：我有十年教學經驗..." />
+          <label>最高學歷（education）</label>
+          <input id="education" type="text" placeholder="例：國立台灣大學 碩士" />
+        </div>
+      </div>
+
+      <!-- 專業證照 -->
+      <div class="section">
+        <div class="section-title">專業證照</div>
+        <div class="section-body">
+          <div class="row">
+            <div>
+              <label>證照1欄名（certificateName1）</label>
+              <input id="certificateName1" type="text" placeholder="TESOL 認證" />
+            </div>
+            <div>
+              <label>證照1位址（certificate1）</label>
+              <input id="certificate1" type="text" placeholder="https://example.com/cert1.jpg" />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>證照2欄名（certificateName2）</label>
+              <input id="certificateName2" type="text" placeholder="CELTA 認證" />
+            </div>
+            <div>
+              <label>證照2位址（certificate2）</label>
+              <input id="certificate2" type="text" placeholder="https://example.com/cert2.jpg" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 影片連結 -->
+      <div class="section">
+        <div class="section-title">影片連結</div>
+        <div class="section-body">
+          <label>介紹影片（videoUrl1）</label>
+          <input id="videoUrl1" type="text" placeholder="https://example.com/intro.mp4" />
+          <label>試教影片（videoUrl2）</label>
+          <input id="videoUrl2" type="text" placeholder="https://example.com/demo.mp4" />
+        </div>
+      </div>
+
+      <!-- 收款資訊 -->
+      <div class="section">
+        <div class="section-title">收款資訊</div>
+        <div class="section-body">
+          <div class="row">
+            <div>
+              <label>銀行代碼（bankCode）</label>
+              <input id="bankCode" type="text" placeholder="例：822" maxlength="10" />
+            </div>
+            <div>
+              <label>銀行帳號（bankAccount）</label>
+              <input id="bankAccount" type="text" placeholder="例：123456789" maxlength="20" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 操作按鈕 -->
+      <div class="section">
+        <div class="section-title">API 操作</div>
+        <div class="section-body">
+          <div class="row">
+            <button class="btn-get"    onclick="doGet()">GET 查詢</button>
+            <button class="btn-post"   onclick="doPost()">POST 建立</button>
+          </div>
+          <div class="row">
+            <button class="btn-put"    onclick="doPut()">PUT 更新</button>
+            <button class="btn-delete" onclick="doDelete()">DELETE 刪除</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════ RIGHT: 回應紀錄 ════════════ -->
+  <div class="panel">
+    <div class="panel-header">
+      <h2>API 回應紀錄</h2>
+    </div>
+    <div class="panel-body">
+
+      <!-- API 路由說明 -->
+      <div class="section">
+        <div class="section-title">API 路由</div>
+        <div class="section-body" style="gap:6px;">
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="badge badge-get">GET</span>
+            <code style="font-size:12px;color:#a0aec0;">/api/teacher/profile/{tutorId}</code>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="badge badge-post">POST</span>
+            <code style="font-size:12px;color:#a0aec0;">/api/teacher/profile</code>
+            <span style="font-size:11px;color:#718096;">初次建立（已存在→409）</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="badge badge-put">PUT</span>
+            <code style="font-size:12px;color:#a0aec0;">/api/teacher/profile</code>
+            <span style="font-size:11px;color:#718096;">更新（不存在時自動建立）</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="badge badge-delete">DELETE</span>
+            <code style="font-size:12px;color:#a0aec0;">/api/teacher/profile/{tutorId}</code>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="log-header">
+      <span class="log-title">回應紀錄</span>
+      <button class="btn-clear" onclick="clearLog()">清除</button>
+    </div>
+    <div class="log-box" id="logBox"></div>
+  </div>
+
+</div><!-- /layout -->
+
+<script>
+  const BASE = 'http://localhost:8080/api/teacher/profile';
+
+  function val(id) {
+    return document.getElementById(id).value.trim() || undefined;
+  }
+
+  function getTutorId() {
+    const v = document.getElementById('tutorId').value.trim();
+    return v ? parseInt(v) : null;
+  }
+
+  function buildBody() {
+    const body = {};
+    const tutorId = getTutorId();
+    if (tutorId) body.tutorId = tutorId;
+
+    const fields = ['name','title','avatar','intro','education',
+      'certificate1','certificateName1','certificate2','certificateName2',
+      'videoUrl1','videoUrl2','bankCode','bankAccount'];
+
+    fields.forEach(f => {
+      const v = val(f);
+      if (v !== undefined) body[f] = v;
+    });
+    return body;
+  }
+
+  function log(method, status, data) {
+    const box  = document.getElementById('logBox');
+    const time = new Date().toLocaleTimeString('zh-TW', { hour12: false });
+    const is2xx = status >= 200 && status < 300;
+    const tagClass = is2xx ? 'tag-2xx' : 'tag-4xx';
+
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+
+    const methodBadge = {
+      GET: 'badge-get', POST: 'badge-post', PUT: 'badge-put', DELETE: 'badge-delete'
+    }[method] || '';
+
+    entry.innerHTML =
+      `<div class="log-meta">` +
+        `<span class="log-time">${time}</span>` +
+        `<span class="badge ${methodBadge}">${method}</span>` +
+        `<span class="log-tag ${tagClass}">${status}</span>` +
+      `</div>` +
+      `<span class="log-msg">${escHtml(JSON.stringify(data, null, 2))}</span>`;
+
+    box.prepend(entry);
+  }
+
+  function logErr(method, err) {
+    const box  = document.getElementById('logBox');
+    const time = new Date().toLocaleTimeString('zh-TW', { hour12: false });
+
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.innerHTML =
+      `<div class="log-meta">` +
+        `<span class="log-time">${time}</span>` +
+        `<span class="badge">${method}</span>` +
+        `<span class="log-tag tag-err">ERR</span>` +
+      `</div>` +
+      `<span class="log-msg">${escHtml(String(err))}</span>`;
+    box.prepend(entry);
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function clearLog() {
+    document.getElementById('logBox').innerHTML = '';
+  }
+
+  async function doGet() {
+    const id = getTutorId();
+    if (!id) { alert('請輸入 tutorId'); return; }
+    try {
+      const res = await fetch(`${BASE}/${id}`);
+      const data = await res.json();
+      log('GET', res.status, data);
+    } catch(e) { logErr('GET', e); }
+  }
+
+  async function doPost() {
+    const body = buildBody();
+    if (!body.tutorId) { alert('請輸入 tutorId'); return; }
+    try {
+      const res = await fetch(BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      log('POST', res.status, data);
+    } catch(e) { logErr('POST', e); }
+  }
+
+  async function doPut() {
+    const body = buildBody();
+    if (!body.tutorId) { alert('請輸入 tutorId'); return; }
+    try {
+      const res = await fetch(BASE, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const text = await res.text();
+      let parsed;
+      try { parsed = JSON.parse(text); } catch { parsed = text; }
+      showResponse(areaId, res.status, parsed);
+    } catch (e) {
+      el.textContent = '連線錯誤: ' + e.message;
+      el.className = 'response-area err';
+    }
+  }
+
+  // 主表單送出
+  async function updateProfile() {
+    const tutorIdVal = document.getElementById('tutorId').value;
+    const body = {};
+    if (tutorIdVal) body.tutorId = parseInt(tutorIdVal);
+
+    const name = document.getElementById('name').value.trim();
+    if (name) body.name = name;
+
+    const intro = document.getElementById('intro').value.trim();
+    if (intro) body.intro = intro;
+
+    const cert = document.getElementById('certificate').value.trim();
+    if (cert) body.certificate = cert;
+
+    const video = document.getElementById('video').value.trim();
+    if (video) body.video = video;
+
+    await apiFetch(body, 'res-put');
+  }
+
+  // 情境 1: 缺少 tutorId
+  async function testMissingId() {
+    await apiFetch({}, 'res-missing-id');
+  }
+
+  // 情境 2: 不存在的老師
+  async function testNotFound() {
+    await apiFetch({ tutorId: 999999 }, 'res-not-found');
+  }
+
+  // 情境 3: 只更新介紹（用主表單的 tutorId）
+  async function testIntroOnly() {
+    const tutorIdVal = document.getElementById('tutorId').value;
+    if (!tutorIdVal) { alert('請在上方表單填入老師 ID'); return; }
+    await apiFetch({ tutorId: parseInt(tutorIdVal), intro: '測試介紹（自動填入）' }, 'res-intro-only');
+  }
+</script>
+</body>
+</html>

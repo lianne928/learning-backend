@@ -1,8 +1,12 @@
 package com.learning.api.service;
 
-import com.learning.api.dto.*;
-import com.learning.api.entity.*;
-import com.learning.api.repo.*;
+
+import com.learning.api.entity.Course;
+import com.learning.api.entity.Order;
+import com.learning.api.repo.CourseRepo;
+import com.learning.api.repo.OrderRepository;
+import com.learning.api.repo.UserRepository;
+import com.learning.api.dto.BookingReq;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,16 +14,13 @@ import org.springframework.stereotype.Service;
 public class BookingService {
 
     @Autowired
-    private UserRepo memberRepo;
+    private UserRepository userRepo;
 
     @Autowired
     private CourseRepo courseRepo;
 
     @Autowired
-    private BookingRepo bookingRepo;
-
-    @Autowired
-    private OrderRepo orderRepo;
+    private OrderRepository orderRepo;
 
     // bookingReq.getUserId() 僅供開發測試使用，正式版改由登入資訊取得
     public boolean sendBooking(BookingReq bookingReq){
@@ -33,42 +34,43 @@ public class BookingService {
         if (bookingReq.getLessonCount() <= 0) return false;
 
         // member existsById
-        if(!memberRepo.existsById(bookingReq.getUserId())) return false;
+        if(!userRepo.existsById(bookingReq.getUserId())) return false;
 
         // course findById
         Course course = courseRepo.findById(bookingReq.getCourseId()).orElse(null);
         if (course == null) return false;
 
         // check courseId isActive
-        if (!course.isActive()) return false;
+        if (!Boolean.TRUE.equals(course.getActive())) return false;
 
-        // buildBooking
-        Booking booking = buildBooking(bookingReq, course);
-        bookingRepo.save(booking);
+        // buildOrder
+        Order order = buildOrder(bookingReq, course);
+        orderRepo.save(order);
 
         return true;
     }
 
-    private Booking buildBooking(BookingReq bookingReq, Course course){
-        Booking booking = new Booking();
+    private Order buildOrder(BookingReq bookingReq, Course course){
+        Order order = new Order();
 
-        // set & save
-        booking.setOrderId(null);
-        booking.setCourseId(bookingReq.getCourseId());
+        order.setUserId(bookingReq.getUserId());
+        order.setCourseId(bookingReq.getCourseId());
 
         // price unitPrice discountPrice
         Integer originalPrice = course.getPrice();
         Integer discount = afterDiscPrice(originalPrice, bookingReq.getLessonCount());
 
-        booking.setUnitPrice(originalPrice);
-        booking.setDiscountPrice(discount);
+        order.setUnitPrice(originalPrice);
+        order.setDiscountPrice(discount);
 
         // lessonCount
-        booking.setLessonCount(bookingReq.getLessonCount());
-        // status first send -> 1
-        booking.setStatus(1);
+        order.setLessonCount(bookingReq.getLessonCount());
+        order.setLessonUsed(0);
 
-        return booking;
+        // status first send -> 1 (pending)
+        order.setStatus(1);
+
+        return order;
     }
 
     private Integer afterDiscPrice(Integer originalPrice, Integer lessonCount){

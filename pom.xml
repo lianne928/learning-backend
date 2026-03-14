@@ -12,7 +12,7 @@
 	<artifactId>api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>api</name>
-	<description>Demo project for Spring Boot</description>
+	<description>Learning Platform Backend API</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -113,12 +113,6 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- WebSocket (STOMP + SockJS) -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-websocket</artifactId>
-        </dependency>
-
         <!-- WebSocket (STOMP + SockJS) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

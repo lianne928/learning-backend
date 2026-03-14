@@ -36,8 +36,12 @@ public class SecurityConfig {
                         // 認證端點（登入 / 註冊）
                         .requestMatchers("/api/auth/**").permitAll()
 
-                        // 公開資源
-                        .requestMatchers("/api/teacher/**").permitAll()      // 家教公開個人資料
+                        // 公開資源（GET only）
+                        .requestMatchers(HttpMethod.GET, "/api/teacher/**").permitAll()      // 家教公開個人資料
+                        // 老師寫入操作需要 TEACHER 角色
+                        .requestMatchers(HttpMethod.POST, "/api/teacher/**").hasRole("TEACHER")
+                        .requestMatchers(HttpMethod.PUT, "/api/teacher/**").hasRole("TEACHER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/teacher/**").hasRole("TEACHER")
                         .requestMatchers("/api/reviews/**").permitAll()
                         .requestMatchers("/api/chat-messages/**").permitAll()
                         .requestMatchers("/api/lesson-feedbacks/**").permitAll()
@@ -48,7 +52,7 @@ public class SecurityConfig {
                         // 靜態頁面 / 測試用
                         .requestMatchers("/*.html").permitAll()
                         .requestMatchers("/favicon.ico").permitAll()
-                        .requestMatchers("/test-email/**").permitAll()
+                        .requestMatchers("/test-email/**").hasRole("ADMIN")
 
                         // Swagger / Actuator（開發階段）
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()

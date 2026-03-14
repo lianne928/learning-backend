@@ -12,9 +12,7 @@ import com.learning.api.repo.LessonFeedbackRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,7 +39,6 @@ public class CourseService {
 
         if (courseReq == null) return false;
 
-        // check null
         if (courseReq.getTutorId() == null || courseReq.getName() == null ||
             courseReq.getSubject() == null || courseReq.getPrice() == null ||
             courseReq.getActive() == null) return false;
@@ -50,13 +47,10 @@ public class CourseService {
 
         if (courseReq.getPrice() <= 0) return false;
 
-        // subject: 11低年級 12中年級 13高年級 21GEPT 22YLE 23國中先修 31其他
         if (!VALID_SUBJECTS.contains(courseReq.getSubject())) return false;
 
-        // level 若有填寫則需在 1-5 之間
         if (courseReq.getLevel() != null && (courseReq.getLevel() < 1 || courseReq.getLevel() > 5)) return false;
 
-        // 確認老師存在且 role == 2
         User tutor = userRepo.findById(courseReq.getTutorId()).orElse(null);
         if (tutor == null || tutor.getRole() != 2) return false;
 
@@ -64,54 +58,90 @@ public class CourseService {
         return true;
     }
 
+    /**
+     * 批量載入所有課程及其關聯資料，避免 N+1 查詢。
+     * 原實作：每筆課程各觸發 orders / bookings / feedbacks 三次 DB 查詢。
+     * 新實作：全表各查一次，再於記憶體中映射，DB 查詢固定為 4 次（courses / orders / bookings / feedbacks）。
+     */
     public List<CourseResp> getAllCourses() {
-        return courseRepo.findAll().stream()
-                .map(this::buildCourseResp)
-                .collect(Collectors.toList());
+        List<Course> courses = courseRepo.findAll();
+        if (courses.isEmpty()) return List.of();
+
+        // ① 批量取得所有 orders（依 courseId）
+        List<Long> courseIds = courses.stream().map(Course::getId).collect(Collectors.toList());
+        List<Order> allOrders = orderRepo.findByCourseIdIn(courseIds);
+
+        // courseId → orderIds
+        Map<Long, List<Long>> orderIdsByCourse = allOrders.stream()
+                .collect(Collectors.groupingBy(
+                        Order::getCourseId,
+                        Collectors.mapping(Order::getId, Collectors.toList())
+                ));
+
+        // ② 批量取得所有 bookings（依 orderId）
+        List<Long> allOrderIds = allOrders.stream().map(Order::getId).collect(Collectors.toList());
+        List<Bookings> allBookings = allOrderIds.isEmpty()
+                ? List.of()
+                : bookingRepo.findByOrderIdIn(allOrderIds);
+
+        // orderId → bookingIds
+        Map<Long, List<Long>> bookingIdsByOrder = allBookings.stream()
+                .collect(Collectors.groupingBy(
+                        Bookings::getOrderId,
+                        Collectors.mapping(Bookings::getId, Collectors.toList())
+                ));
+
+        // ③ 批量取得所有 feedbacks（依 bookingId）
+        List<Long> allBookingIds = allBookings.stream().map(Bookings::getId).collect(Collectors.toList());
+        List<LessonFeedback> allFeedbacks = allBookingIds.isEmpty()
+                ? List.of()
+                : feedbackRepo.findByBookingIdIn(allBookingIds);
+
+        // bookingId → feedbacks
+        Map<Long, List<LessonFeedback>> feedbacksByBooking = allFeedbacks.stream()
+                .collect(Collectors.groupingBy(LessonFeedback::getBookingId));
+
+        // ④ 組裝每筆課程的回應（pure in-memory，不再打 DB）
+        return courses.stream().map(course -> {
+            List<Long> courseOrderIds = orderIdsByCourse.getOrDefault(course.getId(), List.of());
+
+            List<Long> courseBookingIds = courseOrderIds.stream()
+                    .flatMap(oid -> bookingIdsByOrder.getOrDefault(oid, List.of()).stream())
+                    .collect(Collectors.toList());
+
+            List<LessonFeedback> courseFeedbacks = courseBookingIds.stream()
+                    .flatMap(bid -> feedbacksByBooking.getOrDefault(bid, List.of()).stream())
+                    .collect(Collectors.toList());
+
+            Double avgRating = courseFeedbacks.isEmpty() ? null
+                    : courseFeedbacks.stream().mapToInt(LessonFeedback::getRating).average().orElse(0.0);
+
+            return buildCourseResp(course, courseFeedbacks, avgRating);
+        }).collect(Collectors.toList());
     }
 
     public CourseResp getCourseById(Long courseId) {
         Course course = courseRepo.findById(courseId).orElse(null);
         if (course == null) return null;
-        return buildCourseResp(course);
-    }
 
-    private CourseResp buildCourseResp(Course course) {
+        // 單筆查詢，N+1 影響極小，維持原本邏輯即可
         List<Long> orderIds = orderRepo.findByCourseId(course.getId()).stream()
-                .map(Order::getId)
-                .collect(Collectors.toList());
+                .map(Order::getId).collect(Collectors.toList());
 
-        List<Long> bookingIds = orderIds.isEmpty()
-                ? List.of()
+        List<Long> bookingIds = orderIds.isEmpty() ? List.of()
                 : bookingRepo.findByOrderIdIn(orderIds).stream()
-                        .map(Bookings::getId)
-                        .collect(Collectors.toList());
+                        .map(Bookings::getId).collect(Collectors.toList());
 
-        List<LessonFeedback> feedbacks = bookingIds.isEmpty()
-                ? List.of()
+        List<LessonFeedback> feedbacks = bookingIds.isEmpty() ? List.of()
                 : feedbackRepo.findByBookingIdIn(bookingIds);
 
-        Double avgRating = bookingIds.isEmpty()
-                ? null
+        Double avgRating = bookingIds.isEmpty() ? null
                 : feedbackRepo.findAverageRatingByBookingIdIn(bookingIds);
 
-        CourseResp resp = new CourseResp();
-        resp.setId(course.getId());
-        resp.setTutorId(course.getTutorId());
-        resp.setName(course.getName());
-        resp.setSubject(course.getSubject());
-        /* resp.setLevel(course.getLevel()); */
-        resp.setDescription(course.getDescription());
-        resp.setPrice(course.getPrice());
-        resp.setActive(course.getActive());
-        resp.setAvgRating(avgRating);
-        resp.setFeedbacks(feedbacks.stream()
-                .map(f -> new CourseResp.FeedbackItem(f.getRating(), f.getComment()))
-                .collect(Collectors.toList()));
-        return resp;
+        return buildCourseResp(course, feedbacks, avgRating);
     }
 
-    // GET 單筆課程
+    // GET 單筆課程（回傳 entity）
     public Optional<Course> findById(Long id) {
         return courseRepo.findById(id);
     }
@@ -132,7 +162,6 @@ public class CourseService {
             validateCourseReq(req);
             existing.setName(req.getName().trim());
             existing.setSubject(req.getSubject());
-            /* if (req.getLevel() != null) existing.setLevel(req.getLevel()); */
             if (req.getDescription() != null) existing.setDescription(req.getDescription());
             existing.setPrice(req.getPrice());
             existing.setActive(req.getActive());
@@ -149,7 +178,6 @@ public class CourseService {
         return false;
     }
 
-    // 驗證課程資料（不含 tutor 角色驗證，供 update 使用）
     private void validateCourseReq(CourseReq req) {
         if (req == null) throw new IllegalArgumentException("課程資料不能為空");
         if (req.getName() == null || req.getName().trim().isEmpty())
@@ -164,13 +192,28 @@ public class CourseService {
             throw new IllegalArgumentException("難易度必須在 1-5 之間");
     }
 
+    private CourseResp buildCourseResp(Course course, List<LessonFeedback> feedbacks, Double avgRating) {
+        CourseResp resp = new CourseResp();
+        resp.setId(course.getId());
+        resp.setTutorId(course.getTutorId());
+        resp.setName(course.getName());
+        resp.setSubject(course.getSubject());
+        resp.setDescription(course.getDescription());
+        resp.setPrice(course.getPrice());
+        resp.setActive(course.getActive());
+        resp.setAvgRating(avgRating);
+        resp.setFeedbacks(feedbacks.stream()
+                .map(f -> new CourseResp.FeedbackItem(f.getRating(), f.getComment()))
+                .collect(Collectors.toList()));
+        return resp;
+    }
+
     private Course buildCourses(CourseReq courseReq) {
         Course course = new Course();
         course.setTutorId(courseReq.getTutorId());
         course.setName(courseReq.getName().trim());
         course.setSubject(courseReq.getSubject());
-        /* course.setLevel(courseReq.getLevel()); */
-        course.setDescription(courseReq.getDescription());
+        if (courseReq.getDescription() != null) course.setDescription(courseReq.getDescription());
         course.setPrice(courseReq.getPrice());
         course.setActive(courseReq.getActive());
         return course;

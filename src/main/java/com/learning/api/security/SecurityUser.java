@@ -1,7 +1,8 @@
 package com.learning.api.security;
 
-import com.learning.api.entity.*;
+import com.learning.api.entity.User;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
@@ -17,7 +18,7 @@ public class SecurityUser implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.getName();
+        return user.getEmail();
     }
 
     @Override
@@ -27,6 +28,12 @@ public class SecurityUser implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+        String roleName = switch (user.getRole()) {
+            case 1 -> "ROLE_STUDENT";
+            case 2 -> "ROLE_TEACHER";
+            case 3 -> "ROLE_ADMIN";
+            default -> null;
+        };
+        return roleName != null ? List.of(new SimpleGrantedAuthority(roleName)) : List.of();
     }
 }

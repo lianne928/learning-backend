@@ -3,31 +3,59 @@ package com.learning.api.service;
 import com.learning.api.dto.auth.*;
 import com.learning.api.entity.*;
 import com.learning.api.repo.*;
+import com.learning.api.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 @Service
 public class MemberService {
+
     @Autowired
     private MemberRepo memberRepo;
+
+    @Autowired
+    private JwtService jwtService;
 
     public void register(RegisterReq registerReq) {
         String email = registerReq.getEmail().trim().toLowerCase();
 
-        // check email
         if (memberRepo.existsByEmail(email)) throw new IllegalArgumentException("此 email 已被註冊");
 
-        // password
-        String rawPassword = registerReq.getPassword();
-        String password = rawPassword.trim();
-        String hashPassword = BCrypt.hashpw(password, BCrypt.gensalt());
-
-        User user = buildMember(registerReq, email, hashPassword);
-        memberRepo.save(user);
+        String hashPassword = BCrypt.hashpw(registerReq.getPassword().trim(), BCrypt.gensalt());
+        memberRepo.save(buildMember(registerReq, email, hashPassword));
     }
 
-    public User buildMember(RegisterReq registerReq, String email, String hashPassword){
+    public LoginResp login(LoginReq loginReq) {
+        String email    = loginReq.getEmail().trim().toLowerCase();
+        String password = loginReq.getPassword().trim();
+
+        User user = memberRepo.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("帳號或密碼錯誤"));
+
+        if (!BCrypt.checkpw(password, user.getPassword()))
+            throw new IllegalArgumentException("帳號或密碼錯誤");
+
+        String token = jwtService.generateToken(user);
+
+        UserResp userResp = new UserResp(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getBirthday(),
+                user.getRole(),
+                user.getWallet().intValue(),
+                user.getCreatedAt(),
+                user.getUpdatedAt()
+        );
+
+        LoginResp resp = new LoginResp();
+        resp.setToken(token);
+        resp.setUser(userResp);
+        return resp;
+    }
+
+    public User buildMember(RegisterReq registerReq, String email, String hashPassword) {
         User newMember = new User();
         newMember.setName(registerReq.getName());
         newMember.setEmail(email);
@@ -36,18 +64,5 @@ public class MemberService {
         newMember.setRole(registerReq.getRole());
         newMember.setWallet(0L);
         return newMember;
-    }
-
-    // login
-    public void login(LoginReq loginReq) {
-        String rawEmail = loginReq.getEmail().trim().toLowerCase();
-        String rawPassword = loginReq.getPassword().trim();
-
-        User user = memberRepo.findByEmail(rawEmail).orElse(null);
-
-        if (user == null) throw new IllegalArgumentException("你沒有註冊喔");
-
-        if (!BCrypt.checkpw(rawPassword, user.getPassword())) throw new IllegalArgumentException("密碼錯誤");
-
     }
 }

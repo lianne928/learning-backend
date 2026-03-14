@@ -30,8 +30,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginReq loginReq){
         try{
-            memberService.login(loginReq);
-            return ResponseEntity.ok().body(Map.of("msg", "登入成功"));
+            return ResponseEntity.ok(memberService.login(loginReq));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("msg", e.getMessage()));
         }

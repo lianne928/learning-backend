@@ -64,10 +64,10 @@ public class JwtService {
         return claims.get("email", String.class);
     }
 
-    // role
-    public String extractUserRole(String token){
+    // role（User.role 為 Integer：1=student 2=teacher 3=admin）
+    public Integer extractUserRole(String token){
         Claims claims = parseToken(token);
-        return claims.get("role", String.class);
+        return claims.get("role", Integer.class);
     }
 
     // 時效

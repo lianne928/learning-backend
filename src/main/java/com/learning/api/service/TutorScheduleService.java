@@ -27,29 +27,11 @@ public class TutorScheduleService {
             return "格式錯誤：時間範圍需在 9~21 點之間。";
         }
 
-<<<<<<< HEAD
-        // 2. 檢查時間合不合理
-        if (schedule.getWeekday() < 1 || schedule.getWeekday() > 7) {
-            return "格式錯誤：星期必須是 1 到 7";
-        }
-        if (schedule.getHour() < 0 || schedule.getHour() > 23) {
-            return "格式錯誤：時間必須是 0 到 23";
-        }
-
-        // 3. 防呆檢查：是不是已經排過這個時間了？
-        boolean isExist = scheduleRepo.existsByTutorIdAndWeekdayAndHour(
-                schedule.getTutorId(), schedule.getWeekday().byteValue(), schedule.getHour().byteValue()
-=======
-        // 2. 尋找該老師在該時段是否已有紀錄
+        // 2. 查詢是否已有紀錄
         Optional<TutorSchedule> existingSlotOpt = scheduleRepo.findByTutorIdAndWeekdayAndHour(
                 req.getTutorId(), req.getWeekday(), req.getHour()
->>>>>>> upstream/feature/Review
         );
 
-<<<<<<< HEAD
-        // 4. 存檔
-        scheduleRepo.save(schedule);
-=======
         // 3. 邏輯判斷
         if ("available".equals(req.getTargetStatus())) {
             // 【目標：改為開放】
@@ -67,7 +49,6 @@ public class TutorScheduleService {
             // 直接把這筆紀錄從資料庫刪除，保持資料表極致精簡
             existingSlotOpt.ifPresent(slot -> scheduleRepo.delete(slot));
         }
->>>>>>> upstream/feature/Review
 
         return "success";
     }

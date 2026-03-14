@@ -103,15 +103,9 @@ public class EmailService {
     		         + "<span style='font-size:16px; color:#ccc;'>☆</span>".repeat(5 - score);
 
 
-<<<<<<< HEAD
-	private String buildHtml(EmailBookingDTO dto) {
-=======
     }
 
 	private String buildBookingHtml(EmailBookingDTO dto) {
-		// TODO Auto-generated method stub
-
->>>>>>> upstream/feature/Review
 		 final String TEMPLATE = """
 				<div style="background:#f5f7fb;padding:30px;font-family:Arial,Helvetica,sans-serif;">
 

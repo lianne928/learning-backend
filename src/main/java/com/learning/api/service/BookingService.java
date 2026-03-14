@@ -4,8 +4,8 @@ package com.learning.api.service;
 import com.learning.api.entity.Course;
 import com.learning.api.entity.Order;
 import com.learning.api.repo.CourseRepo;
-import com.learning.api.repo.OrderRepo;
-import com.learning.api.repo.UserRepo;
+import com.learning.api.repo.OrderRepository;
+import com.learning.api.repo.UserRepository;
 import com.learning.api.dto.BookingReq;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,15 +20,9 @@ public class BookingService {
     private CourseRepo courseRepo;
 
     @Autowired
-<<<<<<< HEAD
     private OrderRepository orderRepo;
 
-    // 之後 JWT 做完 改掉 OrderReq.getUserId() -> 這是前端送 id
-=======
-    private OrderRepo orderRepo;
-
     // bookingReq.getUserId() 僅供開發測試使用，正式版改由登入資訊取得
->>>>>>> upstream/feature/Review
     public boolean sendBooking(BookingReq bookingReq){
 
         if (bookingReq == null) return false;
@@ -47,11 +41,7 @@ public class BookingService {
         if (course == null) return false;
 
         // check courseId isActive
-<<<<<<< HEAD
-        if (!course.getActive()) return false;
-=======
         if (!Boolean.TRUE.equals(course.getActive())) return false;
->>>>>>> upstream/feature/Review
 
         // buildOrder
         Order order = buildOrder(bookingReq, course);
@@ -76,16 +66,10 @@ public class BookingService {
         // lessonCount
         order.setLessonCount(bookingReq.getLessonCount());
         order.setLessonUsed(0);
-<<<<<<< HEAD
-        // status first send -> 1
-        order.setStatus(1);
-
-=======
 
         // status first send -> 1 (pending)
         order.setStatus(1);
 
->>>>>>> upstream/feature/Review
         return order;
     }
 

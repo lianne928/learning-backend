@@ -81,7 +81,7 @@ public class TutorProfileService {
     private void applyDtoToTutor(TutorProfileDTO dto, Tutor tutor) {
         tutor.setId(dto.getTutorId());
         tutor.setTitle(dto.getTitle());
-        tutor.setAvatar(dto.getAvatar());
+        tutor.setAvatarUrl(dto.getAvatar());
         tutor.setIntro(dto.getIntro());
         tutor.setEducation(dto.getEducation());
         tutor.setCertificate1(dto.getCertificate1());

@@ -11,9 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class CheckoutService {
 
-    @Autowired private UserRepo userRepo;           // 需建立
-    @Autowired private CourseRepo courseRepo;       // 需建立
-    @Autowired private OrderRepo orderRepo;
+    @Autowired private UserRepository userRepo;
+    @Autowired private CourseRepo courseRepo;
+    @Autowired private OrderRepository orderRepo;
     @Autowired private BookingRepo bookingRepo;
     @Autowired private TutorScheduleRepo scheduleRepo;
 
@@ -63,13 +63,13 @@ public class CheckoutService {
 
         // C. 建立多筆預約 (Bookings)
         for (CheckoutReq.Slot slot : req.getSelectedSlots()) {
-            Booking b = new Booking();
+            Bookings b = new Bookings();
             b.setOrderId(savedOrder.getId());
             b.setTutorId(course.getTutorId());
             b.setStudentId(student.getId());
             b.setDate(slot.getDate());
             b.setHour(slot.getHour());
-            b.setStatus(1); // 1:排程中
+            b.setStatus((byte) 1); // 1:排程中
             bookingRepo.save(b);
         }
 

@@ -3,8 +3,8 @@ package com.learning.api.service;
 import com.learning.api.dto.TutorReq;
 import com.learning.api.entity.Tutor;
 import com.learning.api.entity.User;
-import com.learning.api.repo.TutorRepo;
-import com.learning.api.repo.UserRepo;
+import com.learning.api.repo.TutorRepository;
+import com.learning.api.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,10 +12,10 @@ import org.springframework.stereotype.Service;
 public class TutorService {
 
     @Autowired
-    private TutorRepo tutorRepo;
+    private TutorRepository tutorRepo;
 
     @Autowired
-    private UserRepo userRepo;
+    private UserRepository userRepo;
 
     public Tutor getTutor(Long id) {
         return tutorRepo.findById(id).orElse(null);

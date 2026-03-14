@@ -11,12 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-<<<<<<< HEAD
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-=======
->>>>>>> upstream/feature/Review
 
 @Service
 public class CourseService {
@@ -26,7 +23,6 @@ public class CourseService {
     @Autowired
     private CourseRepo courseRepo;
 
-<<<<<<< HEAD
     @Autowired
     private OrderRepository orderRepo;
 
@@ -40,11 +36,6 @@ public class CourseService {
 
     // POST 建立課程
     public boolean sendCourses(CourseReq courseReq) {
-=======
-    private static final List<Integer> VALID_SUBJECTS = List.of(11, 12, 13, 21, 22, 23, 31);
-
-    public boolean sendCourses(CourseReq courseReq){
->>>>>>> upstream/feature/Review
 
         if (courseReq == null) {
             System.out.println("courseReq is null");
@@ -53,13 +44,8 @@ public class CourseService {
 
         // check null
         if (courseReq.getTutorId() == null || courseReq.getName() == null ||
-<<<<<<< HEAD
             courseReq.getSubject() == null || courseReq.getPrice() == null ||
             courseReq.getActive() == null) return false;
-=======
-            courseReq.getSubject() == null ||
-                courseReq.getPrice() == null || courseReq.getActive() == null) return false;
->>>>>>> upstream/feature/Review
 
         if (courseReq.getName().trim().isEmpty()) {
             System.out.println("name is empty");
@@ -71,16 +57,11 @@ public class CourseService {
             return false;
         }
 
-<<<<<<< HEAD
         // subject: 11低年級 12中年級 13高年級 21GEPT 22YLE 23國中先修 31其他
         if (!VALID_SUBJECTS.contains(courseReq.getSubject())) return false;
 
         // level 若有填寫則需在 1-5 之間
         if (courseReq.getLevel() != null && (courseReq.getLevel() < 1 || courseReq.getLevel() > 5)) return false;
-=======
-        // 科目代碼：11低年級 12中年級 13高年級 21GEPT 22YLE 23國中先修 31其他
-        if (!VALID_SUBJECTS.contains(courseReq.getSubject())) return false;
->>>>>>> upstream/feature/Review
 
         // 確認老師存在且 role == 2
         User tutor = userRepo.findById(courseReq.getTutorId()).orElse(null);
@@ -94,7 +75,6 @@ public class CourseService {
         }
 
         courseRepo.save(buildCourses(courseReq));
-<<<<<<< HEAD
         return true;
     }
 
@@ -199,52 +179,11 @@ public class CourseService {
     }
 
     private Course buildCourses(CourseReq courseReq) {
-=======
-        return true;
-    }
-
-    public List<Course> getAllCourses() {
-        return courseRepo.findAll();
-    }
-
-    public List<Course> getCoursesByTutor(Long tutorId) {
-        return courseRepo.findByTutorId(tutorId);
-    }
-
-    public boolean updateCourse(Long id, CourseReq courseReq) {
-        Course course = courseRepo.findById(id).orElse(null);
-        if (course == null) return false;
-
-        if (courseReq.getName() != null && !courseReq.getName().trim().isEmpty())
-            course.setName(courseReq.getName().trim());
-        if (courseReq.getSubject() != null) {
-            if (!VALID_SUBJECTS.contains(courseReq.getSubject())) return false;
-            course.setSubject(courseReq.getSubject());
-        }
-        if (courseReq.getDescription() != null) course.setDescription(courseReq.getDescription());
-        if (courseReq.getPrice() != null && courseReq.getPrice() > 0) course.setPrice(courseReq.getPrice());
-        if (courseReq.getActive() != null) course.setActive(courseReq.getActive());
-
-        courseRepo.save(course);
-        return true;
-    }
-
-    public boolean deleteCourse(Long id) {
-        if (!courseRepo.existsById(id)) return false;
-        courseRepo.deleteById(id);
-        return true;
-    }
-
-    private Course buildCourses(CourseReq courseReq){
->>>>>>> upstream/feature/Review
         Course course = new Course();
         course.setTutorId(courseReq.getTutorId());
         course.setName(courseReq.getName().trim());
         course.setSubject(courseReq.getSubject());
-<<<<<<< HEAD
         /* course.setLevel(courseReq.getLevel()); */
-=======
->>>>>>> upstream/feature/Review
         course.setDescription(courseReq.getDescription());
         course.setPrice(courseReq.getPrice());
         course.setActive(courseReq.getActive());

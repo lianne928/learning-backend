@@ -22,6 +22,7 @@ public class CourseReq {
     private Long tutorId;
     private String name;
     private Integer subject;
+    private Integer level;
     private String description;
     private Integer price;
     private Boolean active;

@@ -10,11 +10,6 @@ public interface TutorScheduleRepo extends JpaRepository<TutorSchedule, Long> {
     // 查詢老師的「整週常態課表模板」
     List<TutorSchedule> findByTutorId(Long tutorId);
 
-<<<<<<< HEAD
-    // 檢查該老師在「星期幾的幾點」是不是已經排過班了 (防呆機制)
-    boolean existsByTutorIdAndWeekdayAndHour(Long tutorId, Byte weekday, Byte hour);
-=======
     // 精準尋找老師在「星期幾的幾點」的紀錄 (用來檢查要 Update 還是 Insert)
     Optional<TutorSchedule> findByTutorIdAndWeekdayAndHour(Long tutorId, Integer weekday, Integer hour);
->>>>>>> upstream/feature/Review
 }

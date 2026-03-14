@@ -5,11 +5,7 @@ import org.springframework.stereotype.Service;
 import com.learning.api.entity.ChatMessage;
 import com.learning.api.enums.MessageType;
 import com.learning.api.repo.ChatMessageRepository;
-<<<<<<< HEAD
 import com.learning.api.repo.OrderRepository;
-=======
-import com.learning.api.repo.OrderRepo;
->>>>>>> upstream/feature/Review
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -19,11 +15,7 @@ import java.util.Optional;
 public class ChatMessageService {
 
     private final ChatMessageRepository chatMessageRepository;
-<<<<<<< HEAD
     private final OrderRepository orderRepo;
-=======
-    private final OrderRepo orderRepo;
->>>>>>> upstream/feature/Review
 
     public List<ChatMessage> findByBookingId(Long bookingId) {
         return chatMessageRepository.findByBookingIdOrderByCreatedAtAsc(bookingId);
@@ -46,31 +38,19 @@ public class ChatMessageService {
 
         if (type.isMedia()) {
             chatMessage.setMediaUrl(mediaUrl);
-<<<<<<< HEAD
             chatMessage.setMessage("");
-=======
->>>>>>> upstream/feature/Review
         } else {
             chatMessage.setMessage(message);
         }
 
         return chatMessageRepository.save(chatMessage);
     }
-<<<<<<< HEAD
-    //fix
-    public Optional<ChatMessage> update(Long id, String message) {
-        return chatMessageRepository.findById(id).map(existing -> {
-            if (message == null || message.trim().isEmpty()) {
-                throw new IllegalArgumentException("消息內容不能為空");
-            }
-=======
 
     public Optional<ChatMessage> update(Long id, String message) {
         return chatMessageRepository.findById(id).map(existing -> {
 /*             if (message == null || message.trim().isEmpty()) {
                 throw new IllegalArgumentException("消息內容不能為空");
             } */
->>>>>>> upstream/feature/Review
             existing.setMessage(message);
             return chatMessageRepository.save(existing);
         });
@@ -83,8 +63,4 @@ public class ChatMessageService {
         }
         return false;
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> upstream/feature/Review

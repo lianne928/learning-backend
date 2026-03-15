@@ -1,6 +1,6 @@
-# 規格文件 - UserController
+# 規格文件 - AuthController
 
-來源檔案: `src/main/java/com/learning/api/controller/UserController.java`
+來源檔案: `src/main/java/com/learning/api/controller/AuthController.java`
 
 Base URL: `http://localhost:8080`
 
@@ -40,14 +40,14 @@ Base URL: `http://localhost:8080`
 - Body:
 ```json
 {
-  "message": "歡迎"
+  "msg": "註冊成功"
 }
 ```
-- HTTP Status: `400 Bad Request`（例如 email 重複）
+- HTTP Status: `400 Bad Request`（例如 email 重複或驗證失敗）
 - Body:
 ```json
 {
-  "message": "註冊失敗"
+  "msg": "（錯誤原因）"
 }
 ```
 
@@ -74,17 +74,19 @@ Base URL: `http://localhost:8080`
 
 * **回應內容 (Response)**
 - HTTP Status: `200 OK`（成功）
-- Body:
+- Body: JWT token 物件（由 `MemberService.login()` 回傳）
 ```json
 {
-  "message": "歡迎"
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "userId": 1,
+  "role": "STUDENT"
 }
 ```
-- HTTP Status: `401 Unauthorized`（帳號或密碼錯誤）
+- HTTP Status: `400 Bad Request`（帳號或密碼錯誤）
 - Body:
 ```json
 {
-  "message": "帳號或密碼錯誤"
+  "msg": "（錯誤原因）"
 }
 ```
 

@@ -12,7 +12,7 @@ Base URL: `http://localhost:8080`
 
 ## 概述
 
-老師（Tutor）相關的 REST API，涵蓋課程管理、個人檔案更新、排班管理及課後回饋提交。
+老師（Tutor）相關的 REST API，涵蓋課程管理、個人檔案 CRUD、排班切換及課後回饋提交。
 
 ---
 
@@ -65,37 +65,65 @@ Base URL: `http://localhost:8080`
 
 ---
 
-### 2. 更新老師個人檔案（TutorProfileController）
+## TutorProfileController — 老師個人檔案 CRUD
 
-* **請求資訊（HTTP Request）**
-- Method: `PUT`
-- URL: `/api/teacher/profile`
-- Headers: `Content-Type: application/json`
-- Payload (Request Body):
-```json
-{
-  "tutorId": 2,
-  "name": "王小明",
-  "intro": "英語教學十年，專注兒童英文",
-  "certificate": "TESOL 認證",
-  "video": "https://example.com/intro.mp4"
-}
-```
+Base URL: `/api/teacher/profile`
+
+### TutorProfileDTO 欄位說明
 
 | 欄位 | 型別 | 必填 | 說明 |
 |---|---|---|---|
-| `tutorId` | Long | 是 | 老師 ID |
+| `tutorId` | Long | 是（POST/PUT） | 老師 ID |
 | `name` | String | 否 | 更新 users 表的姓名 |
-| `intro` | String | 否 | 更新 tutors 表的介紹 |
-| `certificate` | String | 否 | 證照資訊 |
-| `video` | String | 否 | 自我介紹影片連結 |
+| `title` | String | 否 | 老師頭銜（例：資深英文老師） |
+| `avatar` | String | 否 | 頭像圖片 URL |
+| `intro` | String | 否 | 自我介紹 |
+| `education` | String | 否 | 學歷（例：國立台灣大學 碩士） |
+| `certificate1` | String | 否 | 第一張證照圖片 URL |
+| `certificateName1` | String | 否 | 第一張證照名稱 |
+| `certificate2` | String | 否 | 第二張證照圖片 URL |
+| `certificateName2` | String | 否 | 第二張證照名稱 |
+| `videoUrl1` | String | 否 | 第一支自我介紹影片 URL |
+| `videoUrl2` | String | 否 | 第二支影片 URL |
+| `bankCode` | String | 否 | 銀行代碼 |
+| `bankAccount` | String | 否 | 銀行帳號 |
+
+---
+
+### 2. 取得老師個人檔案（TutorProfileController）
+
+* **請求資訊（HTTP Request）**
+- Method: `GET`
+- URL: `/api/teacher/profile/{tutorId}`
+- Payload: 無
 
 * **回應內容 (Response)**
 - HTTP Status: `200 OK`（成功）
+- Body: `Tutor` 實體（包含所有個人檔案欄位）
+- HTTP Status: `404 Not Found`（找不到）
 - Body:
 ```json
 {
-  "message": "個人檔案儲存成功！您的學生現在可以看到最新資訊了！"
+  "msg": "找不到該名老師的個人檔案"
+}
+```
+
+---
+
+### 3. 建立老師個人檔案（TutorProfileController）
+
+* **請求資訊（HTTP Request）**
+- Method: `POST`
+- URL: `/api/teacher/profile`
+- Headers: `Content-Type: application/json`
+- Payload (Request Body): `TutorProfileDTO`（見欄位說明）
+
+* **回應內容 (Response)**
+- HTTP Status: `201 Created`（成功）
+- Body:
+```json
+{
+  "msg": "個人檔案建立成功！"
 }
 ```
 - HTTP Status: `400 Bad Request`（未提供 tutorId）
@@ -105,28 +133,100 @@ Base URL: `http://localhost:8080`
   "message": "必須提供老師 ID"
 }
 ```
-- HTTP Status: `404 Not Found`（找不到該老師）
+- HTTP Status: `404 Not Found`（找不到該名老師）
 - Body:
 ```json
 {
-  "message": "更新失敗，找不到該名老師"
+  "msg": "（錯誤原因）"
+}
+```
+- HTTP Status: `409 Conflict`（個人檔案已存在）
+- Body:
+```json
+{
+  "msg": "（已存在的說明）"
+}
+```
+
+* **限制**：每位老師只能建立一筆個人檔案，若已存在請使用 PUT 更新。
+
+---
+
+### 4. 更新老師個人檔案（TutorProfileController）
+
+* **請求資訊（HTTP Request）**
+- Method: `PUT`
+- URL: `/api/teacher/profile`
+- Headers: `Content-Type: application/json`
+- Payload (Request Body): `TutorProfileDTO`（見欄位說明）
+
+* **回應內容 (Response)**
+- HTTP Status: `200 OK`（成功）
+- Body:
+```json
+{
+  "msg": "個人檔案更新成功！"
+}
+```
+- HTTP Status: `400 Bad Request`（未提供 tutorId）
+- Body:
+```json
+{
+  "msg": "必須提供老師 ID"
+}
+```
+- HTTP Status: `404 Not Found`（找不到該名老師）
+- Body:
+```json
+{
+  "msg": "更新失敗，找不到該名老師"
 }
 ```
 
 ---
 
-### 3. 新增排班時段（TutorScheduleController）
+### 5. 刪除老師個人檔案（TutorProfileController）
+
+* **請求資訊（HTTP Request）**
+- Method: `DELETE`
+- URL: `/api/teacher/profile/{tutorId}`
+- Payload: 無
+
+* **回應內容 (Response)**
+- HTTP Status: `200 OK`（成功）
+- Body:
+```json
+{
+  "msg": "個人檔案已成功刪除！"
+}
+```
+- HTTP Status: `404 Not Found`（找不到）
+- Body:
+```json
+{
+  "msg": "（錯誤原因）"
+}
+```
+
+---
+
+## TutorScheduleController — 排班管理
+
+Base URL: `/api/teacher/schedules`
+
+### 6. 切換時段狀態（開放 / 關閉）（TutorScheduleController）
 
 * **請求資訊（HTTP Request）**
 - Method: `POST`
-- URL: `/api/teacher/schedules`
+- URL: `/api/teacher/schedules/toggle`
 - Headers: `Content-Type: application/json`
-- Payload (Request Body): `TutorSchedule` 實體
+- Payload (Request Body): `ScheduleDTO.ToggleReq`
 ```json
 {
   "tutorId": 2,
-  "startTime": "2026-03-15T10:00:00",
-  "endTime": "2026-03-15T11:00:00"
+  "dayOfWeek": 1,
+  "startTime": "10:00",
+  "endTime": "11:00"
 }
 ```
 
@@ -135,20 +235,20 @@ Base URL: `http://localhost:8080`
 - Body:
 ```json
 {
-  "message": "排班成功！該時段已開放給家長預約。"
+  "msg": "時段狀態已更新"
 }
 ```
-- HTTP Status: `400 Bad Request`（時段衝突或資料錯誤）
+- HTTP Status: `400 Bad Request`（時間格式錯誤或其他失敗）
 - Body:
 ```json
 {
-  "message": "（錯誤原因）"
+  "msg": "（錯誤原因）"
 }
 ```
 
 ---
 
-### 4. 取得老師所有排班（TutorScheduleController）
+### 7. 取得老師所有排班（TutorScheduleController）
 
 * **請求資訊（HTTP Request）**
 - Method: `GET`
@@ -157,24 +257,23 @@ Base URL: `http://localhost:8080`
 
 * **回應內容 (Response)**
 - HTTP Status: `200 OK`
-- Body:
+- Body: `List<ScheduleDTO.Res>`（直接回傳陣列）
 ```json
-{
-  "tutorId": 2,
-  "schedules": [
-    {
-      "id": 1,
-      "tutorId": 2,
-      "startTime": "2026-03-15T10:00:00",
-      "endTime": "2026-03-15T11:00:00"
-    }
-  ]
-}
+[
+  {
+    "id": 1,
+    "tutorId": 2,
+    "dayOfWeek": 1,
+    "startTime": "10:00",
+    "endTime": "11:00",
+    "available": true
+  }
+]
 ```
 
 ---
 
-### 5. 老師送出課後回饋（TutorFeedbackController）
+### 8. 老師送出課後回饋（TutorFeedbackController）
 
 * **請求資訊（HTTP Request）**
 - Method: `POST`

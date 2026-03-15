@@ -2,8 +2,9 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
+  <link rel="icon" href="data:," />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>聊天室測試 — 雙人對話</title>
+  <title>ChatRoom API Tester</title>
   <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
   <style>
@@ -11,39 +12,42 @@
 
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f0f2f5;
+      background: #0f1117;
+      color: #e2e8f0;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
 
-    /* ── 頂部設定列 ── */
-    .topbar {
-      background: #1a73e8;
-      color: #fff;
-      padding: 12px 20px;
+    /* ── header ── */
+    header {
+      background: #1a1d2e;
+      border-bottom: 1px solid #2d3748;
+      padding: 14px 24px;
       display: flex;
       align-items: center;
       gap: 16px;
       flex-wrap: wrap;
     }
-    .topbar h1 { font-size: 16px; font-weight: 700; white-space: nowrap; }
-    .topbar label { font-size: 13px; white-space: nowrap; opacity: 0.85; }
-    .topbar input {
+    header h1 { font-size: 18px; font-weight: 600; color: #90cdf4; white-space: nowrap; }
+
+    .header-field { display: flex; align-items: center; gap: 8px; }
+    .header-field label { font-size: 12px; color: #718096; white-space: nowrap; }
+    .header-field input {
       padding: 5px 10px;
       border-radius: 6px;
-      border: none;
+      border: 1px solid #2d3748;
       font-size: 13px;
-      width: 120px;
-      background: rgba(255,255,255,0.2);
-      color: #fff;
+      background: #0f1117;
+      color: #e2e8f0;
     }
-    .topbar input::placeholder { color: rgba(255,255,255,0.6); }
-    .topbar input:focus { outline: 2px solid rgba(255,255,255,0.6); background: rgba(255,255,255,0.25); }
-    #urlInput { width: 240px; }
-    .topbar-hint { font-size: 12px; opacity: 0.7; margin-left: auto; }
+    .header-field input:focus { outline: none; border-color: #4299e1; }
+    #urlInput  { width: 220px; }
+    #jwtToken  { width: 280px; }
 
-    /* ── 雙欄佈局 ── */
+    .header-hint { font-size: 12px; color: #4a5568; margin-left: auto; }
+
+    /* ── layout ── */
     .columns {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -53,11 +57,11 @@
       min-height: 0;
     }
 
-    /* ── 聊天面板 ── */
+    /* ── chat panel ── */
     .chat-panel {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      background: #1a1d2e;
+      border: 1px solid #2d3748;
+      border-radius: 10px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -69,419 +73,341 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      border-bottom: 1px solid #e0e0e0;
+      border-bottom: 1px solid #2d3748;
+      background: #171923;
     }
     .avatar {
-      width: 38px; height: 38px;
+      width: 36px; height: 36px;
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 16px; font-weight: 700; color: #fff;
+      font-size: 14px; font-weight: 700; color: #fff;
       flex-shrink: 0;
     }
-    .avatar-student { background: #1a73e8; }
-    .avatar-tutor   { background: #34a853; }
+    .avatar-student { background: #2b6cb0; }
+    .avatar-tutor   { background: #276749; }
 
     .chat-header-info { flex: 1; }
-    .chat-header-name { font-size: 15px; font-weight: 600; }
-    .chat-header-sub  { font-size: 12px; color: #888; }
+    .chat-header-name { font-size: 14px; font-weight: 600; color: #e2e8f0; }
+    .chat-header-sub  { font-size: 11px; color: #718096; }
 
     .status-pill {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 10px;
-      border-radius: 20px;
-      background: #f1f3f4;
-      color: #888;
+      font-size: 11px; font-weight: 600;
+      padding: 3px 10px; border-radius: 20px;
+      background: #2d3748; color: #718096;
       transition: all 0.3s;
     }
-    .status-pill.online { background: #e6f4ea; color: #137333; }
+    .status-pill.online { background: #1c4532; color: #68d391; }
 
     .btn-conn {
-      padding: 6px 14px;
-      border: none;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
+      padding: 5px 12px; border: none; border-radius: 20px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
       transition: opacity 0.2s;
     }
     .btn-conn:hover { opacity: 0.8; }
-    .btn-conn.connect    { background: #1a73e8; color: #fff; }
-    .btn-conn.disconnect { background: #ea4335; color: #fff; }
+    .btn-conn.connect    { background: #2b6cb0; color: #fff; }
+    .btn-conn.disconnect { background: #742a2a; color: #fc8181; }
 
-    /* ── 聊天訊息區 ── */
+    /* ── messages ── */
     .chat-messages {
-      flex: 1;
-      overflow-y: auto;
+      flex: 1; overflow-y: auto;
       padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      background: #f8f9fa;
+      display: flex; flex-direction: column; gap: 10px;
+      background: #0f1117;
     }
     .chat-messages::-webkit-scrollbar { width: 4px; }
-    .chat-messages::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 2px; }
 
-    /* 訊息氣泡 */
-    .msg-row {
-      display: flex;
-      gap: 8px;
-      max-width: 85%;
-    }
-    .msg-row.self  { align-self: flex-end; flex-direction: row-reverse; }
+    .msg-row { display: flex; gap: 8px; max-width: 85%; }
+    .msg-row.self  { align-self: flex-end;   flex-direction: row-reverse; }
     .msg-row.other { align-self: flex-start; }
 
     .msg-avatar {
-      width: 30px; height: 30px;
-      border-radius: 50%;
+      width: 28px; height: 28px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 700; color: #fff;
-      flex-shrink: 0;
-      align-self: flex-end;
+      font-size: 11px; font-weight: 700; color: #fff;
+      flex-shrink: 0; align-self: flex-end;
     }
 
     .msg-content { display: flex; flex-direction: column; gap: 2px; }
     .msg-row.self  .msg-content { align-items: flex-end; }
     .msg-row.other .msg-content { align-items: flex-start; }
 
-    .msg-sender { font-size: 11px; color: #888; padding: 0 4px; }
+    .msg-sender { font-size: 10px; color: #4a5568; padding: 0 4px; }
 
     .bubble {
-      padding: 9px 13px;
-      border-radius: 18px;
-      font-size: 14px;
-      line-height: 1.5;
-      word-break: break-word;
-      max-width: 100%;
+      padding: 8px 12px; border-radius: 16px;
+      font-size: 13px; line-height: 1.5;
+      word-break: break-word; max-width: 100%;
     }
-    .msg-row.self  .bubble { background: #1a73e8; color: #fff; border-bottom-right-radius: 4px; }
-    .msg-row.other .bubble { background: #fff; color: #202124; border-bottom-left-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .msg-row.self  .bubble { background: #2b6cb0; color: #fff; border-bottom-right-radius: 4px; }
+    .msg-row.other .bubble { background: #2d3748; color: #e2e8f0; border-bottom-left-radius: 4px; }
+    .bubble.media { background: transparent !important; padding: 4px; }
 
-    /* 媒體氣泡：無背景、縮小 padding，讓元素直接呈現 */
-    .bubble.media {
-      background: transparent !important;
-      padding: 4px;
-      box-shadow: none;
+    .msg-time { font-size: 10px; color: #4a5568; padding: 0 4px; }
+
+    /* ── media elements ── */
+    .sticker-img { width: 100px; height: 100px; object-fit: contain; display: block; }
+    .chat-img    { max-width: 220px; max-height: 180px; border-radius: 8px; cursor: pointer; display: block; object-fit: cover; transition: opacity 0.2s; }
+    .chat-img:hover { opacity: 0.85; }
+    .chat-audio  { width: 220px; height: 40px; display: block; }
+    .chat-video  { max-width: 240px; border-radius: 8px; display: block; }
+
+    /* ── file upload button ── */
+    .btn-upload {
+      flex-shrink: 0;
+      padding: 0 10px; height: 36px;
+      background: #2d3748; color: #a0aec0;
+      border: 1px solid #4a5568; border-radius: 20px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, color 0.2s;
     }
+    .btn-upload:hover   { background: #4a5568; color: #e2e8f0; }
+    .btn-upload:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    .msg-time { font-size: 10px; color: #aaa; padding: 0 4px; }
-
-    /* ── 媒體元素 ── */
-
-    /* 貼圖：固定小尺寸 */
-    .sticker-img {
-      width: 100px;
-      height: 100px;
-      object-fit: contain;
-      display: block;
+    /* ── file message card ── */
+    .chat-file {
+      display: flex; align-items: center; gap: 8px;
+      background: #2d3748; border-radius: 8px; padding: 8px 12px;
+      color: #e2e8f0; text-decoration: none;
+      border: 1px solid #4a5568; max-width: 220px;
+      transition: background 0.2s;
     }
+    .chat-file:hover { background: #4a5568; }
+    .chat-file-name  { font-size: 12px; word-break: break-all; }
 
-    /* 圖片：限制大小，點擊可放大 */
-    .chat-img {
-      max-width: 220px;
-      max-height: 180px;
-      border-radius: 10px;
-      cursor: pointer;
-      display: block;
-      object-fit: cover;
-      transition: opacity 0.2s;
-    }
-    .chat-img:hover { opacity: 0.9; }
-
-    /* 語音播放器 */
-    .chat-audio {
-      width: 220px;
-      height: 40px;
-      display: block;
-    }
-
-    /* 影片播放器 */
-    .chat-video {
-      max-width: 240px;
-      border-radius: 10px;
-      display: block;
-    }
-
-    /* 系統訊息 */
+    /* ── system message ── */
     .sys-msg {
       align-self: center;
-      background: rgba(0,0,0,0.06);
-      color: #666;
-      font-size: 12px;
-      padding: 4px 12px;
-      border-radius: 12px;
+      background: #1a1d2e; color: #4a5568;
+      font-size: 12px; padding: 4px 12px; border-radius: 12px;
+      border: 1px solid #2d3748;
     }
 
-    /* ── 輸入區 ── */
+    /* ── input area ── */
     .chat-input-area {
-      border-top: 1px solid #e0e0e0;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      background: #fff;
+      border-top: 1px solid #2d3748;
+      padding: 10px;
+      display: flex; flex-direction: column; gap: 8px;
+      background: #171923;
     }
-
-    .input-options {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
+    .input-options { display: flex; gap: 8px; align-items: center; }
     .input-options select {
-      padding: 5px 8px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 12px;
-      color: #333;
-      background: #f8f9fa;
+      padding: 4px 8px; border: 1px solid #2d3748; border-radius: 6px;
+      font-size: 12px; color: #e2e8f0; background: #0f1117;
     }
-    .type-label { font-size: 12px; color: #666; white-space: nowrap; }
+    .type-label { font-size: 12px; color: #718096; white-space: nowrap; }
 
-    .input-row {
-      display: flex;
-      gap: 8px;
-    }
+    .input-row { display: flex; gap: 8px; }
     .msg-input {
-      flex: 1;
-      padding: 9px 14px;
-      border: 1px solid #ddd;
-      border-radius: 22px;
-      font-size: 14px;
-      color: #202124;
-      outline: none;
-      transition: border-color 0.2s;
+      flex: 1; padding: 8px 12px;
+      border: 1px solid #2d3748; border-radius: 20px;
+      font-size: 13px; color: #e2e8f0; background: #0f1117;
+      outline: none; transition: border-color 0.2s;
     }
-    .msg-input:focus { border-color: #1a73e8; }
-    .msg-input::placeholder { color: #aaa; }
+    .msg-input:focus { border-color: #4299e1; }
+    .msg-input::placeholder { color: #4a5568; }
 
     .media-input {
-      padding: 6px 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 12px;
-      color: #333;
-      flex: 1;
+      flex: 1; padding: 6px 10px;
+      border: 1px solid #2d3748; border-radius: 6px;
+      font-size: 12px; color: #e2e8f0; background: #0f1117; outline: none;
     }
+    .media-input:focus { border-color: #4299e1; }
 
     .btn-send {
-      padding: 9px 20px;
-      background: #1a73e8;
-      color: #fff;
-      border: none;
-      border-radius: 22px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
-      white-space: nowrap;
+      padding: 8px 18px; background: #2b6cb0; color: #fff;
+      border: none; border-radius: 20px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s; white-space: nowrap;
     }
     .btn-send:hover { opacity: 0.85; }
     .btn-send:active { transform: scale(0.97); }
     .btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* 事件按鈕列 */
-    .event-btns {
-      display: flex;
-      gap: 6px;
-    }
+    .event-btns { display: flex; gap: 6px; }
     .btn-event {
-      padding: 5px 12px;
-      border: none;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
+      padding: 4px 10px; border: none; border-radius: 20px;
+      font-size: 11px; font-weight: 600; cursor: pointer;
     }
-    .btn-join  { background: #e6f4ea; color: #137333; }
-    .btn-leave { background: #fce8e6; color: #c5221f; }
+    .btn-join  { background: #1c4532; color: #68d391; }
+    .btn-leave { background: #742a2a; color: #fc8181; }
 
-    /* ── 日誌面板 ── */
+    /* ── log panel ── */
     .log-toggle {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      cursor: pointer;
-      user-select: none;
-      font-size: 12px;
-      color: #888;
-      border-top: 1px solid #f0f0f0;
-      background: #fafafa;
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 12px; cursor: pointer; user-select: none;
+      font-size: 11px; color: #4a5568;
+      border-top: 1px solid #2d3748; background: #171923;
     }
-    .log-toggle:hover { background: #f0f0f0; }
-    .log-area {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease;
-      background: #1e1e1e;
-    }
+    .log-toggle:hover { color: #718096; }
+    .log-area { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #0a0c14; }
     .log-area.open { max-height: 160px; overflow-y: auto; }
     .log-area::-webkit-scrollbar { width: 4px; }
-    .log-area::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+    .log-area::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 2px; }
     .log-line {
-      padding: 2px 12px;
-      font-family: monospace;
-      font-size: 11px;
-      line-height: 1.6;
-      color: #ccc;
-      white-space: pre-wrap;
-      word-break: break-all;
+      padding: 2px 12px; font-family: monospace;
+      font-size: 11px; line-height: 1.6; color: #4a5568;
+      white-space: pre-wrap; word-break: break-all;
     }
-    .log-line.in  { color: #82cfff; }
-    .log-line.out { color: #a8e6a3; }
-    .log-line.sys { color: #d4a8ff; }
-    .log-line.err { color: #ff8b8b; }
+    .log-line.in  { color: #63b3ed; }
+    .log-line.out { color: #68d391; }
+    .log-line.sys { color: #b794f4; }
+    .log-line.err { color: #fc8181; }
   </style>
 </head>
 <body>
 
-<!-- 頂部設定列 -->
-<div class="topbar">
-  <h1>💬 聊天室雙人測試</h1>
-  <label>Booking ID</label>
-  <input id="bookingId" type="number" value="1" min="1" />
-  <label>WebSocket URL</label>
-  <input id="urlInput" type="text" value="http://localhost:8080/ws" placeholder="ws URL" />
-  <span class="topbar-hint">兩個面板共用同一房間，模擬學生與導師即時對話</span>
-</div>
-
-<div class="columns">
-
-  <!-- ══════════ 面板 A：學生 ══════════ -->
-  <div class="chat-panel" id="panelA">
-
-    <!-- 頭部 -->
-    <div class="chat-header">
-      <div class="avatar avatar-student">S</div>
-      <div class="chat-header-info">
-        <div class="chat-header-name">學生 (role=1)</div>
-        <div class="chat-header-sub">用戶端 A</div>
-      </div>
-      <span class="status-pill" id="pillA">離線</span>
-      <button class="btn-conn connect" onclick="connect('A')">連線</button>
-      <button class="btn-conn disconnect" onclick="disconnect('A')">斷線</button>
-    </div>
-
-    <!-- 訊息區 -->
-    <div class="chat-messages" id="msgsA">
-      <div class="sys-msg">請先點擊「連線」加入聊天室</div>
-    </div>
-
-    <!-- 輸入區 -->
-    <div class="chat-input-area">
-      <div class="input-options">
-        <span class="type-label">訊息類型：</span>
-        <select id="typeA" onchange="onTypeChange('A')">
-          <option value="1">文字 TEXT</option>
-          <option value="2">貼圖 STICKER</option>
-          <option value="3">語音 VOICE</option>
-          <option value="4">圖片 IMAGE</option>
-          <option value="5">影片 VIDEO</option>
-        </select>
-        <div class="event-btns">
-          <button class="btn-event btn-join"  onclick="sendEvent('A','joined')">加入房間</button>
-          <button class="btn-event btn-leave" onclick="sendEvent('A','left')">離開房間</button>
-        </div>
-      </div>
-      <div class="input-row" id="textRowA">
-        <input class="msg-input" id="inputA" type="text" placeholder="輸入訊息，按 Enter 傳送…"
-               onkeydown="if(event.key==='Enter') sendChat('A')" />
-        <button class="btn-send" onclick="sendChat('A')">傳送</button>
-      </div>
-      <div class="input-row" id="mediaRowA" style="display:none;">
-        <input class="media-input" id="mediaA" type="text" placeholder="媒體 URL（https://...）" />
-        <button class="btn-send" onclick="sendChat('A')">傳送</button>
-      </div>
-    </div>
-
-    <!-- 原始訊息日誌 -->
-    <div class="log-toggle" onclick="toggleLog('A')">
-      <span id="logArrowA">▶</span> 原始訊息日誌
-      <span style="margin-left:auto;cursor:pointer;color:#aaa;" onclick="event.stopPropagation();clearLog('A')">清除</span>
-    </div>
-    <div class="log-area" id="logA"></div>
-
+<header>
+  <h1>ChatRoom API Tester</h1>
+  <div class="header-field">
+    <label>Booking ID</label>
+    <input id="bookingId" type="number" value="1" min="1" style="width:80px" />
   </div>
-
-  <!-- ══════════ 面板 B：導師 ══════════ -->
-  <div class="chat-panel" id="panelB">
-
-    <!-- 頭部 -->
-    <div class="chat-header">
-      <div class="avatar avatar-tutor">T</div>
-      <div class="chat-header-info">
-        <div class="chat-header-name">導師 (role=2)</div>
-        <div class="chat-header-sub">用戶端 B</div>
-      </div>
-      <span class="status-pill" id="pillB">離線</span>
-      <button class="btn-conn connect" onclick="connect('B')">連線</button>
-      <button class="btn-conn disconnect" onclick="disconnect('B')">斷線</button>
-    </div>
-
-    <!-- 訊息區 -->
-    <div class="chat-messages" id="msgsB">
-      <div class="sys-msg">請先點擊「連線」加入聊天室</div>
-    </div>
-
-    <!-- 輸入區 -->
-    <div class="chat-input-area">
-      <div class="input-options">
-        <span class="type-label">訊息類型：</span>
-        <select id="typeB" onchange="onTypeChange('B')">
-          <option value="1">文字 TEXT</option>
-          <option value="2">貼圖 STICKER</option>
-          <option value="3">語音 VOICE</option>
-          <option value="4">圖片 IMAGE</option>
-          <option value="5">影片 VIDEO</option>
-        </select>
-        <div class="event-btns">
-          <button class="btn-event btn-join"  onclick="sendEvent('B','joined')">加入房間</button>
-          <button class="btn-event btn-leave" onclick="sendEvent('B','left')">離開房間</button>
-        </div>
-      </div>
-      <div class="input-row" id="textRowB">
-        <input class="msg-input" id="inputB" type="text" placeholder="輸入訊息，按 Enter 傳送…"
-               onkeydown="if(event.key==='Enter') sendChat('B')" />
-        <button class="btn-send" onclick="sendChat('B')">傳送</button>
-      </div>
-      <div class="input-row" id="mediaRowB" style="display:none;">
-        <input class="media-input" id="mediaB" type="text" placeholder="媒體 URL（https://...）" />
-        <button class="btn-send" onclick="sendChat('B')">傳送</button>
-      </div>
-    </div>
-
-    <!-- 原始訊息日誌 -->
-    <div class="log-toggle" onclick="toggleLog('B')">
-      <span id="logArrowB">▶</span> 原始訊息日誌
-      <span style="margin-left:auto;cursor:pointer;color:#aaa;" onclick="event.stopPropagation();clearLog('B')">清除</span>
-    </div>
-    <div class="log-area" id="logB"></div>
-
+  <div class="header-field">
+    <label>WebSocket URL</label>
+    <input id="urlInput" type="text" value="http://localhost:8080/ws" />
   </div>
+  <div class="header-field">
+    <label>JWT Token</label>
+    <input id="jwtToken" type="text" placeholder="Bearer token（選填）" />
+  </div>
+  <span class="header-hint">兩個面板共用同一房間，模擬學生與導師即時對話</span>
+</header>
 
-</div><!-- /columns -->
+<div class="columns" id="columns"></div>
 
 <script>
 // ─────────────────────────────────────────────
-// 設定
+// 常數
 // ─────────────────────────────────────────────
-const ROLE = { A: 1, B: 2 };
-const ROLE_NAME = { 1: '學生', 2: '導師' };
-const TYPE_NAME = { 1: 'TEXT', 2: 'STICKER', 3: 'VOICE', 4: 'IMAGE', 5: 'VIDEO' };
+const ROLE       = { A: 1, B: 2 };
+const ROLE_NAME  = { 1: '學生', 2: '導師' };
+const TYPE_NAME  = { 1: 'TEXT', 2: 'STICKER', 3: 'VOICE', 4: 'IMAGE', 5: 'VIDEO', 6: 'FILE' };
 const MEDIA_TYPES = new Set([2, 3, 4, 5]);
 
 const state = { A: { client: null }, B: { client: null } };
 
+// ─────────────────────────────────────────────
+// 建立面板（消除重複 HTML）
+// ─────────────────────────────────────────────
+function createPanel(p) {
+  const roleNum   = ROLE[p];
+  const roleName  = ROLE_NAME[roleNum];
+  const avatarCls = p === 'A' ? 'avatar-student' : 'avatar-tutor';
+  const avatarLtr = p === 'A' ? 'S' : 'T';
+
+  const panel = document.createElement('div');
+  panel.className = 'chat-panel';
+  panel.id = 'panel' + p;
+  panel.innerHTML = `
+    <div class="chat-header">
+      <div class="avatar ${avatarCls}">${avatarLtr}</div>
+      <div class="chat-header-info">
+        <div class="chat-header-name">${roleName} (role=${roleNum})</div>
+        <div class="chat-header-sub">用戶端 ${p}</div>
+      </div>
+      <span class="status-pill" id="pill${p}">離線</span>
+      <button class="btn-conn connect"    onclick="connect('${p}')">連線</button>
+      <button class="btn-conn disconnect" onclick="disconnect('${p}')">斷線</button>
+    </div>
+
+    <div class="chat-messages" id="msgs${p}">
+      <div class="sys-msg">請先點擊「連線」加入聊天室</div>
+    </div>
+
+    <div class="chat-input-area">
+      <div class="input-options">
+        <span class="type-label">訊息類型：</span>
+        <select id="type${p}" onchange="onTypeChange('${p}')">
+          <option value="1">文字 TEXT</option>
+          <option value="2">貼圖 STICKER</option>
+          <option value="3">語音 VOICE</option>
+          <option value="4">圖片 IMAGE</option>
+          <option value="5">影片 VIDEO</option>
+        </select>
+        <div class="event-btns">
+          <button class="btn-event btn-join"  onclick="sendEvent('${p}','joined')">加入房間</button>
+          <button class="btn-event btn-leave" onclick="sendEvent('${p}','left')">離開房間</button>
+        </div>
+      </div>
+      <div class="input-row" id="textRow${p}">
+        <input class="msg-input" id="input${p}" type="text"
+               placeholder="輸入訊息，按 Enter 傳送…"
+               onkeydown="if(event.key==='Enter') sendChat('${p}')" />
+        <input type="file" id="fileInput${p}" style="display:none"
+               onchange="onFileSelected('${p}', this)" />
+        <button class="btn-upload" id="uploadBtn${p}" title="上傳檔案"
+                onclick="document.getElementById('fileInput${p}').click()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+          </svg>
+        </button>
+        <button class="btn-send" onclick="sendChat('${p}')">傳送</button>
+      </div>
+      <div class="input-row" id="mediaRow${p}" style="display:none">
+        <input class="media-input" id="media${p}" type="text" placeholder="媒體 URL（https://...）" />
+        <button class="btn-send" onclick="sendChat('${p}')">傳送</button>
+      </div>
+    </div>
+
+    <div class="log-toggle" onclick="toggleLog('${p}')">
+      <span id="logArrow${p}">▶</span> 原始訊息日誌
+      <span style="margin-left:auto" onclick="event.stopPropagation();clearLog('${p}')">清除</span>
+    </div>
+    <div class="log-area" id="log${p}"></div>
+  `;
+  return panel;
+}
+
+document.getElementById('columns').append(createPanel('A'), createPanel('B'));
+
+// ─────────────────────────────────────────────
+// 輔助
+// ─────────────────────────────────────────────
 function bookingId() { return document.getElementById('bookingId').value; }
-function wsUrl()     { return document.getElementById('urlInput').value;  }
+function wsUrl()     { return document.getElementById('urlInput').value; }
+function jwtToken()  { return document.getElementById('jwtToken').value.trim(); }
+
+function setPill(p, online) {
+  const pill = document.getElementById('pill' + p);
+  pill.textContent = online ? '線上' : '離線';
+  pill.className   = 'status-pill' + (online ? ' online' : '');
+}
+
+function addSys(panel, text) {
+  const box = document.getElementById('msgs' + panel);
+  const el  = document.createElement('div');
+  el.className   = 'sys-msg';
+  el.textContent = text;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+
+function rawLog(p, type, text) {
+  const box  = document.getElementById('log' + p);
+  const time = new Date().toLocaleTimeString('zh-TW', { hour12: false });
+  const line = document.createElement('div');
+  line.className   = `log-line ${type}`;
+  line.textContent = `[${time}] ${text}`;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
+function clearLog(p)  { document.getElementById('log' + p).innerHTML = ''; }
+
+function toggleLog(p) {
+  const area  = document.getElementById('log' + p);
+  const arrow = document.getElementById('logArrow' + p);
+  arrow.textContent = area.classList.toggle('open') ? '▼' : '▶';
+}
 
 // ─────────────────────────────────────────────
 // 訊息類型切換
 // ─────────────────────────────────────────────
 function onTypeChange(p) {
-  const t = parseInt(document.getElementById('type' + p).value);
-  document.getElementById('textRow'  + p).style.display = MEDIA_TYPES.has(t) ? 'none'  : 'flex';
-  document.getElementById('mediaRow' + p).style.display = MEDIA_TYPES.has(t) ? 'flex'  : 'none';
+  const isMedia = MEDIA_TYPES.has(parseInt(document.getElementById('type' + p).value));
+  document.getElementById('textRow'  + p).style.display = isMedia ? 'none' : 'flex';
+  document.getElementById('mediaRow' + p).style.display = isMedia ? 'flex' : 'none';
 }
 
 // ─────────────────────────────────────────────
@@ -490,31 +416,28 @@ function onTypeChange(p) {
 function connect(p) {
   if (state[p].client?.connected) { addSys(p, '已連線中'); return; }
 
-  const socket = new SockJS(wsUrl());
-  const client = Stomp.over(socket);
+  const client = Stomp.over(new SockJS(wsUrl()));
   client.debug = null;
   state[p].client = client;
 
-  client.connect({}, () => {
+  const headers = {};
+  const token = jwtToken();
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+
+  client.connect(headers, () => {
     setPill(p, true);
     addSys(p, `已連線 → ${wsUrl()}  (Booking ${bookingId()})`);
     rawLog(p, 'sys', `CONNECTED ${wsUrl()}`);
 
     const bid = bookingId();
 
-    // 訂閱聊天（僅記錄日誌確認伺服器廣播；氣泡已由本地中繼顯示）
     client.subscribe(`/topic/room/${bid}/chat`, (frame) => {
-      try {
-        rawLog(p, 'in', frame.body);
-      } catch (e) {
-        rawLog(p, 'err', `解析失敗: ${e.message}`);
-      }
+      rawLog(p, 'in', frame.body);
     });
 
-    // 訂閱房間事件
     client.subscribe(`/topic/room/${bid}/events`, (frame) => {
-      const ev = JSON.parse(frame.body);
       rawLog(p, 'in', frame.body);
+      const ev  = JSON.parse(frame.body);
       const who = ROLE_NAME[ev.role] || `role=${ev.role}`;
       addSys(p, `${who} ${ev.type === 'joined' ? '加入' : '離開'}了房間`);
     });
@@ -542,35 +465,24 @@ function disconnect(p) {
 function sendChat(p) {
   if (!state[p].client?.connected) { addSys(p, '請先連線'); return; }
 
-  const type     = parseInt(document.getElementById('type' + p).value);
-  const isMedia  = MEDIA_TYPES.has(type);
+  const type    = parseInt(document.getElementById('type' + p).value);
+  const isMedia = MEDIA_TYPES.has(type);
   const message  = isMedia ? '' : document.getElementById('input' + p).value.trim();
   const mediaUrl = isMedia ? document.getElementById('media' + p).value.trim() : '';
 
-  if (!isMedia && !message) return;
+  if (!isMedia && !message)  return;
   if (isMedia  && !mediaUrl) { addSys(p, '請輸入媒體 URL'); return; }
 
-  const payload = {
-    bookingId: parseInt(bookingId()),
-    role: ROLE[p],
-    messageType: type,
-    message,
-    mediaUrl,
-  };
-
+  const payload  = { bookingId: parseInt(bookingId()), role: ROLE[p], messageType: type, message, mediaUrl };
   const localMsg = { role: ROLE[p], messageType: type, message, mediaUrl };
 
-  // 立即顯示在自己面板
+  // 立即顯示在自己面板，並中繼到對方面板
   renderMessage(p, localMsg);
-
-  // 直接中繼到對方面板（不依賴伺服器廣播，確保對方一定看得到）
-  const other = p === 'A' ? 'B' : 'A';
-  renderMessage(other, localMsg);
+  renderMessage(p === 'A' ? 'B' : 'A', localMsg);
 
   state[p].client.send(`/app/chat/${bookingId()}`, {}, JSON.stringify(payload));
   rawLog(p, 'out', JSON.stringify(payload));
 
-  // 清空輸入
   if (isMedia) document.getElementById('media' + p).value = '';
   else         document.getElementById('input' + p).value = '';
 }
@@ -583,156 +495,145 @@ function sendEvent(p, type) {
 }
 
 // ─────────────────────────────────────────────
-// 依 messageType 建立對應媒體元素
+// 檔案上傳（REST multipart → /api/chatMessage/upload）
 // ─────────────────────────────────────────────
-function createMediaElement(msg) {
-  const url = msg.mediaUrl || '';
-  let el;
+function onFileSelected(p, input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = ''; // reset，允許重複選同一檔案
+  uploadFile(p, file);
+}
 
-  switch (msg.messageType) {
-    case 2: // STICKER — 固定小尺寸圖片
-      el = document.createElement('img');
-      el.className = 'sticker-img';
-      el.alt = '貼圖';
-      el.src = url;
-      break;
+async function uploadFile(p, file) {
+  const btn = document.getElementById('uploadBtn' + p);
+  btn.disabled = true;
+  addSys(p, `上傳中：${file.name}…`);
+  rawLog(p, 'out', `UPLOAD ${file.name} (${file.size} bytes)`);
 
-    case 3: // VOICE — 內建音訊播放器
-      el = document.createElement('audio');
-      el.className = 'chat-audio';
-      el.controls = true;
-      el.src = url;
-      break;
+  const form = new FormData();
+  form.append('file', file);
+  form.append('bookingId', bookingId());
+  form.append('role', ROLE[p]);
 
-    case 4: // IMAGE — 可點擊原圖
-      el = document.createElement('img');
-      el.className = 'chat-img';
-      el.alt = '圖片';
-      el.title = '點擊查看原圖';
-      el.src = url;
-      el.addEventListener('click', () => window.open(url, '_blank'));
-      break;
+  const headers = {};
+  const token = jwtToken();
+  if (token) headers['Authorization'] = 'Bearer ' + token;
 
-    case 5: // VIDEO — 內建影片播放器
-      el = document.createElement('video');
-      el.className = 'chat-video';
-      el.controls = true;
-      el.src = url;
-      break;
+  try {
+    const res  = await fetch('/api/chatMessage/upload', { method: 'POST', headers, body: form });
+    const data = await res.json();
 
-    default:
-      return null;
+    if (!res.ok) {
+      addSys(p, `上傳失敗: ${data.msg || res.status}`);
+      rawLog(p, 'err', JSON.stringify(data));
+      return;
+    }
+
+    rawLog(p, 'in', JSON.stringify(data));
+    renderMessage(p, data);
+    renderMessage(p === 'A' ? 'B' : 'A', data);
+  } catch (e) {
+    addSys(p, `上傳錯誤: ${e.message}`);
+    rawLog(p, 'err', String(e));
+  } finally {
+    btn.disabled = false;
   }
-  return el;
 }
 
 // ─────────────────────────────────────────────
-// 渲染聊天氣泡（使用 DOM 操作，避免 XSS）
+// 渲染聊天氣泡（DOM 操作，避免 XSS）
 // ─────────────────────────────────────────────
-function renderMessage(panel, msg) {
-  const box      = document.getElementById('msgs' + panel);
-  const selfRole = ROLE[panel];
-  const isSelf   = msg.role === selfRole;
-  const isMedia  = MEDIA_TYPES.has(msg.messageType);
+function createMediaElement(msg) {
+  const url = msg.mediaUrl || '';
+  switch (msg.messageType) {
+    case 2: {
+      const el = document.createElement('img');
+      el.className = 'sticker-img'; el.alt = '貼圖'; el.src = url;
+      return el;
+    }
+    case 3: {
+      const el = document.createElement('audio');
+      el.className = 'chat-audio'; el.controls = true; el.src = url;
+      return el;
+    }
+    case 4: {
+      const el = document.createElement('img');
+      el.className = 'chat-img'; el.alt = '圖片'; el.title = '點擊查看原圖'; el.src = url;
+      el.addEventListener('click', () => window.open(url, '_blank'));
+      return el;
+    }
+    case 5: {
+      const el = document.createElement('video');
+      el.className = 'chat-video'; el.controls = true; el.src = url;
+      return el;
+    }
+    case 6: {
+      const filename = url.split('/').pop() || '下載檔案';
+      const a = document.createElement('a');
+      a.className = 'chat-file'; a.href = url; a.target = '_blank';
 
-  // 最外層 row
+      const icon = document.createElement('span');
+      icon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+
+      const name = document.createElement('span');
+      name.className = 'chat-file-name'; name.textContent = filename;
+
+      a.append(icon, name);
+      return a;
+    }
+    default: return null;
+  }
+}
+
+function renderMessage(panel, msg) {
+  const box     = document.getElementById('msgs' + panel);
+  const isSelf  = msg.role === ROLE[panel];
+  const isMedia = MEDIA_TYPES.has(msg.messageType);
+
   const row = document.createElement('div');
   row.className = `msg-row ${isSelf ? 'self' : 'other'}`;
 
-  // 頭像
-  const msgAvatar = document.createElement('div');
-  msgAvatar.className = `msg-avatar ${msg.role === 1 ? 'avatar-student' : 'avatar-tutor'}`;
-  msgAvatar.textContent = msg.role === 1 ? 'S' : 'T';
+  const avatar = document.createElement('div');
+  avatar.className   = `msg-avatar ${msg.role === 1 ? 'avatar-student' : 'avatar-tutor'}`;
+  avatar.textContent = msg.role === 1 ? 'S' : 'T';
 
-  // 內容欄
-  const msgContent = document.createElement('div');
-  msgContent.className = 'msg-content';
+  const content = document.createElement('div');
+  content.className = 'msg-content';
 
-  // 發送者名稱
-  const senderSpan = document.createElement('span');
-  senderSpan.className = 'msg-sender';
-  senderSpan.textContent = ROLE_NAME[msg.role] || `role=${msg.role}`;
+  const sender = document.createElement('span');
+  sender.className   = 'msg-sender';
+  sender.textContent = ROLE_NAME[msg.role] || `role=${msg.role}`;
 
-  // 氣泡
+  const isFile = msg.messageType === 6;
+
   const bubble = document.createElement('div');
-  bubble.className = 'bubble' + (isMedia ? ' media' : '');
+  bubble.className = 'bubble' + (isMedia && !isFile ? ' media' : '');
 
-  if (isMedia) {
+  if (isMedia || isFile) {
     const mediaEl = createMediaElement(msg);
-    if (mediaEl) {
-      bubble.appendChild(mediaEl);
-    } else {
-      bubble.textContent = `[${TYPE_NAME[msg.messageType] || msg.messageType}] ${msg.mediaUrl || ''}`;
-    }
+    if (mediaEl) bubble.appendChild(mediaEl);
+    else bubble.textContent = `[${TYPE_NAME[msg.messageType] || msg.messageType}] ${msg.mediaUrl || ''}`;
   } else {
     bubble.textContent = msg.message || '';
   }
 
-  // 時間戳
-  const timeSpan = document.createElement('span');
-  timeSpan.className = 'msg-time';
   const timeStr = msg.createdAt
     ? new Date(msg.createdAt).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false })
     : new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
-  timeSpan.textContent = timeStr + (msg.id ? ` · #${msg.id}` : '');
 
-  // 組裝
-  msgContent.appendChild(senderSpan);
-  msgContent.appendChild(bubble);
-  msgContent.appendChild(timeSpan);
-  row.appendChild(msgAvatar);
-  row.appendChild(msgContent);
+  const time = document.createElement('span');
+  time.className   = 'msg-time';
+  time.textContent = timeStr + (msg.id ? ` · #${msg.id}` : '');
 
-  // 移除初始佔位提示
+  content.append(sender, bubble, time);
+  row.append(avatar, content);
+
   const hint = box.querySelector('.sys-msg');
-  if (hint && hint.textContent.includes('請先點擊')) hint.remove();
+  if (hint?.textContent.includes('請先點擊')) hint.remove();
 
   box.appendChild(row);
   box.scrollTop = box.scrollHeight;
 }
-
-function addSys(panel, text) {
-  const box = document.getElementById('msgs' + panel);
-  const el  = document.createElement('div');
-  el.className = 'sys-msg';
-  el.textContent = text;
-  box.appendChild(el);
-  box.scrollTop = box.scrollHeight;
-}
-
-// ─────────────────────────────────────────────
-// 原始日誌
-// ─────────────────────────────────────────────
-function rawLog(p, type, text) {
-  const box  = document.getElementById('log' + p);
-  const time = new Date().toLocaleTimeString('zh-TW', { hour12: false });
-  const line = document.createElement('div');
-  line.className = `log-line ${type}`;
-  line.textContent = `[${time}] ${text}`;
-  box.appendChild(line);
-  box.scrollTop = box.scrollHeight;
-}
-
-function clearLog(p) {
-  document.getElementById('log' + p).innerHTML = '';
-}
-
-function toggleLog(p) {
-  const area  = document.getElementById('log' + p);
-  const arrow = document.getElementById('logArrow' + p);
-  const open  = area.classList.toggle('open');
-  arrow.textContent = open ? '▼' : '▶';
-}
-
-// ─────────────────────────────────────────────
-// 工具
-// ─────────────────────────────────────────────
-function setPill(p, online) {
-  const pill = document.getElementById('pill' + p);
-  pill.textContent = online ? '線上' : '離線';
-  pill.className   = 'status-pill' + (online ? ' online' : '');
-}
-
 </script>
 </body>
 </html>

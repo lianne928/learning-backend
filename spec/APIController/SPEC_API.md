@@ -10,16 +10,18 @@ Base URL: `http://localhost:8080`
 |---|---|---|---|
 | `UserController` | `/api/auth` | 會員註冊 / 登入 | [SPEC_UserController.md](./SPEC_UserController.md) |
 | `BookingController` | `/api/bookings` | 課程預約建立 | [SPEC_BookingController.md](./SPEC_BookingController.md) |
-| `CourseController` | `/api/courses` | 課程建立 | [SPEC_CourseController.md](./SPEC_CourseController.md) |
+| `CourseController` | `/api/courses` | 課程完整 CRUD（含老師課程查詢） | [SPEC_CourseController.md](./SPEC_CourseController.md) |
 | `OrderController` | `/api/orders` | 訂單管理（建立、查詢、更新、取消、支付） | [SPEC_OrderController.md](./SPEC_OrderController.md) |
 | `ReviewController` | `/api/reviews` | 課程評價 CRUD | [SPEC_ReviewController.md](./SPEC_ReviewController.md) |
 | `FeedbackController` | `/api/feedbacks` | 課堂回饋 CRUD | [SPEC_FeedbackController.md](./SPEC_FeedbackController.md) |
 | `ChatMessageController` | `/api/chatMessage` | 聊天訊息 CRUD（含多媒體） | [SPEC_ChatMessageController.md](./SPEC_ChatMessageController.md) |
 | `TeacherController` | `/api/teacher/courses` | 老師新增課程 | [SPEC_TeacherController.md](./SPEC_TeacherController.md) |
-| `TutorProfileController` | `/api/teacher/profile` | 老師個人檔案更新 | [SPEC_TeacherController.md](./SPEC_TeacherController.md) |
+| `TutorProfileController` | `/api/teacher/profile` | 老師個人檔案 CRUD | [SPEC_TeacherController.md](./SPEC_TeacherController.md) |
 | `TutorScheduleController` | `/api/teacher/schedules` | 老師排班管理 | [SPEC_TeacherController.md](./SPEC_TeacherController.md) |
 | `TutorFeedbackController` | `/api/teacher/feedbacks` | 老師送出課後回饋 | [SPEC_TeacherController.md](./SPEC_TeacherController.md) |
 | `VideoRoomController` | WebSocket `/ws` | 視訊聊天室（WebRTC 信令 / 即時聊天 / 房間事件） | [SPEC_VideoRoomController.md](./SPEC_VideoRoomController.md) |
+| `TutorController` | `/api/tutor` | 老師（Tutor）資料 CRUD | — |
+| `CheckoutController` | `/api/shop` | 購買並預約課程 | — |
 
 ---
 

@@ -64,6 +64,19 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((req, res, e) -> {
+                            res.setStatus(401);
+                            res.setContentType("application/json;charset=UTF-8");
+                            res.getWriter().write("{\"msg\":\"請先登入\"}");
+                        })
+                        .accessDeniedHandler((req, res, e) -> {
+                            res.setStatus(403);
+                            res.setContentType("application/json;charset=UTF-8");
+                            res.getWriter().write("{\"msg\":\"權限不足\"}");
+                        })
+                )
+
                 // JWT filter 在 Spring Security 的 UsernamePasswordAuthenticationFilter 之前執行
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 

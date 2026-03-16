@@ -40,7 +40,7 @@ public class BookingService {
         if (course == null) return false;
 
         // check courseId isActive
-//        if (!course.isActive()) return false;
+//        if (!course.getActive()) return false;
 
         // buildBooking
         Booking booking = buildBooking(bookingReq, course);
@@ -54,7 +54,8 @@ public class BookingService {
 
         // set & save
         booking.setOrderId(null);
-//        booking.setCourseId(bookingReq.getCourseId());
+//        booking.setTutorId(course.getTutorId());
+//        booking.setStudentId(bookingReq.getUserId());
 
         // price unitPrice discountPrice
         Integer originalPrice = course.getPrice();

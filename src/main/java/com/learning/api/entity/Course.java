@@ -22,7 +22,7 @@ public class Course {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tutor_id", nullable = false)
     private Tutor tutor;
@@ -47,5 +47,5 @@ public class Course {
     private Integer price; // 單堂價格（元）
 
     @Column(name = "is_active", nullable = false)
-    private Integer active = 1; // 1: 上架, 0: 下架
+    private Integer active ; // 1: 上架, 0: 下架
 }

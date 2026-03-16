@@ -1,0 +1,81 @@
+package com.learning.api.security;
+
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import java.util.List;
+
+@EnableWebSecurity
+@Configuration
+public class SecurityConfig {
+
+    @Autowired
+    private JwtFilter jwtFilter;
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception{
+        httpSecurity.csrf(csrf -> csrf.disable())
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                ) // session -> token
+
+                // 授權設定
+                .authorizeHttpRequests(
+                        auth -> auth
+                                // 不需要登入
+                                .requestMatchers("/api/auth/**").permitAll()
+                                // 以上沒有的都要登入
+                                .anyRequest().authenticated()
+                )
+                // 檢查 token
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+                        // 公開資源
+                        .requestMatchers("/api/teacher/**").permitAll()      // 家教公開個人資料
+                        .requestMatchers("/api/reviews/**").permitAll()
+                        .requestMatchers("/api/chat-messages/**").permitAll()
+                        .requestMatchers("/api/lesson-feedbacks/**").permitAll()
+
+                        // WebSocket (SockJS handshake + STOMP)
+                        .requestMatchers("/ws/**").permitAll()
+
+                        // 靜態頁面 / 測試用
+                        .requestMatchers("/*.html").permitAll()
+                        .requestMatchers("/favicon.ico").permitAll()
+                        .requestMatchers("/test-email/**").permitAll()
+
+                        // Swagger / Actuator（開發階段）
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
+
+                        // 其餘請求需登入
+                        .anyRequest().authenticated()
+                )
+
+                // JWT filter 在 Spring Security 的 UsernamePasswordAuthenticationFilter 之前執行
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
+}

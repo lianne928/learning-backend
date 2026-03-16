@@ -63,8 +63,10 @@ com.learning.api
 | [CheckoutService](../src/main/java/com/learning/api/service/CheckoutService.java) | 購課原子交易：驗證餘額 → 驗證時段 → 建立 Order/Bookings → 扣款 |
 | [OrderService](../src/main/java/com/learning/api/service/OrderService.java) | 訂單 CRUD、95 折邏輯、付款、取消 |
 | [CourseService](../src/main/java/com/learning/api/service/CourseService.java) | 課程 CRUD、批次查詢防 N+1 |
-| [TutorService](../src/main/java/com/learning/api/service/TutorService.java) | 老師資料 CRUD |
+| [TutorService](../src/main/java/com/learning/api/service/TutorService.java) | 老師資料 CRUD |  
+**與TutorProfileService功能類似，建議給管理員用
 | [TutorProfileService](../src/main/java/com/learning/api/service/TutorProfileService.java) | 老師個人檔案管理（防重複建立） |
+**與TutorProfileService功能類似，建議給給老師本人用
 | [TutorScheduleService](../src/main/java/com/learning/api/service/TutorScheduleService.java) | 排班 toggle、週排程查詢 |
 | [ReviewService](../src/main/java/com/learning/api/service/ReviewService.java) | 課程評論 CRUD、平均分計算、資料驗證 |
 | [LessonFeedbackService](../src/main/java/com/learning/api/service/LessonFeedbackService.java) | 課後回饋 CRUD、rating 平均 |

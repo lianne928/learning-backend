@@ -74,13 +74,13 @@ public class CourseService {
 
         Course course = new Course();
         //set
-        course.setTutorId(courseReq.getTutorId());
+//        course.setTutorId(courseReq.getTutorId());
         course.setName(courseReq.getName().trim());
         course.setSubject(courseReq.getSubject());
 //        course.setLevel(courseReq.getLevel());
         course.setDescription(courseReq.getDescription());
         course.setPrice(courseReq.getPrice());
-        course.setActive(courseReq.getActive());
+//        course.setActive(courseReq.getActive());
 
         return course;
     }

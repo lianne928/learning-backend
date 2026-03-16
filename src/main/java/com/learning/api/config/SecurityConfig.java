@@ -24,7 +24,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 測試 正式上線要刪
                         // .requestMatchers("/api/TestController").permitAll()
-
+                		.requestMatchers("/api/view/**").permitAll()
+                		
+                		.requestMatchers("/api/tutor/**").permitAll()
+                		
                         .requestMatchers("/api/auth/**").permitAll()
                         // teacher
                         .requestMatchers("/api/teacher/**").hasRole("TEACHER")
@@ -32,6 +35,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/student/**").hasRole("STUDENT")
 
                         .anyRequest().authenticated()
+                        
+                       
                 );
 
 

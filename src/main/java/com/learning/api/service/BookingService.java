@@ -40,7 +40,7 @@ public class BookingService {
         if (course == null) return false;
 
         // check courseId isActive
-        if (!course.isActive()) return false;
+//        if (!course.isActive()) return false;
 
         // buildBooking
         Booking booking = buildBooking(bookingReq, course);

@@ -28,6 +28,8 @@ public class SecurityConfig {
                 		
                 		.requestMatchers("/api/tutor/**").permitAll()
                 		
+                	    .requestMatchers("/test-email/**").permitAll()
+
                         .requestMatchers("/api/auth/**").permitAll()
                         // teacher
                         .requestMatchers("/api/teacher/**").hasRole("TEACHER")

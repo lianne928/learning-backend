@@ -36,6 +36,7 @@ build/
 ### VS Code ###
 .vscode/
 *.code-workspace
+*.md
 
 # Sensitive settings and passwords
 src/main/resources/application.properties

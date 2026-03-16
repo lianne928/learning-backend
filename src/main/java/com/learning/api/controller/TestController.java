@@ -7,12 +7,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @ApiController
 @RequestMapping("/api")
 public class TestController {
-
-    @GetMapping("/TestController")
-    public String test() {
+    @GetMapping("/test")
+    public String test(){
         return "OK";
     }
 
     // test ok
-    //http://localhost:8080/api/TestController
+    // http://localhost:8080/api/test
 }

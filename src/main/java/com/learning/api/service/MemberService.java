@@ -22,8 +22,13 @@ public class MemberService {
 
         if (memberRepo.existsByEmail(email)) throw new IllegalArgumentException("此 email 已被註冊");
 
-        String hashPassword = BCrypt.hashpw(registerReq.getPassword().trim(), BCrypt.gensalt());
-        memberRepo.save(buildMember(registerReq, email, hashPassword));
+        // password
+        String rawPassword = registerReq.getPassword();
+        // String password = rawPassword.trim();
+        String hashPassword = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
+
+        User user = buildMember(registerReq, email, hashPassword);
+        memberRepo.save(user);
     }
 
     public LoginResp login(LoginReq loginReq) {
@@ -64,5 +69,35 @@ public class MemberService {
         newMember.setRole(registerReq.getRole());
         newMember.setWallet(0L);
         return newMember;
+    }
+
+    // login
+    public LoginResp login(LoginReq loginReq) {
+        String rawEmail = loginReq.getEmail().trim().toLowerCase();
+        //String rawPassword = loginReq.getPassword().trim();
+        String rawPassword = loginReq.getPassword();
+
+        User user = memberRepo.findByEmail(rawEmail).orElse(null);
+
+        if (user == null) throw new IllegalArgumentException("你沒有註冊喔");
+
+        if (!BCrypt.checkpw(rawPassword, user.getPassword())) throw new IllegalArgumentException("密碼錯誤");
+
+        // token JwtService
+        String token = jwtService.generateToken(user);
+
+        UserResp userResp = new UserResp(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getBirthday(),
+                user.getRole(),
+                user.getWallet(),
+                user.getCreatedAt(),
+                user.getUpdatedAt()
+        );
+
+
+        return new LoginResp(token);
     }
 }

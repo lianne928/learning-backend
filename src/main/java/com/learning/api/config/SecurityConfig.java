@@ -19,7 +19,6 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-
                 // /api/auth
                 .authorizeHttpRequests(auth -> auth
                         // 測試 正式上線要刪
@@ -35,12 +34,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/teacher/**").hasRole("TEACHER")
                         // student
                         .requestMatchers("/api/student/**").hasRole("STUDENT")
-
-                        .anyRequest().authenticated()
-                        
-                       
-                );
-
+                        // WebSocket (SockJS handshake + STOMP)
+                        .requestMatchers("/ws/**").permitAll()
+                        .anyRequest().authenticated());
 
         return httpSecurity.build();
     }

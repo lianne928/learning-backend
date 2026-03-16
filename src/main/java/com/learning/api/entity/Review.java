@@ -3,7 +3,6 @@ import java.sql.Timestamp;
 import java.time.Instant;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 

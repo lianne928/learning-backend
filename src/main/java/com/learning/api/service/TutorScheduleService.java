@@ -27,7 +27,7 @@ public class TutorScheduleService {
             return "格式錯誤：時間範圍需在 9~21 點之間。";
         }
 
-        // 2. 尋找該老師在該時段是否已有紀錄
+        // 2. 查詢是否已有紀錄
         Optional<TutorSchedule> existingSlotOpt = scheduleRepo.findByTutorIdAndWeekdayAndHour(
                 req.getTutorId(), req.getWeekday(), req.getHour()
         );

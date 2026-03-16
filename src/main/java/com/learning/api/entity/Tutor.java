@@ -26,11 +26,11 @@ public class Tutor {
     @Column(name = "avatar_url", length = 500)
     private String avatarUrl; //大頭照url
 
-    @Column(length = 1000)
+    @Column(name = "intro",length = 1000)
     private String intro;
 
-    @Column(name="education",length=100)
-    private String education;//學歷
+    @Column(name = "education", length = 100)
+    private String education; // 最高學歷
 
     @Column(name ="certificate_1" ,length = 500)
     private String certificate1;//位址
@@ -55,8 +55,7 @@ public class Tutor {
 
     @Column(name = "bank_account", length = 20)
     private String bankAccount;
-    
+
     @Column(name="status")
     private Integer status;//1 pending 2qualified 3停權
-  
 }

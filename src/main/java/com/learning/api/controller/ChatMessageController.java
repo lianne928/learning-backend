@@ -1,15 +1,19 @@
 package com.learning.api.controller;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import com.learning.api.dto.ChatMessageRequest;
+import com.learning.api.dto.ErrorResponse;
 import com.learning.api.entity.ChatMessage;
 import com.learning.api.enums.MessageType;
 import com.learning.api.service.ChatMessageService;
+import com.learning.api.service.FileStorageService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -20,6 +24,7 @@ import java.util.NoSuchElementException;
 public class ChatMessageController {
 
     private final ChatMessageService chatMessageService;
+    private final FileStorageService fileStorageService;
 
     @GetMapping("/booking/{bookingId}")
     public ResponseEntity<List<ChatMessage>> getByBookingId(@PathVariable Long bookingId) {
@@ -57,11 +62,53 @@ public class ChatMessageController {
         }
     }
 
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadFile(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("bookingId") Long bookingId,
+            @RequestParam("role") Integer role) {
+        try {
+            if (file.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ErrorResponse("驗證失敗: 檔案不能為空"));
+            }
+
+            String contentType = file.getContentType() != null ? file.getContentType() : "";
+            MessageType messageType;
+            if (contentType.startsWith("image/")) {
+                messageType = MessageType.IMAGE;
+            } else if (contentType.startsWith("video/")) {
+                messageType = MessageType.VIDEO;
+            } else if (contentType.startsWith("audio/")) {
+                messageType = MessageType.VOICE;
+            } else {
+                messageType = MessageType.FILE;
+            }
+
+            String fileUrl = fileStorageService.store(file);
+
+            ChatMessage chatMessage = chatMessageService.save(
+                    bookingId, role, messageType.getValue(), null, fileUrl);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(chatMessage);
+
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ErrorResponse("錯誤: " + e.getMessage()));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("檔案儲存失敗: " + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("伺服器錯誤: " + e.getMessage()));
+        }
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Map<String, String> body) {
         try {
             String message = body.get("message");
- /*            if (message == null || message.trim().isEmpty()) {
+           /*  if (message == null || message.trim().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ErrorResponse("驗證失敗: 消息內容不能為空"));
             } */
@@ -70,10 +117,10 @@ public class ChatMessageController {
                     .orElse(ResponseEntity.notFound().build());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse("驗證失敗: " + e.getMessage()));
+                .body(Map.of("message", "驗證失敗: " + e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("伺服器錯誤: " + e.getMessage()));
+                .body(Map.of("message", "伺服器錯誤: " + e.getMessage()));
         }
     }
 
@@ -105,7 +152,6 @@ public class ChatMessageController {
                 return "消息內容不能為空";
             }
         }
-
         return null;
     }
 
@@ -119,21 +165,4 @@ public class ChatMessageController {
         };
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(new ErrorResponse("伺服器錯誤: " + e.getMessage()));
-    }
-
-    public static class ErrorResponse {
-        public String message;
-
-        public ErrorResponse(String message) {
-            this.message = message;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-    }
 }

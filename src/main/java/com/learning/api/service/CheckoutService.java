@@ -3,19 +3,22 @@ package com.learning.api.service;
 import com.learning.api.dto.CheckoutReq;
 import com.learning.api.entity.*;
 import com.learning.api.repo.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CheckoutService {
 
-    @Autowired private UserRepo userRepo;           // 需建立
-    @Autowired private CourseRepo courseRepo;       // 需建立
-    @Autowired private OrderRepo orderRepo;
-    @Autowired private BookingRepo bookingRepo;
-    @Autowired private TutorScheduleRepo scheduleRepo;
+    private final UserRepository userRepo;
+    private final CourseRepo courseRepo;
+    private final OrderRepository orderRepo;
+    private final BookingRepository bookingRepo;
+    private final TutorScheduleRepo scheduleRepo;
 
     @Transactional
     public String processPurchase(CheckoutReq req) {
@@ -56,22 +59,25 @@ public class CheckoutService {
         order.setUserId(student.getId());
         order.setCourseId(course.getId());
         order.setUnitPrice(course.getPrice());
+        order.setDiscountPrice(totalPrice);
         order.setLessonCount(totalSlots);
         order.setLessonUsed(totalSlots); // 因為是直接買時段，所以直接標記為已使用
         order.setStatus(2); // 2:成交
         Order savedOrder = orderRepo.save(order);
 
-        // C. 建立多筆預約 (Bookings)
+        // C. 建立多筆預約 (Bookings) — 批次儲存減少 DB round-trip
+        List<Bookings> bookingList = new ArrayList<>();
         for (CheckoutReq.Slot slot : req.getSelectedSlots()) {
-            Booking b = new Booking();
+            Bookings b = new Bookings();
             b.setOrderId(savedOrder.getId());
             b.setTutorId(course.getTutorId());
             b.setStudentId(student.getId());
             b.setDate(slot.getDate());
             b.setHour(slot.getHour());
-            b.setStatus(1); // 1:排程中
-            bookingRepo.save(b);
+            b.setStatus((byte) 1); // 1:排程中
+            bookingList.add(b);
         }
+        bookingRepo.saveAll(bookingList);
 
         return "success";
     }

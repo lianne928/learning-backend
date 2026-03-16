@@ -1,7 +1,7 @@
 package com.learning.api.service;
 
-import com.learning.api.entity.*;
-import com.learning.api.repo.*;
+import com.learning.api.entity.User;
+import com.learning.api.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     @Autowired
-    private UserRepo userRepo;
+    private UserRepository userRepo;
 
     // check email - findByEmail ( checkEmail != null return email )
     public boolean checkEmail (String email){

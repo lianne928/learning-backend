@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import com.learning.api.entity.ChatMessage;
 import com.learning.api.enums.MessageType;
 import com.learning.api.repo.ChatMessageRepository;
-import com.learning.api.repo.OrderRepo;
+import com.learning.api.repo.OrderRepository;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -15,7 +15,7 @@ import java.util.Optional;
 public class ChatMessageService {
 
     private final ChatMessageRepository chatMessageRepository;
-    private final OrderRepo orderRepo;
+    private final OrderRepository orderRepo;
 
     public List<ChatMessage> findByBookingId(Long bookingId) {
         return chatMessageRepository.findByBookingIdOrderByCreatedAtAsc(bookingId);
@@ -38,6 +38,7 @@ public class ChatMessageService {
 
         if (type.isMedia()) {
             chatMessage.setMediaUrl(mediaUrl);
+            chatMessage.setMessage("");
         } else {
             chatMessage.setMessage(message);
         }

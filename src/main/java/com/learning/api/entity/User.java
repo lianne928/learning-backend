@@ -1,4 +1,5 @@
 package com.learning.api.entity;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,7 +32,7 @@ public class User {
     private Integer role; //1:student/2:teacher/3admin
 
     @Column(nullable=false)
-    private Integer wallet=0;
+    private Long wallet=0L;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private Instant createdAt;

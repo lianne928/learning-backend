@@ -32,8 +32,20 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
-src/main/resources/application.properties
 
 ### VS Code ###
 .vscode/
-src/main/resources/application.properties.example.properties
+*.code-workspace
+
+# Sensitive settings and passwords
+src/main/resources/application.properties
+application.properties
+.env
+
+# Build and package directories
+out/
+node_modules/
+dist/
+
+# OS generated files
+Thumbs.db

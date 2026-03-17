@@ -32,4 +32,4 @@ public class LessonFeedback {
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private Instant createdAt;
-}
+}*/

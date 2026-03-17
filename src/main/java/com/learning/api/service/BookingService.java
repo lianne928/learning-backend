@@ -36,7 +36,7 @@ public class BookingService {
 
         Booking booking = new Booking();
         booking.setStudentId(req.getUserId());
-        booking.setTutorId(course.getTutorId());
+        booking.setTutorId(course.getTutor().getId());
         booking.setOrderId(req.getOrderId());
         booking.setDate(req.getDate());
         booking.setHour(req.getHour());

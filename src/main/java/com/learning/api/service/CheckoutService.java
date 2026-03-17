@@ -42,12 +42,12 @@ public class CheckoutService {
         // 檢查時段
         for (CheckoutReq.Slot slot : req.getSelectedSlots()) {
             int weekday = slot.getDate().getDayOfWeek().getValue();
-            var sched = scheduleRepo.findByTutorIdAndWeekdayAndHour(course.getTutorId(), weekday, slot.getHour());
+            var sched = scheduleRepo.findByTutorIdAndWeekdayAndHour(course.getTutor().getId(), weekday, slot.getHour());
 
             if (sched.isEmpty() || !sched.get().getIsAvailable()) {
                 throw new IllegalArgumentException("時段 " + slot.getDate() + " " + slot.getHour() + ":00 老師未開放");
             }
-            if (bookingRepo.findByTutorIdAndDateAndHourAndSlotLockedTrue(course.getTutorId(), slot.getDate(), slot.getHour()).isPresent()) {
+            if (bookingRepo.findByTutorIdAndDateAndHourAndSlotLockedTrue(course.getTutor().getId(), slot.getDate(), slot.getHour()).isPresent()) {
                 throw new IllegalArgumentException("時段已被他人預約");
             }
         }

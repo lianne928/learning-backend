@@ -1,12 +1,6 @@
 package com.learning.api.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.Data;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -26,7 +20,7 @@ public class Course {
     private String name;
 
     @Column(nullable = false)
-    private Integer subject; //11低年級 12中年級 13高年級  21GEPT 22YLE 23國中先修 31其他 (開頭 1: 年級課程  2檢定與升學 3其他)
+    private Integer subject;
 
     @Column(length = 1000)
     private String description;
@@ -34,6 +28,7 @@ public class Course {
     @Column(nullable = false)
     private Integer price;
 
+    // 👉 修正：對齊 DB 的 is_active，並建議使用 Boolean 物件
     @Column(name = "is_active", nullable = false)
-    private boolean active;
+    private Boolean isActive = true;
 }

@@ -1,6 +1,5 @@
 package com.learning.api.entity;
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,7 +29,11 @@ public class Order {
 
     @Column(name = "lesson_used", nullable = false)
     private Integer lessonUsed;
-    
+
+    // 👉 修正：補上漏掉的 is_experienced 欄位
+    @Column(name = "is_experienced")
+    private Boolean isExperienced;
+
     @Column(name = "status", nullable = false)
     private Integer status; //1 pending 2deal 3complete
 }

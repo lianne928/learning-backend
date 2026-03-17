@@ -1,82 +1,54 @@
 package com.learning.api.service;
 
-import com.learning.api.dto.*;
-import com.learning.api.entity.*;
+import com.learning.api.dto.BookingReq;
+import com.learning.api.entity.Booking;
+import com.learning.api.entity.Course;
 import com.learning.api.repo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.util.List;
 
 @Service
 public class BookingService {
 
-    @Autowired
-    private UserRepo memberRepo;
+    @Autowired private CourseRepo courseRepo;
+    @Autowired private BookingRepo bookingRepo;
+    @Autowired private OrderRepo orderRepo;
 
-    @Autowired
-    private CourseRepo courseRepo;
+    // 什麼都不做，直接回傳 200 OK 或空內容
+    @GetMapping("favicon.ico")
+    @ResponseBody
+    public void disableFavicon() {
+    }
+    public boolean sendBooking(BookingReq req){
+        if (req == null || req.getUserId() == null || req.getCourseId() == null) return false;
 
-    @Autowired
-    private BookingRepo bookingRepo;
+        // 👉 防呆：DB 規定一定要有 order_id
+        if (req.getOrderId() == null) {
+            throw new IllegalArgumentException("預約必須關聯一筆有效訂單 (order_id 不可為空)");
+        }
 
-    @Autowired
-    private OrderRepo orderRepo;
-
-    // bookingReq.getUserId() 僅供開發測試使用，正式版改由登入資訊取得
-    public boolean sendBooking(BookingReq bookingReq){
-
-        if (bookingReq == null) return false;
-
-        // check null
-        if (bookingReq.getUserId() == null || bookingReq.getCourseId() == null || bookingReq.getLessonCount() == null) return false;
-
-        // lessonCount > 0
-        if (bookingReq.getLessonCount() <= 0) return false;
-
-        // member existsById
-        if(!memberRepo.existsById(bookingReq.getUserId())) return false;
-
-        // course findById
-        Course course = courseRepo.findById(bookingReq.getCourseId()).orElse(null);
+        Course course = courseRepo.findById(req.getCourseId()).orElse(null);
         if (course == null) return false;
 
-        // check courseId isActive
-        if (!course.isActive()) return false;
+        Booking booking = new Booking();
+        booking.setStudentId(req.getUserId());
+        booking.setTutorId(course.getTutorId());
+        booking.setOrderId(req.getOrderId());
+        booking.setDate(req.getDate());
+        booking.setHour(req.getHour());
+        booking.setStatus(1);
+        booking.setSlotLocked(true); // 預約成功直接鎖定
 
-        // buildBooking
-        Booking booking = buildBooking(bookingReq, course);
         bookingRepo.save(booking);
-
         return true;
     }
 
-    private Booking buildBooking(BookingReq bookingReq, Course course){
-        Booking booking = new Booking();
 
-        // set & save
-        booking.setOrderId(null);
-        booking.setCourseId(bookingReq.getCourseId());
-
-        // price unitPrice discountPrice
-        Integer originalPrice = course.getPrice();
-        Integer discount = afterDiscPrice(originalPrice, bookingReq.getLessonCount());
-
-        booking.setUnitPrice(originalPrice);
-        booking.setDiscountPrice(discount);
-
-        // lessonCount
-        booking.setLessonCount(bookingReq.getLessonCount());
-        // status first send -> 1
-        booking.setStatus(1);
-
-        return booking;
-    }
-
-    private Integer afterDiscPrice(Integer originalPrice, Integer lessonCount){
-        // 95% 10 堂
-        if (lessonCount >= 10) return ((int) (originalPrice*0.95));
-
-
-        // 0%
-        return originalPrice;
+    public List<Booking> getTutorBookings(Long tutorId) {
+        return bookingRepo.findByTutorId(tutorId);
     }
 }

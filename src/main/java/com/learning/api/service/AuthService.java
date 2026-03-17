@@ -3,7 +3,7 @@ package com.learning.api.service;
 import com.learning.api.dto.auth.LoginReq;
 import com.learning.api.dto.auth.LoginResp;
 import com.learning.api.entity.User;
-import com.learning.api.repo.MemberRepo;
+import com.learning.api.repo.UserRepo;
 import com.learning.api.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +17,7 @@ public class AuthService {
     private JwtService jwtService;
 
     @Autowired
-    private MemberRepo memberRepo;
+    private UserRepo memberRepo;
 
     @Autowired
     private PasswordEncoder passwordEncoder;

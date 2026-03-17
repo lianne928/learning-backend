@@ -15,6 +15,6 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
 
     Optional<Feedback> findFirstByBookingId(Long bookingId);
 
-    @Query("SELECT AVG(f.rating) FROM LessonFeedback f WHERE f.bookingId = :bookingId")
+    @Query("SELECT AVG(f.rating) FROM Feedback f WHERE f.bookingId = :bookingId")
     Double findAverageRatingByBookingId(@Param("bookingId") Long bookingId);
 }

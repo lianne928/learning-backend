@@ -63,4 +63,5 @@ public class Tutor {
     //為了讓 CourseSpec 能順利從課程連動到課表
     @OneToMany(mappedBy = "tutor")
     private List<TutorSchedule> schedules;
+    
 }

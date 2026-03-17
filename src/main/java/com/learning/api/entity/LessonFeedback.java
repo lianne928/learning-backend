@@ -1,4 +1,4 @@
-package com.learning.api.entity;
+/* package com.learning.api.entity;
 
 import java.time.Instant;
 
@@ -16,7 +16,7 @@ public class LessonFeedback {
     private Long id;
 
     
-    @JoinColumn(name = "booking_id")
+    @Column(name = "booking_id")
     private Long bookId;
 
     @Column(name="focus_score" ,nullable = false)
@@ -35,4 +35,4 @@ public class LessonFeedback {
     private Instant createdAt;
     
 
-}
+} */

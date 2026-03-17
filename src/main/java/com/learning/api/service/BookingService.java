@@ -15,7 +15,7 @@ public class BookingService {
     @Autowired private UserRepo memberRepo;
     @Autowired private CourseRepo courseRepo;
     @Autowired private BookingRepo bookingRepo;
-    @Autowired private OrderRepo orderRepo;
+    @Autowired private OrderRepository orderRepo;
 
     /**
      * 建立預約紀錄 (已修正紅線)
@@ -32,7 +32,7 @@ public class BookingService {
 
         // 對齊你的 Booking.java 欄位
         booking.setStudentId(req.getUserId());
-        booking.setTutorId(course.getTutorId());
+        booking.setTutorId(req.getCourseId());
         booking.setOrderId(req.getOrderId()); // 如果是直接預約，這會由 CheckoutService 傳入
         booking.setDate(req.getDate());
         booking.setHour(req.getHour());

@@ -6,8 +6,6 @@ import lombok.Data;
 public class ReviewRequest {
     private Long userId;
     private Long courseId;
-    private Integer focusScore;
-    private Integer comprehensionScore;
-    private Integer confidenceScore;
+    private Integer rating;
     private String comment;
 }

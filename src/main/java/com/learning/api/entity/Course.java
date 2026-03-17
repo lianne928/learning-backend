@@ -48,4 +48,6 @@ public class Course {
 
     @Column(name = "is_active", nullable = false)
     private Integer active ; // 1: 上架, 0: 下架
+
+    
 }

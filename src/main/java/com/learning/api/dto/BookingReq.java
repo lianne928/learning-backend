@@ -22,6 +22,8 @@ public class BookingReq {
         private Long userId;
         // 課程 ID
         private Long courseId;
+        // 老師 ID
+        /* private long tutorId; */
         // 預約日期
         private LocalDate date;
         // 預約小時

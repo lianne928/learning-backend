@@ -2,11 +2,11 @@ package com.learning.api.service;
 
 import com.learning.api.dto.ScheduleDTO;
 import com.learning.api.entity.TutorSchedule;
-/* import com.learning.api.repo.TutorScheduleRepo; */
+import com.learning.api.repo.TutorScheduleRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.learning.api.repo.TutorRepo;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -14,30 +14,30 @@ import java.util.stream.Collectors;
 @Service
 public class TutorScheduleService {
 
-    
-     @Autowired
-     private TutorScheduleRepo scheduleRepo;
-     
+    @Autowired
+    private TutorScheduleRepo scheduleRepo;
+    @Autowired 
+    private TutorRepo tutorRepo;
 
     /**
      * 切換常態時段狀態 (優化版：休息就刪除，開放才新增)
      */
-    /*
-     * @Transactional
-     * public String toggleSchedule(ScheduleDTO.ToggleReq req) {
-     * // 1. 範圍檢查 (星期 1-7, 時間 9-21)
-     * if (req.getWeekday() < 1 || req.getWeekday() > 7 || req.getHour() < 9 ||
-     * req.getHour() > 21) {
-     * return "格式錯誤：時間範圍需在 9~21 點之間。";
-     * }
-     */
+    
+    @Transactional
+    public String toggleSchedule(ScheduleDTO.ToggleReq req) {
+    // 1. 範圍檢查 (星期 1-7, 時間 9-21)
+    if (req.getWeekday() < 1 || req.getWeekday() > 7 || req.getHour() < 9 ||
+    req.getHour() > 21) {
+    return "格式錯誤：時間範圍需在 9~21 點之間。";
+     }
+    
 
     // 2. 尋找該老師在該時段是否已有紀錄
     
     Optional<TutorSchedule> existingSlotOpt =
     scheduleRepo.findByTutorIdAndWeekdayAndHour(
-     * req.getTutorId(), req.getWeekday(), req.getHour()
-     * );
+    req.getTutorId(), req.getWeekday(), req.getHour()
+    );
      
 
     // 3. 邏輯判斷
@@ -47,7 +47,7 @@ public class TutorScheduleService {
         // 如果目前沒紀錄，才需要新增
         if (existingSlotOpt.isEmpty()) {
             TutorSchedule newSlot = new TutorSchedule();
-            newSlot.setTutorId(req.getTutorId());
+            newSlot.setTutor(tutorRepo.getReferenceById(req.getTutorId()));
             newSlot.setWeekday(req.getWeekday());
             newSlot.setHour(req.getHour());
             newSlot.setStatus("available");
@@ -73,3 +73,4 @@ public class TutorScheduleService {
                 .map(s -> new ScheduleDTO.Res(s.getId(), s.getWeekday(), s.getHour(), s.getStatus()))
                 .collect(Collectors.toList());
     }
+}

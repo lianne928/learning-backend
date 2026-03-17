@@ -11,7 +11,8 @@ import com.learning.api.entity.Review;
 import com.learning.api.entity.Tutor;
 import com.learning.api.entity.TutorSchedule;
 import com.learning.api.repo.CourseRepo;
-import com.learning.api.repo.ReviewRepo;
+import com.learning.api.repo.ReviewRepository;
+
 import com.learning.api.repo.TutorRepo;
 import com.learning.api.repo.TutorScheduleRepo;
 
@@ -29,7 +30,7 @@ public class TutorService {
     private TutorScheduleRepo scheduleRepo;
 
     @Autowired
-    private ReviewRepo reviewRepo;
+    private ReviewRepository reviewRepo;
 
     /**
      * 取得老師完整檔案（包含 User 基本資料）

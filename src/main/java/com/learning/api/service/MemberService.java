@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class MemberService {
     @Autowired
-    private MemberRepo memberRepo;
+    private UserRepo memberRepo;
 
     @Autowired
     private JwtService jwtService;

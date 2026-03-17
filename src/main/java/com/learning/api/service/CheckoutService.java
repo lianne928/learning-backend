@@ -13,7 +13,7 @@ public class CheckoutService {
 
     @Autowired private UserRepo userRepo;
     @Autowired private CourseRepo courseRepo;
-    @Autowired private OrderRepo orderRepo;
+    @Autowired private OrderRepository orderRepo;
     @Autowired private BookingRepo bookingRepo;
     @Autowired private TutorScheduleRepo scheduleRepo;
 
@@ -45,13 +45,13 @@ public class CheckoutService {
             int weekday = slot.getDate().getDayOfWeek().getValue();
 
             // 檢查老師是否有排班
-            var sched = scheduleRepo.findByTutorIdAndWeekdayAndHour(course.getTutorId(), weekday, slot.getHour());
+            var sched = scheduleRepo.findByTutorIdAndWeekdayAndHour(course.getTutor().getId(), weekday, slot.getHour());
             if (sched.isEmpty() || !"available".equals(sched.get().getStatus())) {
                 throw new IllegalArgumentException("時段 " + slot.getDate() + " " + slot.getHour() + ":00 老師未開放");
             }
 
             // 檢查是否已被預約 (防超賣)
-            if (bookingRepo.findByTutorIdAndDateAndHour(course.getTutorId(), slot.getDate(), slot.getHour()).isPresent()) {
+            if (bookingRepo.findByTutorIdAndDateAndHour(course.getTutor().getId(), slot.getDate(), slot.getHour()).isPresent()) {
                 throw new IllegalArgumentException("時段 " + slot.getDate() + " " + slot.getHour() + ":00 已被他人預約");
             }
         }
@@ -72,7 +72,7 @@ public class CheckoutService {
         for (CheckoutReq.Slot slot : req.getSelectedSlots()) {
             Booking b = new Booking();
             b.setOrderId(savedOrder.getId());
-            b.setTutorId(course.getTutorId());
+            b.setTutorId(course.getTutor().getId());
             b.setStudentId(student.getId());
             b.setDate(slot.getDate());
             b.setHour(slot.getHour());

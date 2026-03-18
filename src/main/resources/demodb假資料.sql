@@ -8,20 +8,22 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ============================================================
 -- users (role: 1=學生 2=老師 3=管理者)
 -- ============================================================
-INSERT INTO `users` (`id`, `name`, `email`, `password`, `birthday`, `role`, `wallet`, `created_at`, `updated_at`) VALUES
+INSERT INTO `users` 
+(`id`, `name`, `email`, `password`, `birthday`, `role`, `wallet`, `created_at`, `updated_at`) VALUES
 -- 學生 (id 1~5)
-(1,  '林小明', 'ming@example.com',   SHA2('password123', 256), '2012-04-15', 1, 2500, '2025-09-01 08:00:00', '2026-03-10 10:00:00'),
-(2,  '王雅婷', 'yating@example.com', SHA2('password123', 256), '2013-07-22', 1, 800,  '2025-09-10 09:00:00', '2026-03-12 11:00:00'),
-(3,  '陳俊宏', 'junhong@example.com',SHA2('password123', 256), '2011-11-03', 1, 5000, '2025-10-01 10:00:00', '2026-03-15 09:00:00'),
-(4,  '張家豪', 'jiahao@example.com', SHA2('password123', 256), '2014-02-18', 1, 0,   '2025-11-05 14:00:00', '2026-02-20 08:00:00'),
-(5,  '黃怡君', 'yijun@example.com',  SHA2('password123', 256), '2010-08-30', 1, 1200, '2025-12-01 11:00:00', '2026-03-14 15:00:00'),
+(1,  '林小明', 'ming@example.com',   '$2a$10$7EqJtq98hPqEX7fNZaFWoOa7WvyaManIeJ/9z6b0l6Y5f7Yw7Y1eW', '2012-04-15', 1, 2500, '2025-09-01 08:00:00', '2026-03-10 10:00:00'),
+(2,  '王雅婷', 'yating@example.com', '$2a$10$7EqJtq98hPqEX7fNZaFWoOa7WvyaManIeJ/9z6b0l6Y5f7Yw7Y1eW', '2013-07-22', 1, 800,  '2025-09-10 09:00:00', '2026-03-12 11:00:00'),
+(3,  '陳俊宏', 'junhong@example.com','$2a$10$7EqJtq98hPqEX7fNZaFWoOa7WvyaManIeJ/9z6b0l6Y5f7Yw7Y1eW', '2011-11-03', 1, 5000, '2025-10-01 10:00:00', '2026-03-15 09:00:00'),
+(4,  '張家豪', 'jiahao@example.com', '$2a$10$7EqJtq98hPqEX7fNZaFWoOa7WvyaManIeJ/9z6b0l6Y5f7Yw7Y1eW', '2014-02-18', 1, 0,   '2025-11-05 14:00:00', '2026-02-20 08:00:00'),
+(5,  '黃怡君', 'yijun@example.com',  '$2a$10$7EqJtq98hPqEX7fNZaFWoOa7WvyaManIeJ/9z6b0l6Y5f7Yw7Y1eW', '2010-08-30', 1, 1200, '2025-12-01 11:00:00', '2026-03-14 15:00:00'),
 -- 老師 (id 6~9)
-(6,  '李美玲', 'meiling@example.com',SHA2('password123', 256), '1990-05-12', 2, 18000,'2025-08-01 08:00:00', '2026-03-16 08:00:00'),
-(7,  '吳建志', 'jianzhi@example.com',SHA2('password123', 256), '1988-03-28', 2, 9500, '2025-08-15 09:00:00', '2026-03-16 08:00:00'),
-(8,  '鄭雅文', 'yawen@example.com',  SHA2('password123', 256), '1993-09-07', 2, 6200, '2025-09-01 10:00:00', '2026-03-16 08:00:00'),
-(9,  '劉佳慧', 'jiahui@example.com', SHA2('password123', 256), '1995-12-20', 2, 3800, '2025-10-10 11:00:00', '2026-03-16 08:00:00'),
+(6,  '李美玲', 'meiling@example.com','$2a$10$7EqJtq98hPqEX7fNZaFWoOa7WvyaManIeJ/9z6b0l6Y5f7Yw7Y1eW', '1990-05-12', 2, 18000,'2025-08-01 08:00:00', '2026-03-16 08:00:00'),
+(7,  '吳建志', 'jianzhi@example.com','$2a$10$7EqJtq98hPqEX7fNZaFWoOa7WvyaManIeJ/9z6b0l6Y5f7Yw7Y1eW', '1988-03-28', 2, 9500, '2025-08-15 09:00:00', '2026-03-16 08:00:00'),
+(8,  '鄭雅文', 'yawen@example.com',  '$2a$10$7EqJtq98hPqEX7fNZaFWoOa7WvyaManIeJ/9z6b0l6Y5f7Yw7Y1eW', '1993-09-07', 2, 6200, '2025-09-01 10:00:00', '2026-03-16 08:00:00'),
+(9,  '劉佳慧', 'jiahui@example.com', '$2a$10$7EqJtq98hPqEX7fNZaFWoOa7WvyaManIeJ/9z6b0l6Y5f7Yw7Y1eW', '1995-12-20', 2, 3800, '2025-10-10 11:00:00', '2026-03-16 08:00:00'),
 -- 管理者 (id 10)
-(10, '系統管理員', 'admin@learning.com', SHA2('admin@2025', 256), NULL, 3, 0, '2025-07-01 00:00:00', '2025-07-01 00:00:00');
+(10, '系統管理員', 'admin@learning.com', '$2a$10$7EqJtq98hPqEX7fNZaFWoOa7WvyaManIeJ/9z6b0l6Y5f7Yw7Y1eW', NULL, 3, 0, '2025-07-01 00:00:00', '2025-07-01 00:00:00');
+
 
 -- ============================================================
 -- tutors (id 對應 users.id，status: 1=pending 2=qualified 3=停權)

@@ -282,8 +282,9 @@
 // ─────────────────────────────────────────────
 // 常數
 // ─────────────────────────────────────────────
-const ROLE       = { A: 1, B: 2 };
-const ROLE_NAME  = { 1: '學生', 2: '導師' };
+const ROLE       = { A: 'student', B: 'tutor' };
+const ROLE_INT   = { A: 1, B: 2 };
+const ROLE_NAME  = { 'student': '學生', 'tutor': '導師', 1: '學生', 2: '導師' };
 const TYPE_NAME  = { 1: 'TEXT', 2: 'STICKER', 3: 'VOICE', 4: 'IMAGE', 5: 'VIDEO', 6: 'FILE' };
 const MEDIA_TYPES = new Set([2, 3, 4, 5, 6]);
 
@@ -452,6 +453,12 @@ function connect(p) {
       addSys(p, `${who} ${ev.type === 'joined' ? '加入' : '離開'}了房間`);
     });
 
+    client.subscribe(`/topic/room/${bid}/errors`, (frame) => {
+      rawLog(p, 'err', frame.body);
+      const err = JSON.parse(frame.body);
+      addSys(p, `[錯誤] ${err.code}: ${err.message}`);
+    });
+
   }, (err) => {
     setPill(p, false);
     rawLog(p, 'err', `連線失敗: ${err}`);
@@ -494,7 +501,7 @@ function sendChat(p) {
 
 function sendEvent(p, type) {
   if (!state[p].client?.connected) { addSys(p, '請先連線'); return; }
-  const payload = { type, role: ROLE[p] };
+  const payload = { type, role: ROLE_INT[p] };
   state[p].client.send(`/app/event/${bookingId()}`, {}, JSON.stringify(payload));
   rawLog(p, 'out', JSON.stringify(payload));
 }
@@ -648,8 +655,8 @@ function renderMessage(panel, msg) {
   row.className = `msg-row ${isSelf ? 'self' : 'other'}`;
 
   const avatar = document.createElement('div');
-  avatar.className   = `msg-avatar ${msg.role === 1 ? 'avatar-student' : 'avatar-tutor'}`;
-  avatar.textContent = msg.role === 1 ? 'S' : 'T';
+  avatar.className   = `msg-avatar ${msg.role === 'student' ? 'avatar-student' : 'avatar-tutor'}`;
+  avatar.textContent = msg.role === 'student' ? 'S' : 'T';
 
   const content = document.createElement('div');
   content.className = 'msg-content';

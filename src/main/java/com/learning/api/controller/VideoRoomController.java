@@ -54,7 +54,8 @@ public class VideoRoomController {
                      ChatMessageRequest request,
                      SimpMessageHeaderAccessor accessor) {
         try {
-            if (!validateBookingAndRole(bookingId, parseRole(request.getRole()), accessor)) return;
+            Integer roleNum = parseRole(request.getRole());
+            if (!validateBookingAndRole(bookingId, roleNum, accessor)) return;
 
             int typeValue = request.getMessageType() != null
                     ? request.getMessageType()
@@ -62,7 +63,7 @@ public class VideoRoomController {
 
             ChatMessage saved = chatMessageService.save(
                     bookingId,
-                    request.getRole(),
+                    normalizeRole(request.getRole()),
                     typeValue,
                     request.getMessage(),
                     request.getMediaUrl()
@@ -136,9 +137,15 @@ public class VideoRoomController {
     }
 
     private Integer parseRole(String role) {
-        if ("student".equals(role)) return 1;
-        if ("tutor".equals(role)) return 2;
+        if ("student".equals(role) || "1".equals(role)) return 1;
+        if ("tutor".equals(role)   || "2".equals(role)) return 2;
         return null;
+    }
+
+    private String normalizeRole(String role) {
+        Integer num = parseRole(role);
+        if (num == null) return role;
+        return num == 1 ? "student" : "tutor";
     }
 
     /**

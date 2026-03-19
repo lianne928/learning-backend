@@ -141,6 +141,8 @@
     }
     .msg-row.self  .bubble { background: #2b6cb0; color: #fff; border-bottom-right-radius: 4px; }
     .msg-row.other .bubble { background: #2d3748; color: #e2e8f0; border-bottom-left-radius: 4px; }
+    .bubble a { color: #90cdf4; text-decoration: underline; }
+    .msg-row.self .bubble a { color: #bee3f8; }
     .bubble.media { background: transparent !important; padding: 4px; }
 
     .msg-time { font-size: 10px; color: #4a5568; padding: 0 4px; }
@@ -404,7 +406,7 @@ function autoDetectType(text) {
   if (IMG_EXTS.test(text))     return 4; // IMAGE
   if (VIDEO_EXTS.test(text))   return 5; // VIDEO
   if (AUDIO_EXTS.test(text))   return 3; // VOICE
-  return 6;                              // FILE (其他 URL)
+  return 1;                              // 非媒體 URL → TEXT
 }
 
 const TYPE_HINT_MAP = { 1: '文字 TEXT', 2: '貼圖 STICKER', 3: '語音 VOICE', 4: '圖片 IMAGE', 5: '影片 VIDEO', 6: '檔案 FILE' };
@@ -569,6 +571,25 @@ async function uploadFile(p, file) {
 // ─────────────────────────────────────────────
 // 渲染聊天氣泡（DOM 操作，避免 XSS）
 // ─────────────────────────────────────────────
+const LINKIFY_RE = /(https?:\/\/[^\s<]+)/gi;
+
+function linkifyText(text, container) {
+  const parts = text.split(LINKIFY_RE);
+  for (const part of parts) {
+    if (LINKIFY_RE.test(part)) {
+      const a = document.createElement('a');
+      a.href = part;
+      a.textContent = part;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      container.appendChild(a);
+    } else if (part) {
+      container.appendChild(document.createTextNode(part));
+    }
+    LINKIFY_RE.lastIndex = 0;
+  }
+}
+
 function createMediaElement(msg) {
   const url = msg.mediaUrl || '';
   switch (msg.messageType) {
@@ -654,7 +675,7 @@ function renderMessage(panel, msg) {
       bubble.appendChild(caption);
     }
   } else {
-    bubble.textContent = msg.message || '';
+    linkifyText(msg.message || '', bubble);
   }
 
   const timeStr = msg.createdAt

@@ -23,8 +23,14 @@ public class EmailService {
     private static final Logger log =
             LoggerFactory.getLogger(EmailService.class);
 
-    @Autowired
-    private JavaMailSender mailSender;
+	// 原本是這樣：
+	// 會卡強制寄信，先暫時放棄
+	// @Autowired
+	// private JavaMailSender mailSender;
+
+	// 🌟 改成這樣：
+	@Autowired(required = false)
+	private JavaMailSender mailSender;
 
     @Autowired
     private MailConfig mailConfig;

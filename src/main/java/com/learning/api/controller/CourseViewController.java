@@ -31,7 +31,7 @@ public class CourseViewController {
     @Autowired
     private CourseRepo courseRepo;
 
-    @Autowired 
+    @Autowired
     private TutorScheduleRepo scheduleRepo;
 
     /**
@@ -48,27 +48,43 @@ public class CourseViewController {
             @RequestParam(required = false) Integer weekday,
             @RequestParam(required = false) String timeSlot) {
 
-        // 設定分頁大小，此處維持 10
+        // 設定分頁大小
         Pageable pageable = PageRequest.of(page, 10);
 
         // 1. 執行查詢
         Page<Course> coursePage = courseRepo.findAll(
-            CourseSpec.filterCourses(teacherName, courseName, subjectCategory, subject, priceRange, weekday, timeSlot),
-            pageable
+                CourseSpec.filterCourses(teacherName, courseName, subjectCategory, subject, priceRange, weekday, timeSlot),
+                pageable
         );
 
-        // 2. 轉換為 DTO (這部分邏輯不變)
-        Page<CourseSearchDTO> dtoPage = coursePage.map(course -> new CourseSearchDTO(
-            course.getId(),
-            course.getTutor().getId(),
-            course.getTutor().getUser().getName(),
-            course.getTutor().getAvatar(),
-            course.getTutor().getTitle(),
-            course.getName(),
-            course.getSubject(),
-            course.getDescription(),
-            course.getPrice()
-        ));
+        // 2. 轉換為 DTO (修正：加入時段轉換邏輯，湊齊 10 個參數)
+        Page<CourseSearchDTO> dtoPage = coursePage.map(course -> {
+
+            // 🌟 轉換時段邏輯：將 TutorSchedule 轉為 "1-morning" 格式
+            List<String> slots = course.getTutor().getSchedules().stream()
+                    .filter(s -> s.getIsAvailable() != null && s.getIsAvailable())
+                    .map(s -> {
+                        String period = "morning";
+                        if (s.getHour() >= 13 && s.getHour() < 17) period = "afternoon";
+                        else if (s.getHour() >= 17) period = "evening";
+                        return s.getWeekday() + "-" + period;
+                    })
+                    .collect(Collectors.toList());
+
+            // 🌟 回傳完整的 DTO (現在有 10 個參數了！)
+            return new CourseSearchDTO(
+                    course.getId(),
+                    course.getTutor().getId(),
+                    course.getTutor().getUser().getName(),
+                    course.getTutor().getAvatar(),
+                    course.getTutor().getTitle(),
+                    course.getName(),
+                    course.getSubject(),
+                    course.getDescription(),
+                    course.getPrice(),
+                    slots // 第 10 個參數：時段清單
+            );
+        });
 
         // 3. 直接回傳 DTO 分頁物件
         return ResponseEntity.ok(dtoPage);
@@ -80,7 +96,7 @@ public class CourseViewController {
     @GetMapping("/api/view/teacher_schedule/{teacherId}")
     public Map<Integer, List<Integer>> getTeacherSchedule(@PathVariable Long teacherId) {
         List<TutorSchedule> schedules = scheduleRepo.findByTutorId(teacherId);
-        
+
         return schedules.stream()
             .collect(Collectors.groupingBy(
                 TutorSchedule::getWeekday,

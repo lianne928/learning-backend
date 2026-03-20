@@ -21,6 +21,13 @@ public class FileStorageService {
     private static final Set<String> VIDEO_TYPES = Set.of("video/mp4", "video/webm", "video/quicktime");
     private static final Set<String> AUDIO_TYPES = Set.of("audio/mpeg", "audio/wav", "audio/ogg", "audio/webm");
 
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
+        ".jpg", ".jpeg", ".png", ".gif", ".webp",
+        ".mp4", ".webm", ".mov",
+        ".mp3", ".wav", ".ogg",
+        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt"
+    );
+
     private final Path uploadDir;
 
     public FileStorageService(@Value("${file.upload-dir:uploads}") String uploadDir) {
@@ -36,7 +43,10 @@ public class FileStorageService {
         String original = file.getOriginalFilename();
         String ext = "";
         if (original != null && original.contains(".")) {
-            ext = original.substring(original.lastIndexOf('.'));
+            ext = original.substring(original.lastIndexOf('.')).toLowerCase();
+        }
+        if (ext.isEmpty() || !ALLOWED_EXTENSIONS.contains(ext)) {
+            throw new IllegalArgumentException("不允許的檔案類型: " + (ext.isEmpty() ? "(無副檔名)" : ext));
         }
         String filename = UUID.randomUUID() + ext;
         Path target = uploadDir.resolve(filename);
@@ -46,6 +56,9 @@ public class FileStorageService {
 
     public Resource loadAsResource(String filename) throws MalformedURLException {
         Path file = uploadDir.resolve(filename).normalize();
+        if (!file.startsWith(uploadDir)) {
+            throw new SecurityException("非法的檔案路徑");
+        }
         return new UrlResource(file.toUri());
     }
 

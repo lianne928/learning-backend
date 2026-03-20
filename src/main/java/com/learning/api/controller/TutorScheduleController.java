@@ -14,7 +14,7 @@ import java.util.Map;
 
 @CrossOrigin(origins = "*") // 允許前端跨域請求
 @RestController
-@RequestMapping("/api/teacher/schedules")
+@RequestMapping("/api/tutor/schedules")
 public class TutorScheduleController {
     @Autowired
     private JwtService jwtService;

@@ -57,7 +57,7 @@ public class MemberService {
         // token JwtService
         String token = jwtService.generateToken(user);
 
-        UserResp userResp = new UserResp(
+/*         UserResp userResp = new UserResp(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
@@ -66,7 +66,7 @@ public class MemberService {
                 user.getWallet(),
                 user.getCreatedAt(),
                 user.getUpdatedAt()
-        );
+        ); */
 
 
         return new LoginResp(token);

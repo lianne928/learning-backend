@@ -4,7 +4,7 @@ import com.learning.api.dto.ScheduleDTO;
 import com.learning.api.entity.TutorSchedule;
 import com.learning.api.enums.UserRole;
 import com.learning.api.repo.TutorScheduleRepo;
-import com.learning.api.security.JwtService;
+/* import com.learning.api.security.JwtService; */
 import com.learning.api.security.SecurityUser;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +17,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class TutorScheduleService {
-     @Autowired
-    private JwtService jwtService;
+/*      @Autowired
+    private JwtService jwtService; */
 
     // @Transactional
     // public String toggleSchedule(ScheduleDTO.ToggleReq req) {

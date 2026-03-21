@@ -1,6 +1,6 @@
 package com.learning.api.dto;
 
-import jakarta.validation.constraints.*;
+/* import jakarta.validation.constraints.*; */
 import lombok.Getter;
 import lombok.Setter;
 

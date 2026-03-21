@@ -14,12 +14,12 @@ import com.learning.api.repo.CourseRepo;
 import com.learning.api.repo.TutorRepo;
 
 import com.learning.api.dto.CourseSearchDTO;
-import com.learning.api.entity.Course;
+/* import com.learning.api.entity.Course; */
 import com.learning.api.entity.TutorSchedule;
-import com.learning.api.repo.CourseRepo;
+/* import com.learning.api.repo.CourseRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.util.List;
+import java.util.List; */
 import java.util.stream.Collectors;
 
 @Service

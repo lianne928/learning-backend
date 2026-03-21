@@ -16,7 +16,7 @@ public class BookingService {
 
     @Autowired private CourseRepo courseRepo;
     @Autowired private BookingRepo bookingRepo;
-    @Autowired private OrderRepository orderRepo;
+/*     @Autowired private OrderRepository orderRepo; */
 
     // 什麼都不做，直接回傳 200 OK 或空內容
     @GetMapping("favicon.ico")

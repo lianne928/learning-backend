@@ -1,7 +1,7 @@
 package com.learning.api.controller;
 
 import com.learning.api.dto.ScheduleDTO;
-import com.learning.api.security.JwtService;
+/* import com.learning.api.security.JwtService; */
 import com.learning.api.security.SecurityUser;
 import com.learning.api.service.TutorScheduleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +16,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/tutor/schedules")
 public class TutorScheduleController {
-    @Autowired
-    private JwtService jwtService;
+/*     @Autowired
+    private JwtService jwtService; */
     @Autowired
     private TutorScheduleService scheduleService;
 

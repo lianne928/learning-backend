@@ -4,7 +4,7 @@ import com.learning.api.dto.EmailBookingDTO;
 import com.learning.api.dto.FeedbackEmailDTO;
 import com.learning.api.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
+/* import org.springframework.security.access.prepost.PreAuthorize; */
 import org.springframework.web.bind.annotation.*;
 
 @RestController

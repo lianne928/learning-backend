@@ -1,6 +1,11 @@
 -- ============================================================
 -- learningv3 假資料 Seed Data (含一鍵清空與 Emoji 編碼修復)
 -- 專案假資料/影片URL:https://drive.google.com/drive/folders/1-vxh2VNO7Jqrn7SDpumUKRsZ-qreNRHn?usp=drive_link
+--       -頭像測試文件:https://drive.google.com/file/d/1DXU3uHxuMw2IvxwI6i0Sp5FLRMziZeq_/view?usp=drive_link
+--       -證照測試文件:https://drive.google.com/file/d/1GyM8OkWUQ_s_LZe07njf7P03NiDcFnBG/view?usp=drive_link
+--       -測試文件:https://drive.google.com/file/d/1s7jhFkLaUWVpxymXdOCOCSCoQMrn_aRh/view?usp=drive_link
+--       -自我介紹測試影片:https://drive.google.com/file/d/11vlhLQ0hjYCt7lZ3AsFVJLQUYQf757EF/view?usp=drive_link
+--       -測試影片: https://drive.google.com/file/d/1UCHd6M_Z4-ZnJPp6RTry15iZiMyH3tMP/view?usp=drive_link  
 -- ============================================================
 
 SET

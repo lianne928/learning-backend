@@ -6,6 +6,9 @@ import com.learning.api.dto.EmailBookingTimeDTO;
 import com.learning.api.entity.*;
 import com.learning.api.enums.UserRole;
 import com.learning.api.repo.*;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -41,6 +44,60 @@ public class CheckoutService {
     // 1. 注入 BookingService，讓建立預約的邏輯集中在那裡
     @Autowired
     private BookingService bookingService;
+
+    public List<CheckoutReq.Slot> getStudentFutureBookings(Long studentId) {
+
+        // 1️⃣ 先拿 tutorId（這裡才需要 Optional）
+        var student = userRepo.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("查無此人"));
+
+        // 2️⃣ 時間區間
+        LocalDateTime baseTime = LocalDateTime.now();
+        LocalDateTime start = baseTime.plusHours(24);
+        LocalDateTime end = baseTime.plusDays(28);
+
+        int startHour = start.getMinute() == 0
+                ? start.getHour()
+                : start.getHour() + 1;
+
+        // 3️⃣ 查 booking（已被預約的）
+        return bookingRepo.findStudentFutureBookings(
+                studentId,
+                start.toLocalDate(),
+                end.toLocalDate(),
+                startHour,
+                end.getHour()
+        );
+    }
+
+
+    public List<CheckoutReq.Slot> getTutorFutureBookings(Long courseId) {
+
+        // 1️⃣ 先拿 tutorId（這裡才需要 Optional）
+        var course = courseRepo.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("課程不存在"));
+
+        Long tutorId = course.getTutor().getId();
+
+        // 2️⃣ 時間區間
+        LocalDateTime baseTime = LocalDateTime.now();
+        LocalDateTime start = baseTime.plusHours(24);
+        LocalDateTime end = baseTime.plusDays(28);
+
+        int startHour = start.getMinute() == 0
+                ? start.getHour()
+                : start.getHour() + 1;
+
+        // 3️⃣ 查 booking（已被預約的）
+        return bookingRepo.findTutorFutureBookings(
+                tutorId,
+                start.toLocalDate(),
+                end.toLocalDate(),
+                startHour,
+                end.getHour()
+        );
+    }
+
 
     @Transactional
     public String processPurchase(CheckoutReq req, Long studentId, UserRole role) {
@@ -185,11 +242,11 @@ public class CheckoutService {
 
     /**
      * 根據購買堂數計算折扣後的單堂價格
-     * 10 堂以上打 9 折，5 堂以上打 95 折，其他原價
+     * 10 堂打 9 折，5 堂打 95 折，其他原價
      */
     private int calculateUnitDiscountPrice(int unitPrice, int count) {
-        if (count >= 10) return (int) (unitPrice * 0.90); // 9 折
-        if (count >= 5)  return (int) (unitPrice * 0.95); // 95 折
+        if (count == 10) return (int) (unitPrice * 0.90); // 9 折
+        if (count == 5)  return (int) (unitPrice * 0.95); // 95 折
         return unitPrice;                                  // 原價
     }
 }

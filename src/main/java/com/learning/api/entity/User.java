@@ -5,9 +5,13 @@ import com.learning.api.enums.UserRoleConverter;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+<<<<<<< HEAD
 /* import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
  */
+=======
+
+>>>>>>> feature/develop
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -33,9 +37,9 @@ public class User {
 
     private LocalDate birthday;
 
-    @Convert(converter = UserRoleConverter.class)
-    @Column(nullable = false, length = 20)
-   /*  @Enumerated(EnumType.STRING) */
+@Convert(converter = UserRoleConverter.class)  
+@Column(nullable = false, length = 20)
+/*     @Enumerated(EnumType.STRING) */
     private UserRole role;
 
     @Column(nullable=false)

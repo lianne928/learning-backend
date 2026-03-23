@@ -15,8 +15,35 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class CheckoutController {
 
-    @Autowired
-    private CheckoutService checkoutService;
+    @Autowired private CheckoutService checkoutService;
+
+    // @PostMapping("/purchase")//old
+    // public ResponseEntity<?> purchase(@RequestBody CheckoutReq req) {
+    //     String result = checkoutService.processPurchase(req);
+
+    //     if ("success".equals(result)) {
+    //         return ResponseEntity.ok(Map.of("msg", "購買並預約成功！"));
+    //     } else if ("餘額不足".equals(result)) {
+    //         return ResponseEntity.status(402).body(Map.of("msg", result, "action", "recharge"));
+    //     } else {
+    //         return ResponseEntity.badRequest().body(Map.of("msg", result));
+    //     }
+    // } 
+    @GetMapping("course/{courseId}/futurebookings")
+    public ResponseEntity<?> getTeacherFutureBookings(@PathVariable Long courseId) {
+
+        return ResponseEntity.ok(
+                checkoutService.getTutorFutureBookings(courseId)
+        );
+    }
+
+    @GetMapping("me/futurebookings")
+    public ResponseEntity<?> getStudentFutureBookings(@AuthenticationPrincipal SecurityUser me) {
+        Long studentId = me.getUser().getId(); 
+        return ResponseEntity.ok(
+                checkoutService.getStudentFutureBookings(studentId)
+        );
+    }
 
     @PostMapping("/purchase")
     public ResponseEntity<?> purchase(@RequestBody CheckoutReq req, @AuthenticationPrincipal SecurityUser me) {

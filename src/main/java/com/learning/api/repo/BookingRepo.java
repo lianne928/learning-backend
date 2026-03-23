@@ -70,4 +70,7 @@ public interface BookingRepo extends JpaRepository<Booking, Long> {
 
     List<Booking> findByStudentId(Long studentId);
 
+ // 使用 Spring Data JPA 的命名規範自動生成 SQL
+    List<Booking> findByStudentIdAndDateGreaterThanEqualOrderByDateAscHourAsc(Long studentId, LocalDate date);
+
 }

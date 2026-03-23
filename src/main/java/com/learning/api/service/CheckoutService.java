@@ -104,12 +104,12 @@ public class CheckoutService {
                         "時段 " + slot.getDate() + " " + slot.getHour() + ":00 老師未開放");
             }
 
-        // 10. 查詢這個時段是否已被其他學生鎖定（slotLocked = true）
-        if (bookingRepo.findByTutorIdAndDateAndHourAndSlotLockedTrue(
-                course.getTutor().getId(), slot.getDate(), slot.getHour()).isPresent()) {
-            throw new IllegalArgumentException("時段已被他人預約，請重新選擇");
-        }
-
+            if (bookingRepo.findByStudentIdAndDateAndHourAndSlotLockedTrue(student.getId(), slot.getDate(), slot.getHour()).isPresent()) {
+                    throw new IllegalArgumentException("學生該時段已有其他課程，無法重複預約");//ok
+            }
+            if (bookingRepo.findByTutorIdAndDateAndHourAndSlotLockedTrue(course.getTutor().getId(), slot.getDate(), slot.getHour()).isPresent()){ 
+                    throw new IllegalArgumentException("時段已被他人預約");//ok
+            }
         // 11. 驗證通過，加入待儲存清單
         validatedSlots.add(slot);
     }
@@ -179,6 +179,8 @@ public class CheckoutService {
 
         return "success";
     }
+
+
 
     /**
      * 根據購買堂數計算折扣後的單堂價格

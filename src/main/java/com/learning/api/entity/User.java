@@ -31,8 +31,7 @@ public class User {
 
     private LocalDate birthday;
 
-    @Column(nullable = false, length = 20)
-    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private UserRole role;
 
     @Column(nullable=false)

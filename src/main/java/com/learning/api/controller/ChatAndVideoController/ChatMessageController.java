@@ -2,7 +2,7 @@ package com.learning.api.controller.ChatAndVideoController;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
+/* import org.springframework.core.io.UrlResource; */
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

@@ -1,6 +1,6 @@
 package com.learning.api.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+/* import com.fasterxml.jackson.annotation.JsonIgnore; */
 
 import jakarta.persistence.*;
 import lombok.Getter;

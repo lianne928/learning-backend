@@ -3,8 +3,10 @@ package com.learning.api.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -13,23 +15,22 @@ import org.springframework.stereotype.Service;
 
 import com.learning.api.dto.BookingResponseDTO;
 import com.learning.api.dto.CancelResponseDTO;
-import com.learning.api.dto.CourseDTO;
-import com.learning.api.dto.CourseDto;
+
+import com.learning.api.dto.CourseResponseDto;
 import com.learning.api.dto.PackageResponseDTO;
 import com.learning.api.dto.TodayCourseDto;
 import com.learning.api.entity.Booking;
 import com.learning.api.entity.Course;
 import com.learning.api.entity.Order;
-import com.learning.api.entity.Tutor;
+
 import com.learning.api.entity.User;
 import com.learning.api.entity.WalletLog;
 import com.learning.api.repo.*;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.LockModeType;
+
 import jakarta.transaction.Transactional;
 
 
-//@Service
+@Service
 public class StudentCourseService {
 
     private final TutorRepo tutorRepo;
@@ -76,91 +77,83 @@ public class StudentCourseService {
      * @param lessonCount 堂數
      * @return 包裝後的 PackageResponseDTO
      */
-    @Transactional
-    public PackageResponseDTO Buycourse(Long studentId, Long courseId, Integer lessonCount) {
-        // 基本參數檢查
-        if (lessonCount == null || lessonCount <= 0) {
-            throw new IllegalArgumentException("lessonCount 必須大於 0");
-        }
-
-        User student = usersRepo.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("找不到帳號"));
-
-        Course course = coursesRepo.findById(courseId)
-                .orElseThrow(() -> new RuntimeException("課程不存在"));
-        if (!course.getIsActive()) {
-            throw new RuntimeException("課程目前不可購買");
-        }
-
-        long totalPrice = course.getPrice().longValue() * lessonCount;
-        if (student.getWallet() < totalPrice) {
-            throw new RuntimeException("錢包餘額不足，無法購買");
-        }
-
-        // 課程開始進行金流處理
-        // 1. 扣學生錢包
-        student.setWallet((int)(student.getWallet() - totalPrice));
-        usersRepo.save(student);
-
-        // 2. 加老師錢包
-        // 1. 取得老師對應的 User ID
-        Long tutorUserId = course.getTutor().getId(); 
-
-        // 2. 從資料庫查出這個 User
-        User tutorUser = usersRepo.findById(tutorUserId)
-            .orElseThrow(() -> new RuntimeException("找不到該老師的使用者帳號"));
-
-        // 3. 更新錢包並儲存
-        tutorUser.setWallet(tutorUser.getWallet() + (int)totalPrice);
-        usersRepo.save(tutorUser);
-        
-        // 3. 建立訂單
-        User user = new User();
-        Order order = new Order();
-        order.setUserId(user.getId());
-        order.setCourseId(course.getId());
-        order.setUnitPrice(course.getPrice());
-        order.setDiscountPrice((int) totalPrice); // 目前不支援折扣
-        order.setLessonCount(lessonCount);
-        order.setLessonUsed(0);
-        order.setStatus(1); // 1 = 有效/進行中
-        ordersRepo.save(order);
-
-        // 4. 建立錢包日誌：學生消費
-        WalletLog studentLog = new WalletLog();
-        studentLog.setUserId(user.getId());
-        studentLog.setTransactionType(2); // 2 = 購課
-        studentLog.setAmount(totalPrice); // 金額欄位始終正數，由 transactionType 區分出入
-        studentLog.setRelatedType(1); // 1 = order
-        studentLog.setRelatedId(order.getId());
-        walletLogsRepo.save(studentLog);
-
-        // 5. 建立錢包日誌：老師收入
-        WalletLog tutorLog = new WalletLog();
-        tutorLog.setUserId(user.getId());
-        tutorLog.setTransactionType(3); // 3 = 授課收入
-        tutorLog.setAmount(totalPrice);
-        tutorLog.setRelatedType(1);
-        tutorLog.setRelatedId(order.getId());
-        walletLogsRepo.save(tutorLog);
-
-
-	 	List<Order> orders = ordersRepo.findByUserId(user.getId());
-	 	
-	 	List<Long> courseIds = orders.stream().map(Order::getCourseId).distinct().toList();
-        
-	 	Map<Long, String> courseNameMap = coursesRepo.findAllById(courseIds).stream()
-		           .collect(Collectors.toMap(Course::getId, Course::getName));
-        // 回傳訂單資料
-        return new PackageResponseDTO(
-                order.getId(),
-                courseNameMap.getOrDefault(order.getCourseId(), "未知課程"),
-                order.getLessonCount(),
-                order.getLessonUsed(),
-                order.getLessonCount() - order.getLessonUsed(),
-                order.getStatus()
-        );
-    }
+//    @Transactional
+//    public PackageResponseDTO Buycourse(Long userId, Long courseId, Integer lessonCount) {
+//        // 基本參數檢查
+//        if (lessonCount == null || lessonCount <= 0) {
+//            throw new IllegalArgumentException("lessonCount 必須大於 0");
+//        }
+//
+//        User student = usersRepo.findById(userId)
+//                .orElseThrow(() -> new RuntimeException("找不到帳號"));
+//
+//        Course course = coursesRepo.findById(courseId)
+//                .orElseThrow(() -> new RuntimeException("課程不存在"));
+//        if (!course.getIsActive()) {
+//            throw new RuntimeException("課程目前不可購買");
+//        }
+//
+//        long totalPrice = course.getPrice().longValue() * lessonCount;
+//        if (student.getWallet() < totalPrice) {
+//            throw new RuntimeException("錢包餘額不足，無法購買");
+//        }
+//
+//        // 課程開始進行金流處理
+//        // 1. 扣學生錢包
+//        student.setWallet((int)(student.getWallet() - totalPrice));
+//        usersRepo.save(student);
+//
+//        // 2. 加老師錢包
+//        // 1. 取得老師對應的 User ID
+//        Long tutorUserId = course.getTutor().getId(); 
+//
+//        // 2. 從資料庫查出這個 User
+//        User tutorUser = usersRepo.findById(tutorUserId)
+//            .orElseThrow(() -> new RuntimeException("找不到該老師的使用者帳號"));
+//
+//        // 3. 更新錢包並儲存
+//        tutorUser.setWallet(tutorUser.getWallet() + (int)totalPrice);
+//        usersRepo.save(tutorUser);
+//        
+//        // 3. 建立訂單
+//        Order order = new Order();
+//        order.setUserId(userId);
+//        order.setCourseId(course.getId());
+//        order.setUnitPrice(course.getPrice());
+//        order.setDiscountPrice((int) totalPrice); // 目前不支援折扣
+//        order.setLessonCount(lessonCount);
+//        order.setLessonUsed(0);
+//        order.setStatus(1); // 1 = 有效/進行中
+//        ordersRepo.save(order);
+//
+//        // 4. 建立錢包日誌：學生消費
+//        WalletLog studentLog = new WalletLog();
+//        studentLog.setUserId(userId);
+//        studentLog.setTransactionType(2); // 2 = 購課
+//        studentLog.setAmount(totalPrice); // 金額欄位始終正數，由 transactionType 區分出入
+//        studentLog.setRelatedType(1); // 1 = order
+//        studentLog.setRelatedId(order.getId());
+//        walletLogsRepo.save(studentLog);
+//
+//        // 5. 建立錢包日誌：老師收入
+//        WalletLog tutorLog = new WalletLog();
+//        tutorLog.setUserId(tutorUserId);
+//        tutorLog.setTransactionType(3); // 3 = 授課收入
+//        tutorLog.setAmount(totalPrice);
+//        tutorLog.setRelatedType(1);
+//        tutorLog.setRelatedId(order.getId());
+//        walletLogsRepo.save(tutorLog);
+//
+//        // 回傳訂單資料
+//        return new PackageResponseDTO(
+//                order.getId(),
+//                course.getName(),
+//                order.getLessonCount(),
+//                order.getLessonUsed(),
+//                order.getLessonCount() - order.getLessonUsed(),
+//                order.getStatus()
+//        );
+//    }
 
     // 取得特定課程包細節
     public PackageResponseDTO getPackageById(Long packageId) {
@@ -185,32 +178,64 @@ public class StudentCourseService {
     }
 
     public List<BookingResponseDTO> getMyCourses(Long userId) {
-    	List<Order> orders = ordersRepo.findByUserId(userId);
+    	List<Booking> bookings = bookingsRepo.findByStudentId(userId);
 	 	
-	 	List<Long> courseIds = orders.stream().map(Order::getCourseId).distinct().toList();
-
-	    // 3. 一次性查出這些課程的 ID 和 Name (假設你有 CourseRepo)
-	    Map<Long, String> courseNameMap = coursesRepo.findAllById(courseIds).stream()
-	            .collect(Collectors.toMap(Course::getId, Course::getName));
-	    
-        return bookingsRepo.findByStudent_Id(userId).stream()
+    	Set<Long> orderIds = bookings.stream().map(Booking::getOrderId).collect(Collectors.toSet());
+    	List<Order> orders = ordersRepo.findAllById(orderIds);
+    	Set<Long> courseIds = orders.stream().map(Order::getCourseId).collect(Collectors.toSet());
+    	Set<Long> tutorIds = bookings.stream().map(Booking::getTutorId).collect(Collectors.toSet());
+        
+    	Set<Long> allUserIds = new HashSet<>(tutorIds);
+        allUserIds.add(userId);
+        
+        Map<Long, String> userNameMap = usersRepo.findAllById(allUserIds).stream()
+                .collect(Collectors.toMap(User::getId, User::getName));
+        Map<Long, Integer> courseSubjectMap = coursesRepo.findAllById(courseIds).stream()
+                .collect(Collectors.toMap(Course::getId, Course::getSubject));
+        Map<Long, Integer> orderIdToSubjectMap = orders.stream()
+        	    .collect(Collectors.toMap(
+        	        Order::getId, 
+        	        o -> courseSubjectMap.getOrDefault(o.getCourseId(), null)
+        	    ));
+        
+        return bookingsRepo.findByStudentId(userId).stream()
             .map(b -> new BookingResponseDTO(
-                b.getStudent().getName(),           // 學生姓名
+            	userNameMap.getOrDefault(userId, "找不到學生姓名"),           // 學生姓名
                 b.getId(),                          // 預約 ID
-                b.getTutor().getName(),             // 老師姓名
-                b.getOrder().getCourse().getSubject(), // 跨表抓：訂單 -> 課程 -> 科目
+                userNameMap.getOrDefault(b.getTutorId(), "找不到老師姓名"),             // 老師姓名
+                orderIdToSubjectMap.getOrDefault(b.getOrderId(), null), // 跨表抓：訂單 -> 課程 -> 科目
                 b.getDate(),
                 b.getHour(),
                 b.getStatus()
             )).toList();
     }
     public List<BookingResponseDTO> getBookingsByOrder(Long orderId) {
-        return bookingsRepo.findByOrder_Id(orderId).stream()
+    	List<Booking> bookings = bookingsRepo.findByOrderId(orderId); 
+    	
+    	Set<Long> studentIds = bookings.stream().map(Booking::getStudentId).collect(Collectors.toSet());
+        Set<Long> tutorIds = bookings.stream().map(Booking::getTutorId).collect(Collectors.toSet());
+        Set<Long> orderIds = bookings.stream().map(Booking::getOrderId).collect(Collectors.toSet());
+        List<Order> orders = ordersRepo.findAllById(orderIds);
+        Set<Long> courseIds = orders.stream().map(Order::getCourseId).collect(Collectors.toSet());
+        
+        Map<Long, String> studentNameMap = usersRepo.findAllById(studentIds).stream()
+                .collect(Collectors.toMap(User::getId, User::getName));
+        Map<Long, String> tutorNameMap = usersRepo.findAllById(tutorIds).stream()
+                .collect(Collectors.toMap(User::getId, User::getName));
+        Map<Long, Integer> courseSubjectMap = coursesRepo.findAllById(courseIds).stream()
+                .collect(Collectors.toMap(Course::getId, Course::getSubject));
+        Map<Long, Integer> orderIdToSubjectMap = orders.stream()
+        	    .collect(Collectors.toMap(
+        	        Order::getId, 
+        	        o -> courseSubjectMap.getOrDefault(o.getCourseId(), null)
+        	    ));
+        
+    	return bookingsRepo.findByOrderId(orderId).stream()
             .map(b -> new BookingResponseDTO(
-                b.getStudent().getName(),
+            	studentNameMap.getOrDefault(b.getStudentId(), "找不到學生姓名"),
                 b.getId(),
-                b.getTutor().getName(),
-                b.getOrder().getCourse().getSubject(),
+                tutorNameMap.getOrDefault(b.getTutorId(), "找不到老師姓名"),
+                orderIdToSubjectMap.getOrDefault(b.getOrderId(), null),
                 b.getDate(),
                 b.getHour(),
                 b.getStatus()
@@ -219,27 +244,37 @@ public class StudentCourseService {
     public List<TodayCourseDto> getTodayCourses(Long studentId) {
         LocalDate today = LocalDate.now();
         List<Booking> bookings = bookingsRepo.findByStudentIdAndDateOrderByHourAsc(studentId, today);
-
+        
+        Set<Long> tutorIds = bookings.stream().map(Booking::getTutorId).collect(Collectors.toSet());
+        
+        Map<Long, String> tutorNameMap = usersRepo.findAllById(tutorIds).stream()
+                .collect(Collectors.toMap(User::getId, User::getName));
+        
         // 將 Entity 轉換為 DTO
         return bookings.stream().map(b -> new TodayCourseDto(
             b.getId(),
             b.getDate(),
             b.getHour(),
             b.getStatus(),
-            b.getTutor().getName()
+            tutorNameMap.getOrDefault(b.getTutorId(), "找不到老師姓名")
         )).toList();
     }
     
-    public List<CourseDTO> getCoursesByDate(Long studentId, LocalDate date) {
+    public List<CourseResponseDto> getCoursesByDate(Long studentId, LocalDate date) {
         // 使用傳入的 date 取代 LocalDate.now()
         List<Booking> bookings = bookingsRepo.findByStudentIdAndDateOrderByHourAsc(studentId, date);
 
-        return bookings.stream().map(b -> new CourseDto(
+        Set<Long> tutorIds = bookings.stream().map(Booking::getTutorId).collect(Collectors.toSet());
+        
+        Map<Long, String> tutorNameMap = usersRepo.findAllById(tutorIds).stream()
+                .collect(Collectors.toMap(User::getId, User::getName));
+        
+        return bookings.stream().map(b -> new CourseResponseDto(
             b.getId(),
             b.getDate(),
             b.getHour(),
             b.getStatus(),
-            b.getTutor().getName() // 確保 DTO 最後一個參數是 String
+            tutorNameMap.getOrDefault(b.getTutorId(), "找不到老師姓名") // 確保 DTO 最後一個參數是 String
         )).toList();
     }
 
@@ -247,16 +282,16 @@ public class StudentCourseService {
     @Transactional
     public CancelResponseDTO cancelBooking(Long bookingId, Long userId) {
         // 1. 查找預約並驗證身分
-        Booking booking = bookingsRepo.findByIdAndStudent_Id(bookingId, userId)
+        Booking booking = bookingsRepo.findByIdAndStudentId(bookingId, userId)
                 .orElseThrow(() -> new RuntimeException("預約不存在或無權限"));
 
         // 2. 狀態檢查：僅 status=1 (排程中) 可申請取消
         if (booking.getStatus() != 1) {
             return new CancelResponseDTO(false, "僅排程中的課程可申請取消", null);
         }
-
+        
         LocalDateTime lessonTime = LocalDateTime.of(booking.getDate(), LocalTime.of(booking.getHour(), 0));
-        Order order = booking.getOrder();
+        Order order = ordersRepo.findById(booking.getOrderId()).orElseThrow(() -> new RuntimeException("找不到對應訂單"));
         
         // 3. 判斷是否在 12 小時前 (符合退費規則)
         if (LocalDateTime.now().plusHours(12).isBefore(lessonTime)) {
@@ -288,9 +323,9 @@ public class StudentCourseService {
         // 1. 查找訂單並驗證權限
         Order order = ordersRepo.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("訂單不存在"));
-         
+        
         // 【新增安全性檢查】：確保這張訂單真的屬於該使用者
-        if (!order.getUser().getId().equals(userId)) {
+        if (!order.getUserId().equals(userId)) {
             return "權限不足，無法操作此訂單";
         }
         
@@ -298,7 +333,7 @@ public class StudentCourseService {
         if (order.getStatus() != 1) {
             return "訂單狀態不符（可能已結案或已退費），無法辦理退課";
         }
-        List<Booking> allBookings = bookingsRepo.findByOrder_Id(orderId);
+        List<Booking> allBookings = bookingsRepo.findByOrderId(orderId);
         LocalDateTime now = LocalDateTime.now();
 
         AtomicBoolean isin12hr = new AtomicBoolean(false);
@@ -336,7 +371,8 @@ public class StudentCourseService {
         // 6. 批次儲存更新後的預約狀態
         bookingsRepo.saveAll(allBookings);
         
-        User user = order.getUser();
+        User user = usersRepo.findById(userId)
+        	    .orElseThrow(() -> new RuntimeException("找不到使用者"));
         
         user.setWallet((int)(user.getWallet() + refundAmount));
 	    usersRepo.save(user);
@@ -344,7 +380,7 @@ public class StudentCourseService {
         // 5. 建立 WalletLogs 紀錄 (強制轉型 byte)
          
         WalletLog log = new WalletLog();
-        log.setUser(user);
+        log.setUserId(userId);
         log.setTransactionType(4); // 4=退款
         log.setAmount(refundAmount);
         log.setRelatedType(1);    // 1=order

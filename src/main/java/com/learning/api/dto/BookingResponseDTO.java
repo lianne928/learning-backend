@@ -8,6 +8,6 @@ public record BookingResponseDTO(
 	    String tutorName,
 	    Integer subject,       
 	    LocalDate date,
-	    Byte hour,      
-	    Byte status     
+	    Integer hour,      
+	    Integer status     
 	) {}

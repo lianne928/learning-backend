@@ -20,8 +20,8 @@ public interface BookingRepo extends JpaRepository<Booking, Long> {
     Optional<Booking> findByStudentIdAndDateAndHourAndSlotLockedTrue(Long studentId, LocalDate date, Integer hour);
 
     List<Booking> findByTutorId(Long tutorId);
-    List<Booking> findByStudent_Id(Long studentId);
+    List<Booking> findByStudentId(Long studentId);
     List<Booking> findByStudentIdAndDateOrderByHourAsc(Long studentId, LocalDate date);
-    List<Booking> findByOrder_Id(Long orderId);
-    Optional<Booking> findByIdAndStudent_Id(Long id, Long studentId);
+    List<Booking> findByOrderId(Long orderId);
+    Optional<Booking> findByIdAndStudentId(Long id, Long studentId);
 }

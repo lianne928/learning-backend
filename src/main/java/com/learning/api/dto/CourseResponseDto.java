@@ -1,12 +1,13 @@
 package com.learning.api.dto;
 
-import lombok.Data;
-import lombok.AllArgsConstructor;
 import java.time.LocalDate;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class TodayCourseDto {
+public class CourseResponseDto {
     private Long bookingId;
     private LocalDate date;    // 對應資料庫 date
     private Integer hour;         // 對應資料庫 hour (時段)

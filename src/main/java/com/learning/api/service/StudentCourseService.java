@@ -9,11 +9,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+/* import org.springframework.stereotype.Service; */
 
 import com.learning.api.dto.BookingResponseDTO;
 import com.learning.api.dto.CancelResponseDTO;
-import com.learning.api.dto.CourseDto;
+/* import com.learning.api.dto.CourseDto; */
 import com.learning.api.dto.PackageResponseDTO;
 import com.learning.api.dto.TodayCourseDto;
 import com.learning.api.entity.Booking;
@@ -23,8 +23,8 @@ import com.learning.api.entity.Tutor;
 import com.learning.api.entity.User;
 import com.learning.api.entity.WalletLog;
 import com.learning.api.repo.*;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.LockModeType;
+/* import jakarta.persistence.EntityManager; */
+/* import jakarta.persistence.LockModeType; */
 import jakarta.transaction.Transactional;
 
 
@@ -164,9 +164,10 @@ public class StudentCourseService {
     // 取得特定課程包細節
     public PackageResponseDTO getPackageById(Long packageId) {
         Order order = ordersRepo.findById(packageId).orElseThrow();
+        Course course = coursesRepo.findById(order.getCourseId()).orElseThrow();
         return new PackageResponseDTO(
             order.getId(),
-            order.getCourse().getName(),
+            course.getName(),
             order.getLessonCount(),
             order.getLessonUsed(),
             order.getLessonCount() - order.getLessonUsed(),
@@ -176,53 +177,71 @@ public class StudentCourseService {
 
     public List<BookingResponseDTO> getMyCourses(Long userId) {
         return bookingsRepo.findByStudentId(userId).stream()
-            .map(b -> new BookingResponseDTO(
-                b.getStudent().getName(),           // 學生姓名
-                b.getId(),                          // 預約 ID
-                b.getTutor().getName(),             // 老師姓名
-                b.getOrder().getCourse().getSubject(), // 跨表抓：訂單 -> 課程 -> 科目
-                b.getDate(),
-                b.getHour(),
-                b.getStatus()
-            )).toList();
+            .map(b -> {
+                User student = usersRepo.findById(b.getStudentId()).orElseThrow();
+                Tutor tutor = tutorRepo.findById(b.getTutorId()).orElseThrow();
+                Order order = ordersRepo.findById(b.getOrderId()).orElseThrow();
+                Course course = coursesRepo.findById(order.getCourseId()).orElseThrow();
+                return new BookingResponseDTO(
+                    student.getName(),
+                    b.getId(),
+                    tutor.getUser().getName(),
+                    course.getSubject(),
+                    b.getDate(),
+                    b.getHour().byteValue(),
+                    b.getStatus().byteValue()
+                );
+            }).toList();
     }
     public List<BookingResponseDTO> getBookingsByOrder(Long orderId) {
         return bookingsRepo.findByOrderId(orderId).stream()
-            .map(b -> new BookingResponseDTO(
-                b.getStudent().getName(),
-                b.getId(),
-                b.getTutor().getName(),
-                b.getOrder().getCourse().getSubject(),
-                b.getDate(),
-                b.getHour(),
-                b.getStatus()
-            )).toList();
+            .map(b -> {
+                User student = usersRepo.findById(b.getStudentId()).orElseThrow();
+                Tutor tutor = tutorRepo.findById(b.getTutorId()).orElseThrow();
+                Order order = ordersRepo.findById(b.getOrderId()).orElseThrow();
+                Course course = coursesRepo.findById(order.getCourseId()).orElseThrow();
+                return new BookingResponseDTO(
+                    student.getName(),
+                    b.getId(),
+                    tutor.getUser().getName(),
+                    course.getSubject(),
+                    b.getDate(),
+                    b.getHour().byteValue(),
+                    b.getStatus().byteValue()
+                );
+            }).toList();
     }
     public List<TodayCourseDto> getTodayCourses(Long studentId) {
         LocalDate today = LocalDate.now();
         List<Booking> bookings = bookingsRepo.findByStudentIdAndDateOrderByHourAsc(studentId, today);
 
         // 將 Entity 轉換為 DTO
-        return bookings.stream().map(b -> new TodayCourseDto(
-            b.getId(),
-            b.getDate(),
-            b.getHour(),
-            b.getStatus(),
-            b.getTutor().getName()
-        )).toList();
+        return bookings.stream().map(b -> {
+            Tutor tutor = tutorRepo.findById(b.getTutorId()).orElseThrow();
+            return new TodayCourseDto(
+                b.getId(),
+                b.getDate(),
+                b.getHour().byteValue(),
+                b.getStatus().byteValue(),
+                tutor.getUser().getName()
+            );
+        }).toList();
     }
-    
-    public List<CourseDto> getCoursesByDate(Long studentId, LocalDate date) {
-        // 使用傳入的 date 取代 LocalDate.now()
-        List<Bookings> bookings = bookingsRepo.findByStudentIdAndDateOrderByHourAsc(studentId, date);
 
-        return bookings.stream().map(b -> new CourseDto(
-            b.getId(),
-            b.getDate(),
-            b.getHour(),
-            b.getStatus(),
-            b.getTutor().getName() // 確保 DTO 最後一個參數是 String
-        )).toList();
+    public List<TodayCourseDto> getCoursesByDate(Long studentId, LocalDate date) {
+        // 使用傳入的 date 取代 LocalDate.now()
+        List<Booking> bookings = bookingsRepo.findByStudentIdAndDateOrderByHourAsc(studentId, date);
+
+        return bookings.stream().map(b -> {
+            Tutor tutor = tutorRepo.findById(b.getTutorId()).orElseThrow();
+            return new TodayCourseDto(
+                b.getId(),
+                b.getDate(),
+                b.getHour().byteValue(),
+                b.getStatus().byteValue(),
+                tutor.getUser().getName()
+            );
+        }).toList();
     }
 
     
@@ -238,7 +257,7 @@ public class StudentCourseService {
         }
 
         LocalDateTime lessonTime = LocalDateTime.of(booking.getDate(), LocalTime.of(booking.getHour(), 0));
-        Order order = booking.getOrder();
+        Order order = ordersRepo.findById(booking.getOrderId()).orElseThrow();
         
         // 3. 判斷是否在 12 小時前 (符合退費規則)
         if (LocalDateTime.now().plusHours(12).isBefore(lessonTime)) {
@@ -249,7 +268,7 @@ public class StudentCourseService {
             }
 
             // A. 符合規則：修改狀態為 3，並返還堂數
-            booking.setStatus((byte)3);
+            booking.setStatus(3);
             order.setLessonUsed(order.getLessonUsed() - 1);
             
             bookingsRepo.save(booking);
@@ -258,7 +277,7 @@ public class StudentCourseService {
             return new CancelResponseDTO(true, "取消成功，已返還堂數", order.getLessonCount() - order.getLessonUsed());
         } else {
             // B. 逾時取消：修改狀態為 3，不退堂
-            booking.setStatus((byte)3);
+            booking.setStatus(3);
             bookingsRepo.save(booking);
             
             return new CancelResponseDTO(false, "逾時取消 (12hr內)，不予返還堂數", order.getLessonCount() - order.getLessonUsed());
@@ -272,7 +291,7 @@ public class StudentCourseService {
                 .orElseThrow(() -> new RuntimeException("訂單不存在"));
          
         // 【新增安全性檢查】：確保這張訂單真的屬於該使用者
-        if (!order.getUser().getId().equals(userId)) {
+        if (!order.getUserId().equals(userId)) {
             return "權限不足，無法操作此訂單";
         }
         
@@ -280,7 +299,7 @@ public class StudentCourseService {
         if (order.getStatus() != 1) {
             return "訂單狀態不符（可能已結案或已退費），無法辦理退課";
         }
-        List<Bookings> allBookings = bookingsRepo.findByOrderId(orderId);
+        List<Booking> allBookings = bookingsRepo.findByOrderId(orderId);
         LocalDateTime now = LocalDateTime.now();
 
         AtomicBoolean isin12hr = new AtomicBoolean(false);
@@ -293,11 +312,11 @@ public class StudentCourseService {
             // 判斷是否在 12 小時內
             if (now.plusHours(12).isAfter(lessonTime)) {
                 // A. 12 小時內：視同已上課，不退費
-                b.setStatus((byte) 2); 
+                b.setStatus(2);
                 isin12hr.set(true);
             } else {
                 // B. 12 小時外：准予取消，會退費
-                b.setStatus((byte) 3);
+                b.setStatus(3);
                 
             }
             b.setSlotLocked(null); // 無論如何都釋放老師時段
@@ -318,7 +337,7 @@ public class StudentCourseService {
         // 6. 批次儲存更新後的預約狀態
         bookingsRepo.saveAll(allBookings);
         
-        User user = order.getUser();
+        User user = usersRepo.findById(order.getUserId()).orElseThrow();
         
         user.setWallet((int)(user.getWallet() + refundAmount));
 	    usersRepo.save(user);
@@ -326,7 +345,7 @@ public class StudentCourseService {
         // 5. 建立 WalletLogs 紀錄 (強制轉型 byte)
          
         WalletLog log = new WalletLog();
-        log.setUser(user);
+        log.setUserId(user.getId());
         log.setTransactionType(4); // 4=退款
         log.setAmount(refundAmount);
         log.setRelatedType(1);    // 1=order
@@ -335,7 +354,7 @@ public class StudentCourseService {
 
         // 7. 更新訂單狀態為「已退費/終止」
         // 假設 4 代表系統自動退課完成
-        order.setStatus((byte)4); 
+        order.setStatus(4);
         ordersRepo.save(order);
         
         String msg = "整單退課成功！退還堂數：" + remainingLessons + "，退費金額：$" + refundAmount;

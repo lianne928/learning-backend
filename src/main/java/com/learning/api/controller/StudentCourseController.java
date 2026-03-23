@@ -61,7 +61,7 @@ public class StudentCourseController {
     }
     
     @GetMapping("/daily/me")
-    public List<CourseDto> getMyCoursesByDate(
+    public List<TodayCourseDto> getMyCoursesByDate(
             @RequestParam("userId") Long userId,
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return courseService.getCoursesByDate(userId, date);

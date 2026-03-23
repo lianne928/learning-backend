@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 
 import java.util.Map;
 
@@ -24,39 +25,39 @@ public class TutorUploadController {
     @PostMapping("/avatar")
     public ResponseEntity<Map<String, String>> uploadAvatar(
             @AuthenticationPrincipal SecurityUser me,
-            @RequestParam("file") MultipartFile file) {
-        return ResponseEntity.ok(Map.of("url", fileStorageService.saveImage(file)));
+            @RequestParam("file") MultipartFile file) throws IOException{
+        return ResponseEntity.ok(Map.of("url", fileStorageService.store(file)));
     }
 
     // POST /api/tutor/me/upload/certificate1
     @PostMapping("/certificate1")
     public ResponseEntity<Map<String, String>> uploadCertificate1(
             @AuthenticationPrincipal SecurityUser me,
-            @RequestParam("file") MultipartFile file) {
-        return ResponseEntity.ok(Map.of("url", fileStorageService.saveImage(file)));
+            @RequestParam("file") MultipartFile file) throws IOException{
+        return ResponseEntity.ok(Map.of("url", fileStorageService.store(file)));
     }
  
     // POST /api/tutor/me/upload/certificate2
     @PostMapping("/certificate2")
     public ResponseEntity<Map<String, String>> uploadCertificate2(
             @AuthenticationPrincipal SecurityUser me,
-            @RequestParam("file") MultipartFile file) {
-        return ResponseEntity.ok(Map.of("url", fileStorageService.saveImage(file)));
+            @RequestParam("file") MultipartFile file) throws IOException{
+        return ResponseEntity.ok(Map.of("url", fileStorageService.store(file)));
     }
 
     // POST /api/tutor/me/upload/video1
     @PostMapping("/video1")
     public ResponseEntity<Map<String, String>> uploadVideo1(
             @AuthenticationPrincipal SecurityUser me,
-            @RequestParam("file") MultipartFile file) {
-        return ResponseEntity.ok(Map.of("url", fileStorageService.saveVideo(file)));
+            @RequestParam("file") MultipartFile file)throws IOException {
+        return ResponseEntity.ok(Map.of("url", fileStorageService.store(file)));
     }
 
     // POST /api/tutor/me/upload/video2
     @PostMapping("/video2")
     public ResponseEntity<Map<String, String>> uploadVideo2(
             @AuthenticationPrincipal SecurityUser me,
-            @RequestParam("file") MultipartFile file) {
-        return ResponseEntity.ok(Map.of("url", fileStorageService.saveVideo(file)));
+            @RequestParam("file") MultipartFile file) throws IOException{
+        return ResponseEntity.ok(Map.of("url", fileStorageService.store(file)));
     }
 }

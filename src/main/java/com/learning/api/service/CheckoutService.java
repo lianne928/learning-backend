@@ -157,6 +157,7 @@ public class CheckoutService {
         walletLog.setAmount((long) -totalPrice);    // 負數代表扣款
         walletLog.setRelatedType(1);                // 1 = 關聯到 order
         walletLog.setRelatedId(savedOrder.getId()); // 綁定訂單 ID
+        walletLogRepo.save(walletLog);
 
 
         // 18. 寄送 Email 通知老師

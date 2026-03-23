@@ -29,6 +29,21 @@ public class CheckoutController {
     //         return ResponseEntity.badRequest().body(Map.of("msg", result));
     //     }
     // } 
+    @GetMapping("course/{courseId}/futurebookings")
+    public ResponseEntity<?> getTeacherFutureBookings(@PathVariable Long courseId) {
+
+        return ResponseEntity.ok(
+                checkoutService.getTutorFutureBookings(courseId)
+        );
+    }
+
+    @GetMapping("me/futurebookings")
+    public ResponseEntity<?> getStudentFutureBookings(@AuthenticationPrincipal SecurityUser me) {
+        Long studentId = me.getUser().getId(); 
+        return ResponseEntity.ok(
+                checkoutService.getStudentFutureBookings(studentId)
+        );
+    }
 
     @PostMapping("/purchase")
     public ResponseEntity<?> purchase(@RequestBody CheckoutReq req, @AuthenticationPrincipal SecurityUser me ) {

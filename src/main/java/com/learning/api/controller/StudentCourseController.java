@@ -11,20 +11,20 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-/* import org.springframework.web.bind.annotation.RestController; */
+import org.springframework.web.bind.annotation.RestController;
 
 import com.learning.api.dto.BookingResponseDTO;
-import com.learning.api.dto.BuycourseRequestDTO;
+/* import com.learning.api.dto.BuycourseRequestDTO; */
 import com.learning.api.dto.CancelBookingRequestDTO;
 import com.learning.api.dto.CancelResponseDTO;
-/* import com.learning.api.dto.CourseDto; */
+import com.learning.api.dto.CourseResponseDto;
 import com.learning.api.dto.PackageResponseDTO;
 import com.learning.api.dto.RefundOrderRequestDTO;
 import com.learning.api.dto.TodayCourseDto;
 import com.learning.api.service.StudentCourseService;
 
 
-//@RestController
+@RestController
 @RequestMapping("/api")
 public class StudentCourseController {
 
@@ -61,7 +61,7 @@ public class StudentCourseController {
     }
     
     @GetMapping("/daily/me")
-    public List<TodayCourseDto> getMyCoursesByDate(
+    public List<CourseResponseDto> getMyCoursesByDate(
             @RequestParam("userId") Long userId,
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return courseService.getCoursesByDate(userId, date);
@@ -78,10 +78,10 @@ public class StudentCourseController {
         return courseService.refundEntireOrder(request.orderId(), request.userId());
     }
 
-    // 新增購買課程的 API
-    @PostMapping("/orders/buycourse")
-    public PackageResponseDTO buycourseCourse(@RequestBody BuycourseRequestDTO request) {
-        return courseService.Buycourse(request.userId(), request.courseId(), request.lessonCount());
-    }
+//    // 新增購買課程的 API
+//    @PostMapping("/orders/buycourse")
+//    public PackageResponseDTO buycourseCourse(@RequestBody BuycourseRequestDTO request) {
+//        return courseService.Buycourse(request.userId(), request.courseId(), request.lessonCount());
+//    }
 
 }

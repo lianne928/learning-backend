@@ -1,18 +1,39 @@
 package com.learning.api.service;
 
+import com.learning.api.dto.BookingDTO;
 import com.learning.api.entity.Booking;
+import com.learning.api.entity.User;
 import com.learning.api.repo.BookingRepo;
+import com.learning.api.repo.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class BookingService {
 
     @Autowired
     private BookingRepo bookingRepo;
+    @Autowired
+    private UserRepo userRepo;
+
+    public List<BookingDTO> getTutorBookings(Long tutorId) {
+        return bookingRepo.findByTutorId(tutorId).stream()
+                .map(b -> {
+                    String name = userRepo.findById(b.getStudentId())
+                            .map(User::getName)
+                            .orElse("學生 #" + b.getStudentId());
+                    return new BookingDTO(
+                            b.getId(), b.getOrderId(), b.getTutorId(),
+                            b.getStudentId(), name,
+                            b.getDate(), b.getHour(), b.getStatus(), b.getSlotLocked()
+                    );
+                })
+                .collect(Collectors.toList());
+    }
 
     /**
      * 建立單筆預約紀錄（由 CheckoutService 呼叫，不對外開放）
@@ -32,12 +53,5 @@ public class BookingService {
 
         // 2. 寫入資料庫並回傳儲存後的物件（含自動產生的 ID）
         return bookingRepo.save(b);
-    }
-
-    /**
-     * 查詢某位老師的所有預約紀錄（給前端的班表頁面用）
-     */
-    public List<Booking> getTutorBookings(Long tutorId) {
-        return bookingRepo.findByTutorId(tutorId);
     }
 }

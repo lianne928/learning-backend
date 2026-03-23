@@ -11,6 +11,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -66,8 +68,28 @@ public class CheckoutService {
 
         // 6. 用 List 先把要存的 Booking 收集起來，驗證全部通過才儲存
         List<CheckoutReq.Slot> validatedSlots = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
 
         for (CheckoutReq.Slot slot : req.getSelectedSlots()) {
+
+            LocalDateTime lessonTime = LocalDateTime.of(
+                slot.getDate(),
+                LocalTime.of(slot.getHour(), 0)
+            );
+
+            // ✅ 至少提前 24 小時
+            if (lessonTime.isBefore(now.plusHours(24))) {
+                throw new IllegalArgumentException(
+                    "時段 " + slot.getDate() + " " + slot.getHour() + ":00 需提前24小時預約"
+                );
+            }
+
+            // ✅ 最多 4 週（28 天）
+            if (lessonTime.isAfter(now.plusDays(28))) {
+                throw new IllegalArgumentException(
+                    "時段 " + slot.getDate() + " " + slot.getHour() + ":00 超過可預約範圍（4週內）"
+                );
+            }
 
             // 7. 把日期轉換成星期幾（Java DayOfWeek：週一=1 ... 週日=7）
             int weekday = slot.getDate().getDayOfWeek().getValue();
@@ -82,15 +104,15 @@ public class CheckoutService {
                         "時段 " + slot.getDate() + " " + slot.getHour() + ":00 老師未開放");
             }
 
-            // 10. 查詢這個時段是否已被其他學生鎖定（slotLocked = true）
-            if (bookingRepo.findByTutorIdAndDateAndHourAndSlotLockedTrue(
-                    course.getTutor().getId(), slot.getDate(), slot.getHour()).isPresent()) {
-                throw new IllegalArgumentException("時段已被他人預約，請重新選擇");
-            }
-
-            // 11. 驗證通過，加入待儲存清單
-            validatedSlots.add(slot);
+        // 10. 查詢這個時段是否已被其他學生鎖定（slotLocked = true）
+        if (bookingRepo.findByTutorIdAndDateAndHourAndSlotLockedTrue(
+                course.getTutor().getId(), slot.getDate(), slot.getHour()).isPresent()) {
+            throw new IllegalArgumentException("時段已被他人預約，請重新選擇");
         }
+
+        // 11. 驗證通過，加入待儲存清單
+        validatedSlots.add(slot);
+    }
 
         // ─── 第二階段：全部驗證通過，開始執行扣款與建立紀錄 ───
 
@@ -136,10 +158,6 @@ public class CheckoutService {
         walletLog.setRelatedType(1);                // 1 = 關聯到 order
         walletLog.setRelatedId(savedOrder.getId()); // 綁定訂單 ID
 
-        // 17. 用 UUID 產生唯一的內部交易序號（merchant_trade_no 是 UNIQUE，不能重複）
-        walletLog.setMerchantTradeNo(
-                "INT_" + UUID.randomUUID().toString().substring(0, 8) + "_" + savedOrder.getId());
-        walletLogRepo.save(walletLog);
 
         // 18. 寄送 Email 通知老師
         List<EmailBookingTimeDTO> times = new ArrayList<>();

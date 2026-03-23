@@ -176,7 +176,7 @@ public class StudentCourseService {
     }
 
     public List<BookingResponseDTO> getMyCourses(Long userId) {
-        return bookingsRepo.findByStudentId(userId).stream()
+        return bookingsRepo.findById(userId).stream()
             .map(b -> {
                 User student = usersRepo.findById(b.getStudentId()).orElseThrow();
                 Tutor tutor = tutorRepo.findById(b.getTutorId()).orElseThrow();
@@ -194,7 +194,7 @@ public class StudentCourseService {
             }).toList();
     }
     public List<BookingResponseDTO> getBookingsByOrder(Long orderId) {
-        return bookingsRepo.findByOrderId(orderId).stream()
+        return bookingsRepo.findById(orderId).stream()
             .map(b -> {
                 User student = usersRepo.findById(b.getStudentId()).orElseThrow();
                 Tutor tutor = tutorRepo.findById(b.getTutorId()).orElseThrow();

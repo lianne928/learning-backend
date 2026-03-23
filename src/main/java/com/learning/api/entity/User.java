@@ -5,13 +5,10 @@ import com.learning.api.enums.UserRoleConverter;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-<<<<<<< HEAD
 /* import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
  */
-=======
 
->>>>>>> feature/develop
 import java.time.Instant;
 import java.time.LocalDate;
 

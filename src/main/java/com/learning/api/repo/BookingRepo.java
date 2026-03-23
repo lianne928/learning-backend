@@ -23,6 +23,12 @@ public interface BookingRepo extends JpaRepository<Booking, Long> {
 
     List<Booking> findByTutorId(Long tutorId);
 
+    List<Booking> findByStudentIdAndDateOrderByHourAsc(Long studentId, LocalDate date);
+
+    Optional<Booking> findByIdAndStudentId(Long id, Long studentId);
+
+    List<Booking> findByOrderId(Long orderId);
+
     @Query("""
         SELECT new com.learning.api.dto.CheckoutReq$Slot(b.date, b.hour)
         FROM Booking b

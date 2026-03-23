@@ -2,6 +2,8 @@ package com.learning.api.repo;
 
 import com.learning.api.dto.CheckoutReq;
 import com.learning.api.entity.Booking;
+
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -66,4 +68,8 @@ public interface BookingRepo extends JpaRepository<Booking, Long> {
 
 
 
+    List<Booking> findByStudentId(Long studentId);
+    List<Booking> findByStudentIdAndDateOrderByHourAsc(Long studentId, LocalDate date);
+    List<Booking> findByOrderId(Long orderId);
+    Optional<Booking> findByIdAndStudentId(Long id, Long studentId);
 }

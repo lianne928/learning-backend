@@ -4,19 +4,15 @@
 -- ============================================================
 
 
-<<<<<<< HEAD
-SET FOREIGN_KEY_CHECKS = 0;
-=======
 SET
 FOREIGN_KEY_CHECKS = 0;
->>>>>>> origin/feature/ApiTest
 
 -- ============================================================
 -- users (role: 1=學生 2=老師 3=管理者)
 -- ============================================================
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `birthday`, `role`, `wallet`, `created_at`, `updated_at`)
 VALUES
--- 學生 (id 1~5) password="12345678"
+-- 學生 (id 1~5) password="123456789"
 (1, '林小明', 'ming@example.com', '$2a$10$3XT3q7wUNnc8g6aNX6TbkOfs2uI9bUjh/sAxHj2QeTyufUVPV6O.W', '2012-04-15', 1, 2500,
  '2025-09-01 08:00:00', '2026-03-10 10:00:00'),
 (2, '王雅婷', 'yating@example.com', '$2a$10$3XT3q7wUNnc8g6aNX6TbkOfs2uI9bUjh/sAxHj2QeTyufUVPV6O.W', '2013-07-22', 1,

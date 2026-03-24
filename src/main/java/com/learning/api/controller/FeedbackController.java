@@ -34,12 +34,6 @@ public class FeedbackController {
         return lessonFeedbackService.findByBookingId(bookingId);
     }
 
-    @GetMapping("/lesson/{bookingId}/average-rating")
-    public ResponseEntity<Map<String, Object>> getAverageRating(@PathVariable Long bookingId) {
-        Double avg = lessonFeedbackService.getAverageRating(bookingId);
-        return ResponseEntity.ok(Map.of("bookingId", bookingId, "averageRating", avg));
-    }
-
     @PostMapping
     public ResponseEntity<Feedback> create(@RequestBody FeedbackRequest request) {
         Feedback feedback = toEntity(request);

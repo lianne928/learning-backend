@@ -47,11 +47,6 @@ public class FeedbackService {
         return lessonFeedbackRepository.findByBookingId(bookingId);
     }
 
-    public Double getAverageRating(Long bookingId) {
-        Double average = lessonFeedbackRepository.findAverageRatingByBookingId(bookingId);
-        return average != null ? average : 0.0;
-    }
-
     public Feedback save(Feedback feedback) {
         validate(feedback);
         Feedback saved = lessonFeedbackRepository.save(feedback);

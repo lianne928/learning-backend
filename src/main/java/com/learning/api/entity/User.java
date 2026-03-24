@@ -1,6 +1,6 @@
 package com.learning.api.entity;
 import com.learning.api.enums.UserRole;
-import com.learning.api.enums.UserRoleConverter;
+/* import com.learning.api.enums.UserRoleConverter; */
 
 import jakarta.persistence.*;
 import lombok.Getter;

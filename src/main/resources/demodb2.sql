@@ -83,6 +83,7 @@ CREATE TABLE `lesson_feedback` (
   `comprehension_score` int(11) NOT NULL COMMENT '1-5',
   `confidence_score` int(11) NOT NULL COMMENT '1-5',
   `comment` varchar(1000) DEFAULT NULL
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------

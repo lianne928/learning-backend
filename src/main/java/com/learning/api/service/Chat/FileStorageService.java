@@ -30,6 +30,9 @@ public class FileStorageService {
 
     private final Path uploadDir;
 
+    @Value("${file.base-url:http://localhost:8080/uploads}")
+    private String baseUrl;
+
     public FileStorageService(@Value("${file.upload-dir:uploads}") String uploadDir) {
         this.uploadDir = Paths.get(uploadDir).toAbsolutePath().normalize();
         try {
@@ -37,6 +40,26 @@ public class FileStorageService {
         } catch (IOException e) {
             throw new RuntimeException("無法建立上傳目錄: " + this.uploadDir, e);
         }
+    }
+
+    /**
+     * 儲存至子目錄，回傳可直接使用的完整 URL（如 http://localhost:8080/uploads/chat/uuid.jpg）
+     */
+    public String store(MultipartFile file, String subDir) throws IOException {
+        String original = file.getOriginalFilename();
+        String ext = "";
+        if (original != null && original.contains(".")) {
+            ext = original.substring(original.lastIndexOf('.')).toLowerCase();
+        }
+        if (ext.isEmpty() || !ALLOWED_EXTENSIONS.contains(ext)) {
+            throw new IllegalArgumentException("不允許的檔案類型: " + (ext.isEmpty() ? "(無副檔名)" : ext));
+        }
+        String filename = UUID.randomUUID() + ext;
+        Path subDirPath = uploadDir.resolve(subDir);
+        Files.createDirectories(subDirPath);
+        Path target = subDirPath.resolve(filename);
+        file.transferTo(target.toFile());
+        return baseUrl + "/" + subDir + "/" + filename;
     }
 
     public String store(MultipartFile file) throws IOException {

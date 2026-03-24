@@ -8,6 +8,6 @@ public class FeedbackRequest {
     private Integer focusScore;
     private Integer comprehensionScore;
     private Integer confidenceScore;
-    private Integer rating;
+    /* private Integer rating; */
     private String comment;
 }

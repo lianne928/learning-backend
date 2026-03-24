@@ -30,8 +30,8 @@ public class Feedback {
     @Column(nullable = true, length = 1000)
     private String comment; 
 
-    @Column(nullable = false)
-    private Integer rating;
+/*     @Column(nullable = false)
+    private Integer rating; */
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private Instant createdAt;

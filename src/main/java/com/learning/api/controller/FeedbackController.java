@@ -77,7 +77,7 @@ public class FeedbackController {
         feedback.setFocusScore(request.getFocusScore());
         feedback.setComprehensionScore(request.getComprehensionScore());
         feedback.setConfidenceScore(request.getConfidenceScore());
-        feedback.setRating(request.getRating());
+        /* feedback.setRating(request.getRating()); */
         feedback.setComment(request.getComment());
         return feedback;
     }

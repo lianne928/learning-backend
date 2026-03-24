@@ -20,10 +20,9 @@ import com.learning.api.dto.CourseSearchDTO;
 import com.learning.api.entity.Course;
 import com.learning.api.entity.TutorSchedule;
 import com.learning.api.repo.CourseRepo;
+import com.learning.api.repo.ReviewRepository;
 import com.learning.api.repo.TutorScheduleRepo;
 
-// 1. 改為 @RestController 以便直接回傳 JSON 數據
-// 2. 加上 @CrossOrigin 解決跨域問題
 @RestController
 @CrossOrigin(origins = "*")
 public class CourseViewController {
@@ -34,8 +33,13 @@ public class CourseViewController {
     @Autowired
     private TutorScheduleRepo scheduleRepo;
 
+    // 注入 ReviewRepository，用來計算各課程的平均評分
+    @Autowired
+    private ReviewRepository reviewRepo;
+
     /**
-     * 修改為回傳 ResponseEntity，以便前端獲取分頁 JSON 數據
+     * 取得課程列表（含分頁、篩選、平均評分）
+     * GET /api/view/courses
      */
     @GetMapping("/api/view/courses")
     public ResponseEntity<Page<CourseSearchDTO>> searchCourses(
@@ -48,7 +52,6 @@ public class CourseViewController {
             @RequestParam(required = false) Integer weekday,
             @RequestParam(required = false) String timeSlot) {
 
-        // 設定分頁大小
         Pageable pageable = PageRequest.of(page, 10);
 
         // 1. 執行查詢
@@ -57,10 +60,10 @@ public class CourseViewController {
                 pageable
         );
 
-        // 2. 轉換為 DTO (修正：加入時段轉換邏輯，湊齊 10 個參數)
+        // 2. 轉換為 DTO
         Page<CourseSearchDTO> dtoPage = coursePage.map(course -> {
 
-            // 🌟 轉換時段邏輯：將 TutorSchedule 轉為 "1-morning" 格式
+            // 轉換時段格式：TutorSchedule → "1-morning"
             List<String> slots = course.getTutor().getSchedules().stream()
                     .filter(s -> s.getIsAvailable() != null && s.getIsAvailable())
                     .map(s -> {
@@ -71,7 +74,12 @@ public class CourseViewController {
                     })
                     .collect(Collectors.toList());
 
-            // 🌟 回傳完整的 DTO (現在有 10 個參數了！)
+            // 計算此課程的平均評分（無評價則回傳 0.0）
+            Double avgRating = reviewRepo.findAverageRatingByCourseId(course.getId());
+            double rating = (avgRating != null)
+                    ? Double.parseDouble(String.format("%.1f", avgRating))
+                    : 0.0;
+
             return new CourseSearchDTO(
                     course.getId(),
                     course.getTutor().getId(),
@@ -82,25 +90,26 @@ public class CourseViewController {
                     course.getSubject(),
                     course.getDescription(),
                     course.getPrice(),
-                    slots // 第 10 個參數：時段清單
+                    slots,
+                    rating  // 平均評分（新增）
             );
         });
 
-        // 3. 直接回傳 DTO 分頁物件
         return ResponseEntity.ok(dtoPage);
     }
 
     /**
-     * 獲取老師課表，同樣支援跨域
+     * 取得老師課表
+     * GET /api/view/teacher_schedule/{teacherId}
      */
     @GetMapping("/api/view/teacher_schedule/{teacherId}")
     public Map<Integer, List<Integer>> getTeacherSchedule(@PathVariable Long teacherId) {
         List<TutorSchedule> schedules = scheduleRepo.findByTutorId(teacherId);
 
         return schedules.stream()
-            .collect(Collectors.groupingBy(
-                TutorSchedule::getWeekday,
-                Collectors.mapping(TutorSchedule::getHour, Collectors.toList())
-            ));
+                .collect(Collectors.groupingBy(
+                        TutorSchedule::getWeekday,
+                        Collectors.mapping(TutorSchedule::getHour, Collectors.toList())
+                ));
     }
 }

@@ -15,4 +15,6 @@ public class TutorUpdateDTO {
     private String certificateName2;
     private String videoUrl1;
     private String videoUrl2;
+    private String experience1; // 經歷1（新增）
+    private String experience2; // 經歷2（新增）
 }

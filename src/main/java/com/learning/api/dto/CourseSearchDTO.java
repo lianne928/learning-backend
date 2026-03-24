@@ -16,6 +16,9 @@ public class CourseSearchDTO {
     private String description;
     private Integer price;
 
-    // 🌟 新增：存放時段代碼的清單 (格式如: "1-morning")
+    // 存放時段代碼的清單 (格式如: "1-morning")
     private List<String> availableSlots;
+
+    // 課程平均評分（新增）
+    private Double averageRating;
 }

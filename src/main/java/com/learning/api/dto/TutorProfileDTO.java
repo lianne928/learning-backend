@@ -6,12 +6,12 @@ import lombok.Setter;
 
 @Getter
 @Setter
-/* 
--------公開讀取內容--------給學生看的老師個人頁面-----------
+/*
+ * 公開讀取內容 — 給學生看的老師個人頁面
  */
 public class TutorProfileDTO {
     private String name;
-    private String headline; // 對應 tutor.title
+    private String headline;       // 對應 tutor.title
     private String avatar;
     private String intro;
 
@@ -24,6 +24,10 @@ public class TutorProfileDTO {
     // 影片（自我介紹 + 教學示範）
     private String videoUrl1;
     private String videoUrl2;
+
+    // 教學經歷（新增）
+    private String experience1;
+    private String experience2;
 
     private List<TutorScheduleDTO> schedules;
     private List<ReviewDTO> reviews;

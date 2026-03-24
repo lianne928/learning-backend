@@ -37,22 +37,29 @@ public class Tutor {
     private String intro; // 自我介紹
 
     @Column(name = "certificate_1", length = 500)
-    private String certificate1;// 位址
+    private String certificate1; // 證照圖片位址
 
     @Column(name = "certificate_name_1", length = 500)
-    private String certificateName1;// 證照名稱
+    private String certificateName1; // 證照名稱
 
     @Column(name = "certificate_2", length = 500)
-    private String certificate2;// 位址
+    private String certificate2; // 證照圖片位址
 
     @Column(name = "certificate_name_2", length = 500)
-    private String certificateName2;// 證照名稱
+    private String certificateName2; // 證照名稱
 
     @Column(name = "video_url_1", length = 500)
     private String videoUrl1; // 自我介紹影片
 
     @Column(name = "video_url_2", length = 500)
     private String videoUrl2; // 教學示範影片
+
+    // 新增：教學經歷
+    @Column(name = "experience_1", length = 200)
+    private String experience1; // 經歷1
+
+    @Column(name = "experience_2", length = 200)
+    private String experience2; // 經歷2
 
     @Column(name = "bank_code", length = 10)
     private String bankCode;
@@ -63,5 +70,4 @@ public class Tutor {
     // 為了讓 CourseSpec 能順利從課程連動到課表
     @OneToMany(mappedBy = "tutor")
     private List<TutorSchedule> schedules;
-    
 }

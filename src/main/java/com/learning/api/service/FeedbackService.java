@@ -48,8 +48,13 @@ public class FeedbackService {
     }
 
     public Double getAverageRating(Long bookingId) {
-        Double average = lessonFeedbackRepository.findAverageRatingByBookingId(bookingId);
-        return average != null ? average : 0.0;
+        List<Feedback> feedbacks = lessonFeedbackRepository.findByBookingId(bookingId);
+        if (feedbacks.isEmpty()) return 0.0;
+
+        return feedbacks.stream()
+                .mapToDouble(f -> (f.getFocusScore() + f.getComprehensionScore() + f.getConfidenceScore()) / 3.0)
+                .average()
+                .orElse(0.0);
     }
 
     public Feedback save(Feedback feedback) {
@@ -108,7 +113,6 @@ public class FeedbackService {
             existing.setFocusScore(updated.getFocusScore());
             existing.setComprehensionScore(updated.getComprehensionScore());
             existing.setConfidenceScore(updated.getConfidenceScore());
-            existing.setRating(updated.getRating());
             existing.setComment(updated.getComment());
             return lessonFeedbackRepository.save(existing);
         });
@@ -126,7 +130,6 @@ public class FeedbackService {
         validateScore("專注度", feedback.getFocusScore());
         validateScore("理解度", feedback.getComprehensionScore());
         validateScore("自信度", feedback.getConfidenceScore());
-        validateScore("評分", feedback.getRating());
         if (feedback.getComment() != null && feedback.getComment().length() > MAX_COMMENT_LENGTH) {
             throw new IllegalArgumentException("評論不能超過 " + MAX_COMMENT_LENGTH + " 個字元");
         }

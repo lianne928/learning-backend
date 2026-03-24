@@ -17,4 +17,5 @@ public class BookingDTO {
     private Integer hour;
     private Integer status;
     private Boolean slotLocked;
+    private Integer lessonCount;
 }

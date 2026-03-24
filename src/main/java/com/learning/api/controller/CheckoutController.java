@@ -28,7 +28,7 @@ public class CheckoutController {
     //     } else {
     //         return ResponseEntity.badRequest().body(Map.of("msg", result));
     //     }
-    // } 
+    // }
     @GetMapping("course/{courseId}/futurebookings")
     public ResponseEntity<?> getTeacherFutureBookings(@PathVariable Long courseId) {
 
@@ -39,7 +39,7 @@ public class CheckoutController {
 
     @GetMapping("me/futurebookings")
     public ResponseEntity<?> getStudentFutureBookings(@AuthenticationPrincipal SecurityUser me) {
-        Long studentId = me.getUser().getId(); 
+        Long studentId = me.getUser().getId();
         return ResponseEntity.ok(
                 checkoutService.getStudentFutureBookings(studentId)
         );
@@ -47,7 +47,7 @@ public class CheckoutController {
 
     @PostMapping("/purchase")
     public ResponseEntity<?> purchase(@RequestBody CheckoutReq req, @AuthenticationPrincipal SecurityUser me ) {
-        Long studentId = me.getUser().getId(); 
+        Long studentId = me.getUser().getId();
         UserRole role = me.getUser().getRole();
         String result = checkoutService.processPurchase(req, studentId,role);
 
@@ -60,5 +60,6 @@ public class CheckoutController {
         }
     }
     
+
 
 }

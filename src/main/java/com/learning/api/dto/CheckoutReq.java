@@ -16,13 +16,13 @@ public class CheckoutReq {
     @Getter
     @Setter
     public static class Slot {
-    private LocalDate date;
-    private Integer hour;
+        private LocalDate date;
+        private Integer hour;
 
-    public Slot(LocalDate date, Integer hour) {
-        this.date = date;
-        this.hour = hour;
+        public Slot(LocalDate date, Integer hour) {
+            this.date = date;
+            this.hour = hour;
+        }
     }
-}
 
 }

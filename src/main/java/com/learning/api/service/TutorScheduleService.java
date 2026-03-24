@@ -20,7 +20,6 @@ public class TutorScheduleService {
 
     @Autowired
     private TutorScheduleRepo scheduleRepo;
-
     @Autowired
     private TutorRepo tutorRepo;
 
@@ -46,10 +45,10 @@ public class TutorScheduleService {
                 Tutor tutor = tutorRepo.findById(req.getTutorId())
                         .orElseThrow(() -> new IllegalArgumentException("找不到老師"));
                 newSlot.setTutor(tutor);
-                newSlot.setWeekday(req.getWeekday()); // 設定星期幾
-                newSlot.setHour(req.getHour()); // 設定幾點
-                newSlot.setIsAvailable(true); // 標記為開放
-                scheduleRepo.save(newSlot); // 寫入資料庫
+                newSlot.setWeekday(req.getWeekday());  // 設定星期幾
+                newSlot.setHour(req.getHour());        // 設定幾點
+                newSlot.setIsAvailable(true);          // 標記為開放
+                scheduleRepo.save(newSlot);            // 寫入資料庫
             }
             // 4. 如果已經存在就不動（避免重複新增）
 

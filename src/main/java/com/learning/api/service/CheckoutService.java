@@ -130,21 +130,21 @@ public class CheckoutService {
         for (CheckoutReq.Slot slot : req.getSelectedSlots()) {
 
             LocalDateTime lessonTime = LocalDateTime.of(
-                slot.getDate(),
-                LocalTime.of(slot.getHour(), 0)
+                    slot.getDate(),
+                    LocalTime.of(slot.getHour(), 0)
             );
 
             // ✅ 至少提前 24 小時
             if (lessonTime.isBefore(now.plusHours(24))) {
                 throw new IllegalArgumentException(
-                    "時段 " + slot.getDate() + " " + slot.getHour() + ":00 需提前24小時預約"
+                        "時段 " + slot.getDate() + " " + slot.getHour() + ":00 需提前24小時預約"
                 );
             }
 
             // ✅ 最多 4 週（28 天）
             if (lessonTime.isAfter(now.plusDays(28))) {
                 throw new IllegalArgumentException(
-                    "時段 " + slot.getDate() + " " + slot.getHour() + ":00 超過可預約範圍（4週內）"
+                        "時段 " + slot.getDate() + " " + slot.getHour() + ":00 超過可預約範圍（4週內）"
                 );
             }
 
@@ -162,14 +162,14 @@ public class CheckoutService {
             }
 
             if (bookingRepo.findByStudentIdAndDateAndHourAndSlotLockedTrue(student.getId(), slot.getDate(), slot.getHour()).isPresent()) {
-                    throw new IllegalArgumentException("學生該時段已有其他課程，無法重複預約");//ok
+                throw new IllegalArgumentException("學生該時段已有其他課程，無法重複預約");//ok
             }
-            if (bookingRepo.findByTutorIdAndDateAndHourAndSlotLockedTrue(course.getTutor().getId(), slot.getDate(), slot.getHour()).isPresent()){ 
-                    throw new IllegalArgumentException("時段已被他人預約");//ok
+            if (bookingRepo.findByTutorIdAndDateAndHourAndSlotLockedTrue(course.getTutor().getId(), slot.getDate(), slot.getHour()).isPresent()){
+                throw new IllegalArgumentException("時段已被他人預約");//ok
             }
-        // 11. 驗證通過，加入待儲存清單
-        validatedSlots.add(slot);
-    }
+            // 11. 驗證通過，加入待儲存清單
+            validatedSlots.add(slot);
+        }
 
         // ─── 第二階段：全部驗證通過，開始執行扣款與建立紀錄 ───
 

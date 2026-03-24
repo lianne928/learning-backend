@@ -1,4 +1,5 @@
 package com.learning.api.entity;
+
 import com.learning.api.enums.UserRole;
 import com.learning.api.enums.UserRoleConverter;
 
@@ -8,7 +9,6 @@ import lombok.Setter;
 
 import java.time.Instant;
 import java.time.LocalDate;
-
 
 @Entity
 @Table(name = "users")
@@ -31,17 +31,17 @@ public class User {
 
     private LocalDate birthday;
 
-@Convert(converter = UserRoleConverter.class)  
-@Column(nullable = false, length = 20)
-/*     @Enumerated(EnumType.STRING) */
+    @Convert(converter = UserRoleConverter.class)
+    @Column(nullable = false)
+    /* @Enumerated(EnumType.STRING) */
     private UserRole role;
 
-    @Column(nullable=false)
-    private Integer wallet=0;
+    @Column(nullable = false)
+    private Integer wallet = 0;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private Instant createdAt;
-    
+
     @Column(name = "updated_at", insertable = false, updatable = false)
     private Instant updatedAt;
 }

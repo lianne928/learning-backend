@@ -1,14 +1,17 @@
 package com.learning.api.controller;
 
+import com.learning.api.dto.BookingDTO;
 import com.learning.api.dto.auth.UserResp;
-import com.learning.api.entity.Booking;
 import com.learning.api.entity.User;
 import com.learning.api.security.SecurityUser;
 import com.learning.api.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -37,7 +40,7 @@ public class StudentController {
     }
 
     @GetMapping("/bookings")
-    public ResponseEntity<List<Booking>> getBookings(@AuthenticationPrincipal SecurityUser securityUser) {
+    public ResponseEntity<List<BookingDTO>> getBookings(@AuthenticationPrincipal SecurityUser securityUser) {
         Long studentId = securityUser.getUser().getId();
         return ResponseEntity.ok(bookingService.getTutorBookings(studentId));
     }

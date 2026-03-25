@@ -45,7 +45,7 @@ VALUES
 -- ============================================================
 INSERT INTO `tutors` (`id`, `apply_date`, `avatar`, `title`, `intro`, `certificate_1`, `certificate_name_1`,
                       `certificate_2`, `certificate_name_2`, `video_url_1`, `video_url_2`, `bank_code`, `bank_account`,
-                      `status`)
+                      `status`, `education`, `experience_1`, `experience_2`)
 VALUES
 (11, '2025-07-20', 'https://drive.google.com/file/d/1PRcsio0qw1es3Eph11SZGKhiBRUVdWFy/view?usp=drive_link',
  '多益 TOEIC 衝刺名師',
@@ -54,7 +54,8 @@ VALUES
  NULL, NULL,
  'https://drive.google.com/file/d/12alT0Rmmd0IXXfKwiCi9xowuBoSIhlqM/view?usp=drive_link',
  NULL,
- '007', '234567890123', 2),
+ '007', '234567890123', 2,
+ '淡江大學英文學系', '補習班 TOEIC 課程講師（8 年）', '企業英語培訓講師（3 年）'),
 
 (12, '2025-08-10', 'https://drive.google.com/file/d/1JG-R3qN1Ud24vm4eg8Sg3MURn9EzOwNw/view?usp=drive_link',
  '高年級英語作文與口說教練',
@@ -62,7 +63,8 @@ VALUES
  'https://drive.google.com/file/d/1HBUib8fAq7S3u9eXFuPH-If0PDEMs0gd/view?usp=drive_link', '政治大學英國語文學系',
  NULL, NULL,
  'https://drive.google.com/file/d/1-Tq3AgPZfVFccqzlbYsI9utqkC2z30KW/view?usp=drive_link', NULL,
- '011', '345678901234', 2),
+ '011', '345678901234', 2,
+ '政治大學英國語文學系', '私立小學英語課後輔導教師（6 年）', '補習班高年級英語作文班講師（4 年）'),
 
 (13, '2025-09-05', 'https://drive.google.com/file/d/17RHPU4vqmk0yXNQABjSROzJIDMRzFfz3/view?usp=drive_link',
  'YLE Movers／Flyers 備考專師',
@@ -70,7 +72,8 @@ VALUES
  'https://drive.google.com/file/d/1ORFO_YcMI8Ew8dmSO4PoJ2q6L309v73d/view?usp=drive_link', 'TKT 劍橋教師認證',
  NULL, NULL,
  'https://drive.google.com/file/d/1eTHX5sb3TjP_mdRZZ6DTb-BQUtr-24tt/view?usp=drive_link', NULL,
- '108', '456789012345', 2),
+ '108', '456789012345', 2,
+ '輔仁大學英文學系', '兒童英語補習班 YLE 備考講師（7 年）', '劍橋英語兒童考試監考員（3 年）'),
 
 (14, '2025-11-01', 'https://drive.google.com/file/d/1TAY1ow8NC9yqSeJ7z9cqUC7egMHU1RfV/view?usp=drive_link',
  '國中英語會話與口試訓練師',
@@ -78,7 +81,8 @@ VALUES
  'https://drive.google.com/file/d/1wsMV6ZSGj_XNq2TatjzXpVyi6JJ2fFyu/view?usp=drive_link', '輔仁大學英文學系',
  NULL, NULL,
  'https://drive.google.com/file/d/1qNsC0KKaDhjr_BJmXQhqeX52MgqE2U8w/view?usp=drive_link', NULL,
- '812', '567890123456', 1),
+ '812', '567890123456', 1,
+ '輔仁大學英文學系', '國中英語課後輔導教師（5 年）', '補習班英語口說訓練講師（3 年）'),
 
 (15, '2025-12-15', 'https://drive.google.com/file/d/1qWmOham47s_YF69aMK1m_njcxbHRbw0v/view?usp=drive_link',
  '英語故事創作與寫作老師',
@@ -86,7 +90,8 @@ VALUES
  'https://drive.google.com/file/d/1uah4kB2KU-LUycCQMsA4KgieTsb7e_xq/view?usp=drive_link', '東吳大學英文學系',
  NULL, NULL,
  'https://drive.google.com/file/d/177EteMAeyLa5lBpR1OYuNT3MU_yktYxw/view?usp=drive_link', NULL,
- '103', '678901234567', 1);
+ '103', '678901234567', 1,
+ '東吳大學英文學系', '兒童英語故事繪本教學講師（4 年）', '出版社兒童英語讀本編輯（2 年）');
 
 -- ============================================================
 -- courses

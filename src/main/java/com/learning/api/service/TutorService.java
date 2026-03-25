@@ -11,26 +11,19 @@ import com.learning.api.entity.Review;
 import com.learning.api.entity.Tutor;
 import com.learning.api.entity.TutorSchedule;
 import com.learning.api.repo.CourseRepo;
-import com.learning.api.repo.ReviewRepository; // Repo
+import com.learning.api.repo.ReviewRepository;
 import com.learning.api.repo.TutorRepo;
 import com.learning.api.repo.TutorScheduleRepo;
 
 @Service
 public class TutorService {
 
-    @Autowired
-    private TutorRepo tutorRepo;
+    @Autowired private TutorRepo         tutorRepo;
+    @Autowired private CourseRepo        courseRepo;
+    @Autowired private TutorScheduleRepo scheduleRepo;
+    @Autowired private ReviewRepository  reviewRepo;
 
-    @Autowired
-    private CourseRepo courseRepo;
-
-    @Autowired
-    private TutorScheduleRepo scheduleRepo;
-
-    @Autowired
-    private ReviewRepository reviewRepo;
-
-    // ── 查詢功能 (Query) ──────────────────────────────────────────
+    // ── 查詢功能 ──────────────────────────────────────────────────
 
     /** 取得老師實體物件 */
     public Tutor findTutorById(Long id) {
@@ -57,9 +50,12 @@ public class TutorService {
         return reviewRepo.findByCourseIdOrderByUpdatedAtDesc(courseId);
     }
 
-    // ── 個人資料處理 (Profile Handling) ─────────────────────────────
+    // ── 個人資料處理 ──────────────────────────────────────────────
 
-    /** 將 Tutor 轉換為 DTO 用於編輯頁面 */
+    /**
+     * 將 Tutor entity 轉換為 TutorUpdateDTO，用於老師後台編輯頁面
+     * 包含所有可編輯欄位：頭貼、職稱、介紹、證照、影片、經歷
+     */
     public TutorUpdateDTO getProfileDTO(Long tutorId) {
         Tutor tutor = tutorRepo.findById(tutorId)
                 .orElseThrow(() -> new RuntimeException("找不到老師 id=" + tutorId));
@@ -74,38 +70,38 @@ public class TutorService {
         dto.setCertificateName2(tutor.getCertificateName2());
         dto.setVideoUrl1(tutor.getVideoUrl1());
         dto.setVideoUrl2(tutor.getVideoUrl2());
+        dto.setExperience1(tutor.getExperience1()); // 經歷1
+        dto.setExperience2(tutor.getExperience2()); // 經歷2
         return dto;
     }
 
-    /*
-     * 完整更新個人資料（支援部分更新：DTO 欄位為 null 則不更新）
+    /**
+     * 完整更新老師個人資料（支援部分更新：DTO 欄位為 null 則不更新）
+     * 包含：頭貼、職稱、介紹、證照（位址+名稱）、影片、教學經歷
      */
     @Transactional
     public void updateProfile(Long tutorId, TutorUpdateDTO dto) {
         Tutor tutor = tutorRepo.findById(tutorId)
                 .orElseThrow(() -> new RuntimeException("找不到老師 id=" + tutorId));
 
-        // 核心欄位更新
-        if (dto.getAvatar() != null)
-            tutor.setAvatar(dto.getAvatar());
-        if (dto.getTitle() != null)
-            tutor.setTitle(dto.getTitle());
+        // 核心欄位
+        if (dto.getAvatar() != null)           tutor.setAvatar(dto.getAvatar());
+        if (dto.getTitle() != null)            tutor.setTitle(dto.getTitle());
+        if (dto.getIntro() != null)            tutor.setIntro(dto.getIntro());
 
-        // 詳細資訊更新
-        if (dto.getIntro() != null)
-            tutor.setIntro(dto.getIntro());
-        if (dto.getCertificate1() != null)
-            tutor.setCertificate1(dto.getCertificate1());
-        if (dto.getCertificateName1() != null)
-            tutor.setCertificateName1(dto.getCertificateName1());
-        if (dto.getCertificate2() != null)
-            tutor.setCertificate2(dto.getCertificate2());
-        if (dto.getCertificateName2() != null)
-            tutor.setCertificateName2(dto.getCertificateName2());
-        if (dto.getVideoUrl1() != null)
-            tutor.setVideoUrl1(dto.getVideoUrl1());
-        if (dto.getVideoUrl2() != null)
-            tutor.setVideoUrl2(dto.getVideoUrl2());
+        // 證照
+        if (dto.getCertificate1() != null)     tutor.setCertificate1(dto.getCertificate1());
+        if (dto.getCertificateName1() != null) tutor.setCertificateName1(dto.getCertificateName1());
+        if (dto.getCertificate2() != null)     tutor.setCertificate2(dto.getCertificate2());
+        if (dto.getCertificateName2() != null) tutor.setCertificateName2(dto.getCertificateName2());
+
+        // 影片
+        if (dto.getVideoUrl1() != null)        tutor.setVideoUrl1(dto.getVideoUrl1());
+        if (dto.getVideoUrl2() != null)        tutor.setVideoUrl2(dto.getVideoUrl2());
+
+        // 教學經歷（新增）
+        if (dto.getExperience1() != null)      tutor.setExperience1(dto.getExperience1());
+        if (dto.getExperience2() != null)      tutor.setExperience2(dto.getExperience2());
 
         tutorRepo.save(tutor);
     }

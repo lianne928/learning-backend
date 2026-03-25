@@ -43,8 +43,9 @@ public class BookingService {
                     return new BookingDTO(
                             b.getId(), b.getOrderId(), b.getTutorId(),
                             b.getStudentId(), studentName,
-                            courseName,  // ← 新增
-                            b.getDate(), b.getHour(), b.getStatus(), b.getSlotLocked()
+                            courseName,
+                            b.getDate(), b.getHour(), b.getStatus(), b.getSlotLocked(),
+                            null  // ← 加這個，lessonCount 暫時不用
                     );
                 })
                 .collect(Collectors.toList());
@@ -68,5 +69,12 @@ public class BookingService {
 
         // 2. 寫入資料庫並回傳儲存後的物件（含自動產生的 ID）
         return bookingRepo.save(b);
+    }
+    public boolean updateStatus(Long id, Integer status) {
+        return bookingRepo.findById(id).map(b -> {
+            b.setStatus(status);
+            bookingRepo.save(b);
+            return true;
+        }).orElse(false);
     }
 }

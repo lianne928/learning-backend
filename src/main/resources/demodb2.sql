@@ -135,6 +135,8 @@ CREATE TABLE `tutors` (
   `certificate_name_1` varchar(40) DEFAULT NULL,
   `certificate_2` varchar(500) DEFAULT NULL,
   `certificate_name_2` varchar(40) DEFAULT NULL,
+  `experience_1` varchar(200) DEFAULT NULL,
+  `experience_2` varchar(200) DEFAULT NULL,
   `video_url_1` varchar(500) DEFAULT NULL,
   `video_url_2` varchar(500) DEFAULT NULL,
   `bank_code` varchar(10) DEFAULT NULL,

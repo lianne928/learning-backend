@@ -127,18 +127,15 @@ public class AdminTutorService {
             tutor.getCertificateName1(),
             tutor.getCertificate2(),
             tutor.getCertificateName2(),
+            tutor.getEducation(),
             tutor.getVideoUrl1(),
             tutor.getVideoUrl2()
         );
     }
 
+    // AdminTutorService.java 建議微調
     public TutorReviewCountDTO getCounts() {
-        Object[] result = tutorRepo.countTutorStatus();
-
-        return new TutorReviewCountDTO(
-                (Long) result[0],
-                (Long) result[1],
-                (Long) result[2]
-        );
+        return tutorRepo.countTutorStatus();
+    
     }
 }

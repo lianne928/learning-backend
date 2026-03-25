@@ -83,6 +83,7 @@ CREATE TABLE `lesson_feedback` (
   `comprehension_score` int(11) NOT NULL COMMENT '1-5',
   `confidence_score` int(11) NOT NULL COMMENT '1-5',
   `comment` varchar(1000) DEFAULT NULL
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -134,6 +135,8 @@ CREATE TABLE `tutors` (
   `certificate_name_1` varchar(40) DEFAULT NULL,
   `certificate_2` varchar(500) DEFAULT NULL,
   `certificate_name_2` varchar(40) DEFAULT NULL,
+  `experience_1` varchar(200) DEFAULT NULL,
+  `experience_2` varchar(200) DEFAULT NULL,
   `video_url_1` varchar(500) DEFAULT NULL,
   `video_url_2` varchar(500) DEFAULT NULL,
   'experience_1'varchar(200) DEFAULT NULL,

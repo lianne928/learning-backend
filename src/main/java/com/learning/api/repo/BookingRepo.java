@@ -24,16 +24,6 @@ public interface BookingRepo extends JpaRepository<Booking, Long> {
 
     List<Booking> findByTutorId(Long tutorId);
 
-    List<Booking> findByStudentId(Long studentId);
-
-    List<Booking> findByStudentIdAndDateGreaterThanEqualOrderByDateAscHourAsc(Long studentId, LocalDate date);
-
-    List<Booking> findByStudentIdAndDateOrderByHourAsc(Long studentId, LocalDate date);
-
-    Optional<Booking> findByIdAndStudentId(Long id, Long studentId);
-
-    List<Booking> findByOrderId(Long orderId);
-
     /**
      * 查詢學生未來預約時段
      */
@@ -84,6 +74,14 @@ public interface BookingRepo extends JpaRepository<Booking, Long> {
      */
     @Query("SELECT b FROM Booking b WHERE b.slotLocked = true AND b.status = 1 AND (b.date < :today OR (b.date = :today AND b.hour < :hour))")
     List<Booking> findExpiredBookings(@Param("today") LocalDate today, @Param("hour") int hour);
+
+
+    List<Booking> findByStudentId(Long studentId);
+    List<Booking> findByStudentIdAndDateOrderByHourAsc(Long studentId, LocalDate date);
+    List<Booking> findByOrderId(Long orderId);
+    Optional<Booking> findByIdAndStudentId(Long id, Long studentId);
+ // 使用 Spring Data JPA 的命名規範自動生成 SQL
+    List<Booking> findByStudentIdAndDateGreaterThanEqualOrderByDateAscHourAsc(Long studentId, LocalDate date);
 
     /**
      * 批次更新過期 booking 為 status=2（已完成）

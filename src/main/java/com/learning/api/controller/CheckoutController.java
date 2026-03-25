@@ -28,8 +28,7 @@ public class CheckoutController {
     //     } else {
     //         return ResponseEntity.badRequest().body(Map.of("msg", result));
     //     }
-    // } 
-
+    // }
     @GetMapping("course/{courseId}/futurebookings")
     public ResponseEntity<?> getTeacherFutureBookings(@PathVariable Long courseId) {
 

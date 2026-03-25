@@ -13,7 +13,7 @@ import java.util.Map;
 
 @CrossOrigin(origins = "*") // 允許前端跨域請求
 @RestController
-@RequestMapping("/api/teacher/schedules")
+@RequestMapping("/api/tutor/schedules")
 public class TutorScheduleController {
     @Autowired
     private TutorScheduleService scheduleService;
@@ -28,7 +28,6 @@ public class TutorScheduleController {
             return ResponseEntity.badRequest().body(Map.of("msg", result));
         }
         return ResponseEntity.ok(Map.of("msg", "批次更新成功"));
-
     }
 
     // 1. 老師點擊格子切換狀態 (開放/關閉)
@@ -53,12 +52,11 @@ public class TutorScheduleController {
         List<ScheduleDTO.Res> schedules = scheduleService.getWeeklySchedule(tutorId);
         return ResponseEntity.ok(schedules);
     }
-
     @GetMapping("me")
+
     public ResponseEntity<?> getSchedule(@AuthenticationPrincipal SecurityUser me) {
         Long tutorId = me.getUser().getId();
         List<ScheduleDTO.Res> schedules = scheduleService.getWeeklySchedule(tutorId);
         return ResponseEntity.ok(schedules);
     }
 }
-

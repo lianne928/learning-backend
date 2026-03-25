@@ -25,7 +25,7 @@ public class FileStorageService {
         ".jpg", ".jpeg", ".png", ".gif", ".webp",
         ".mp4", ".webm", ".mov",
         ".mp3", ".wav", ".ogg",
-        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt"
+        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt",".pptx",".ppt"
     );
 
     private final Path uploadDir;

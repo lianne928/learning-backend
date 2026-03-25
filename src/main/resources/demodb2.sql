@@ -128,6 +128,7 @@ CREATE TABLE `reviews` (
 CREATE TABLE `tutors` (
   `id` bigint(20) NOT NULL,
   `apply_date` date DEFAULT NULL,
+  `education` varchar(100) DEFAULT NULL,
   `avatar` varchar(500) DEFAULT NULL,
   `title` varchar(50) DEFAULT NULL,
   `intro` varchar(1000) DEFAULT NULL,

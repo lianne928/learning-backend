@@ -1,5 +1,6 @@
 package com.learning.api.entity;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.persistence.Column;
@@ -26,6 +27,18 @@ public class Tutor {
     @MapsId // 讓此 ID 同時作為外鍵指向 User 的 ID
     @JoinColumn(name = "id")
     private User user;
+
+    @Column(name = "apply_date")
+    private LocalDate applyDate; // 申請日期
+
+    /**
+     * 審核狀態：
+     * 1 = pending（待審核）
+     * 2 = qualified（已開通）
+     * 3 = 停權
+     */
+    @Column
+    private Integer status;
 
     @Column(length = 50)
     private String title; // 吸睛標題，如「TESL認證英語教師」

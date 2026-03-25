@@ -13,7 +13,7 @@ public class TutorProfileDTO {
     private String name;
     private String headline;       // 對應 tutor.title
     private String avatar;
-    private String intro;
+    private String intro;          // 自我介紹
 
     // 證照（位址 + 名稱，兩張）
     private String certificate1;
@@ -25,9 +25,12 @@ public class TutorProfileDTO {
     private String videoUrl1;
     private String videoUrl2;
 
-    // 教學經歷（新增）
+    // 教學經歷
     private String experience1;
     private String experience2;
+
+    // 最高學歷（新增）
+    private String education;
 
     private List<TutorScheduleDTO> schedules;
     private List<ReviewDTO> reviews;

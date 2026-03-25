@@ -54,12 +54,16 @@ public class Tutor {
     @Column(name = "video_url_2", length = 500)
     private String videoUrl2; // 教學示範影片
 
-    // 新增：教學經歷
+    // 教學經歷
     @Column(name = "experience_1", length = 200)
     private String experience1; // 經歷1
 
     @Column(name = "experience_2", length = 200)
     private String experience2; // 經歷2
+
+    // 最高學歷（新增）
+    @Column(name = "education", length = 100)
+    private String education;
 
     @Column(name = "bank_code", length = 10)
     private String bankCode;

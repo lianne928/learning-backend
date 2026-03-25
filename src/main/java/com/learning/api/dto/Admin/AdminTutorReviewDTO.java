@@ -31,6 +31,9 @@ public class AdminTutorReviewDTO {
     private String certificate2;
     private String certificateName2;
 
+    //學歷
+    private String education;
+
     // 影片
     private String videoUrl1;
     private String videoUrl2;

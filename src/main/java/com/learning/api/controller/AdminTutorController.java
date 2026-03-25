@@ -2,6 +2,7 @@ package com.learning.api.controller;
 
 import com.learning.api.dto.Admin.AdminTutorReviewDTO;
 import com.learning.api.dto.Admin.AdminTutorReviewReq;
+import com.learning.api.dto.Admin.TutorReviewCountDTO;
 import com.learning.api.service.AdminTutorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -82,9 +83,14 @@ public class AdminTutorController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-     @GetMapping("/counts")
-    public ResponseEntity<?> getCounts() {
-        return ResponseEntity.ok(adminTutorService.getCounts());
+    /**
+     * 獲取各狀態老師的數量統計
+     * GET /api/admin/tutors/counts
+     */
+    @GetMapping("/counts")
+    public ResponseEntity<TutorReviewCountDTO> getCounts() {
+        TutorReviewCountDTO counts = adminTutorService.getCounts();
+        return ResponseEntity.ok(counts);
     }
 
 }

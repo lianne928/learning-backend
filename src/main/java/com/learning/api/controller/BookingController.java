@@ -1,11 +1,15 @@
 package com.learning.api.controller;
 
-import com.learning.api.dto.BookingReq;
+import com.learning.api.dto.BookingDTO;
+/* import com.learning.api.dto.BookingReq;
+import com.learning.api.entity.Booking; */
 import com.learning.api.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+/* import java.util.Map; */
 import java.util.Map;
 
 @CrossOrigin(origins = "*")
@@ -16,13 +20,19 @@ public class BookingController {
     @Autowired
     private BookingService bookingService;
 
-    @PostMapping
-    public ResponseEntity<?> sendBooking(@RequestBody BookingReq bookingReq){
+    @GetMapping("/tutor/{tutorId}")
+    public ResponseEntity<?> getTutorBookings(@PathVariable Long tutorId) {
+        List<BookingDTO> bookings = bookingService.getTutorBookings(tutorId);
+        return ResponseEntity.ok(bookings);
+    }
 
-        if (!bookingService.sendBooking(bookingReq)) {
-            return ResponseEntity.status(400).body(Map.of("msg", "建立失敗"));
-        }
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<?> updateStatus(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
+        Integer status = body.get("status");
+        if (status == null) return ResponseEntity.badRequest().body(Map.of("msg", "status 不能為空"));
 
-        return ResponseEntity.ok(Map.of("msg", "建立成功"));
+        return bookingService.updateStatus(id, status)
+                ? ResponseEntity.ok(Map.of("msg", "更新成功"))
+                : ResponseEntity.notFound().build();
     }
 }

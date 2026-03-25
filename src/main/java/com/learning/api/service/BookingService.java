@@ -1,82 +1,80 @@
 package com.learning.api.service;
 
-import com.learning.api.dto.*;
-import com.learning.api.entity.*;
-import com.learning.api.repo.*;
+import com.learning.api.dto.BookingDTO;
+import com.learning.api.entity.Booking;
+import com.learning.api.entity.Course;
+import com.learning.api.entity.User;
+import com.learning.api.repo.BookingRepo;
+import com.learning.api.repo.CourseRepo;
+import com.learning.api.repo.OrderRepository;
+import com.learning.api.repo.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class BookingService {
 
     @Autowired
-    private UserRepo memberRepo;
-
+    private BookingRepo bookingRepo;
+    @Autowired
+    private UserRepo userRepo;
+    @Autowired
+    private OrderRepository orderRepo;
     @Autowired
     private CourseRepo courseRepo;
 
-    @Autowired
-    private BookingRepo bookingRepo;
+    public List<BookingDTO> getTutorBookings(Long tutorId) {
+        return bookingRepo.findByTutorId(tutorId).stream()
+                .map(b -> {
+                    String studentName = userRepo.findById(b.getStudentId())
+                            .map(User::getName)
+                            .orElse("學生 #" + b.getStudentId());
 
-    @Autowired
-    private OrderRepo orderRepo;
+                    // 從 order 查 courseId，再查課程名稱
+                    String courseName = orderRepo.findById(b.getOrderId())
+                            .flatMap(o -> courseRepo.findById(o.getCourseId()))
+                            .map(Course::getName)
+                            .orElse("課程");
 
-    // bookingReq.getUserId() 僅供開發測試使用，正式版改由登入資訊取得
-    public boolean sendBooking(BookingReq bookingReq){
-
-        if (bookingReq == null) return false;
-
-        // check null
-        if (bookingReq.getUserId() == null || bookingReq.getCourseId() == null || bookingReq.getLessonCount() == null) return false;
-
-        // lessonCount > 0
-        if (bookingReq.getLessonCount() <= 0) return false;
-
-        // member existsById
-        if(!memberRepo.existsById(bookingReq.getUserId())) return false;
-
-        // course findById
-        Course course = courseRepo.findById(bookingReq.getCourseId()).orElse(null);
-        if (course == null) return false;
-
-        // check courseId isActive
-        if (!course.isActive()) return false;
-
-        // buildBooking
-        Booking booking = buildBooking(bookingReq, course);
-        bookingRepo.save(booking);
-
-        return true;
+                    return new BookingDTO(
+                            b.getId(), b.getOrderId(), b.getTutorId(),
+                            b.getStudentId(), studentName,
+                            courseName,
+                            b.getDate(), b.getHour(), b.getStatus(), b.getSlotLocked(),
+                            null  // ← 加這個，lessonCount 暫時不用
+                    );
+                })
+                .collect(Collectors.toList());
     }
 
-    private Booking buildBooking(BookingReq bookingReq, Course course){
-        Booking booking = new Booking();
+    /**
+     * 建立單筆預約紀錄（由 CheckoutService 呼叫，不對外開放）
+     * 把建立 Booking 的邏輯集中在這裡，讓 CheckoutService 職責更單純
+     */
+    public Booking createBooking(Long orderId, Long tutorId, Long studentId,
+                                 LocalDate date, Integer hour) {
+        // 1. 建立新的預約物件
+        Booking b = new Booking();
+        b.setOrderId(orderId);     // 綁定訂單 ID（必填，DB 規定不能為空）
+        b.setTutorId(tutorId);     // 老師 ID
+        b.setStudentId(studentId); // 學生 ID
+        b.setDate(date);           // 預約日期
+        b.setHour(hour);           // 預約小時
+        b.setStatus(1);            // 1 = 排程中（scheduled）
+        b.setSlotLocked(true);     // 鎖定時段，防止其他人搶訂
 
-        // set & save
-        booking.setOrderId(null);
-        booking.setCourseId(bookingReq.getCourseId());
-
-        // price unitPrice discountPrice
-        Integer originalPrice = course.getPrice();
-        Integer discount = afterDiscPrice(originalPrice, bookingReq.getLessonCount());
-
-        booking.setUnitPrice(originalPrice);
-        booking.setDiscountPrice(discount);
-
-        // lessonCount
-        booking.setLessonCount(bookingReq.getLessonCount());
-        // status first send -> 1
-        booking.setStatus(1);
-
-        return booking;
+        // 2. 寫入資料庫並回傳儲存後的物件（含自動產生的 ID）
+        return bookingRepo.save(b);
     }
-
-    private Integer afterDiscPrice(Integer originalPrice, Integer lessonCount){
-        // 95% 10 堂
-        if (lessonCount >= 10) return ((int) (originalPrice*0.95));
-
-
-        // 0%
-        return originalPrice;
+    public boolean updateStatus(Long id, Integer status) {
+        return bookingRepo.findById(id).map(b -> {
+            b.setStatus(status);
+            bookingRepo.save(b);
+            return true;
+        }).orElse(false);
     }
 }

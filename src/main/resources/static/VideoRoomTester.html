@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>視訊房間測試 — 雙人對話</title>
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── 頂部設定列 ── */
+    .topbar {
+      background: #1a73e8;
+      color: #fff;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .topbar h1 { font-size: 16px; font-weight: 700; white-space: nowrap; }
+    .topbar label { font-size: 13px; white-space: nowrap; opacity: 0.85; }
+    .topbar input {
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 13px;
+      width: 120px;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+    }
+    .topbar input::placeholder { color: rgba(255,255,255,0.6); }
+    .topbar input:focus { outline: 2px solid rgba(255,255,255,0.6); background: rgba(255,255,255,0.25); }
+    #wsUrl { width: 240px; }
+    .topbar-hint { font-size: 12px; opacity: 0.7; margin-left: auto; }
+
+    /* ── 雙欄佈局 ── */
+    .columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 12px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* ── 面板 ── */
+    .chat-panel {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+    .avatar-student { background: #1a73e8; }
+    .avatar-tutor   { background: #34a853; }
+
+    .chat-header-info { flex: 1; }
+    .chat-header-name { font-size: 15px; font-weight: 600; }
+    .chat-header-sub  { font-size: 12px; color: #888; }
+
+    .status-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: #f1f3f4;
+      color: #888;
+      transition: all 0.3s;
+    }
+    .status-pill.online { background: #e6f4ea; color: #137333; }
+
+    .btn-conn {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-conn:hover { opacity: 0.8; }
+    .btn-conn.connect    { background: #1a73e8; color: #fff; }
+    .btn-conn.disconnect { background: #ea4335; color: #fff; }
+
+    /* ── 面板主體 ── */
+    .panel-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+
+    /* ── Section ── */
+    .section {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .section-title {
+      background: #f1f3f4;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #1a73e8;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .section-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+
+    /* ── 表單控件 ── */
+    label { font-size: 12px; color: #666; margin-bottom: 2px; display: block; }
+    input, select, textarea {
+      width: 100%;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      color: #202124;
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #1a73e8;
+    }
+    textarea { resize: vertical; min-height: 60px; font-family: monospace; font-size: 12px; }
+
+    .row { display: flex; gap: 8px; }
+    .row > * { flex: 1; }
+
+    /* ── 通用按鈕 ── */
+    button {
+      padding: 7px 14px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    button:hover { opacity: 0.85; }
+    button:active { transform: scale(0.97); }
+    button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .btn-send    { background: #1a73e8; color: #fff; width: 100%; border-radius: 22px; }
+    .btn-send-sm { background: #1a73e8; color: #fff; flex: 0 0 auto; border-radius: 22px; }
+
+    /* ── 事件按鈕 ── */
+    .event-btns { display: flex; gap: 6px; }
+    .btn-event {
+      padding: 5px 12px;
+      border: none;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      flex: 1;
+    }
+    .btn-join  { background: #e6f4ea; color: #137333; }
+    .btn-leave { background: #fce8e6; color: #c5221f; }
+
+    /* ── 攝影機區 ── */
+    .video-row { display: flex; gap: 8px; }
+    .video-wrap {
+      flex: 1;
+      background: #000;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+    .video-wrap label {
+      position: absolute;
+      top: 6px; left: 8px;
+      font-size: 11px; font-weight: 600;
+      color: #fff;
+      background: rgba(0,0,0,0.5);
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin: 0; z-index: 1;
+    }
+    video {
+      width: 100%; height: 120px;
+      object-fit: cover; display: block;
+      background: #000;
+    }
+    .cam-btns { display: flex; gap: 6px; padding: 6px 0 2px; }
+    .btn-cam {
+      background: #f1f3f4; color: #202124;
+      font-size: 11px; padding: 5px 10px;
+      flex: 1; border-radius: 20px;
+    }
+    .btn-cam.active        { background: #ea4335; color: #fff; }
+    .btn-cam.screen-active { background: #7c3aed; color: #fff; }
+
+    /* ── 麥克風測試 ── */
+    .mic-test-row { display: flex; align-items: center; gap: 8px; }
+    .mic-level-wrap { flex: 1; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; }
+    .mic-level-bar  { height: 100%; width: 0%; background: #34a853; border-radius: 4px; transition: width 0.05s linear; }
+
+    /* ── 日誌 ── */
+    .log-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 12px;
+      color: #888;
+      border-top: 1px solid #f0f0f0;
+      background: #fafafa;
+    }
+    .log-toggle:hover { background: #f0f0f0; }
+    .log-area {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: #1e1e1e;
+    }
+    .log-area.open { max-height: 200px; overflow-y: auto; }
+    .log-area::-webkit-scrollbar { width: 4px; }
+    .log-area::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+    .log-area-inner {
+      padding: 6px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .log-line {
+      font-family: monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      color: #ccc;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .log-line.in  { color: #82cfff; }
+    .log-line.out { color: #a8e6a3; }
+    .log-line.sys { color: #d4a8ff; }
+    .log-line.err { color: #ff8b8b; }
+
+    .log-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+    }
+    .btn-clear {
+      background: transparent; color: #aaa;
+      font-size: 11px; padding: 2px 8px;
+      border: 1px solid #ddd; border-radius: 10px;
+    }
+    .btn-clear:hover { background: #f1f3f4; color: #666; opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- 頂部設定列 -->
+<div class="topbar">
+  <h1>📹 視訊房間測試</h1>
+  <label>Booking ID</label>
+  <input id="bookingId" type="number" value="1" min="1" />
+  <label>WebSocket URL</label>
+  <input id="wsUrl" type="text" placeholder="ws URL" />
+  <label>JWT Token</label>
+  <input id="jwtToken" type="text" placeholder="Bearer token（連線必填）" style="width:260px;" />
+  <span class="topbar-hint">兩個面板共用同一房間，模擬學生與導師視訊對話</span>
+</div>
+
+<div class="columns">
+
+  <!-- ══════════ 面板 A：學生 ══════════ -->
+  <div class="chat-panel" id="panelA">
+
+    <div class="chat-header">
+      <div class="avatar avatar-student">S</div>
+      <div class="chat-header-info">
+        <div class="chat-header-name">學生 (role=1)</div>
+        <div class="chat-header-sub">用戶端 A</div>
+      </div>
+      <span class="status-pill" id="pillA">離線</span>
+      <button class="btn-conn connect"    onclick="connect('A')">連線</button>
+      <button class="btn-conn disconnect" onclick="disconnect('A')">斷線</button>
+    </div>
+
+    <div class="panel-body">
+
+      <!-- 攝影機 -->
+      <div class="section">
+        <div class="section-title">本地攝影機</div>
+        <div class="section-body">
+          <div class="video-row">
+            <div class="video-wrap">
+              <label>Local A</label>
+              <video id="localVideoA" autoplay muted playsinline></video>
+            </div>
+            <div class="video-wrap">
+              <label>Remote A</label>
+              <video id="remoteVideoA" autoplay playsinline></video>
+            </div>
+          </div>
+          <div class="cam-btns">
+            <button class="btn-cam" id="btnCamA" onclick="toggleCamera('A')">開啟攝影機</button>
+            <button class="btn-cam" onclick="startCall('A')" title="作為發起方送出 offer">發起通話 (Offer)</button>
+            <button class="btn-cam" id="btnScreenA" onclick="toggleScreen('A')">螢幕分享</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 麥克風測試 -->
+      <div class="section">
+        <div class="section-title">麥克風測試</div>
+        <div class="section-body">
+          <div class="mic-test-row">
+            <button class="btn-cam" id="btnMicA" onclick="toggleMicTest('A')">測試麥克風</button>
+            <div class="mic-level-wrap"><div class="mic-level-bar" id="micBarA"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 信令 -->
+      <div class="section">
+        <div class="section-title">WebRTC 信令 — /app/signal/{bookingId}</div>
+        <div class="section-body">
+          <div class="row">
+            <div>
+              <label>type</label>
+              <select id="sigTypeA">
+                <option value="offer">offer</option>
+                <option value="answer">answer</option>
+                <option value="candidate">candidate</option>
+              </select>
+            </div>
+            <div>
+              <label>senderRole</label>
+              <select id="sigRoleA">
+                <option value="1">1 (學生)</option>
+                <option value="2">2 (導師)</option>
+              </select>
+            </div>
+          </div>
+          <label>sdp（offer/answer 時填入）</label>
+          <textarea id="sigSdpA" placeholder='{"type":"offer","sdp":"v=0\r\no=- ..."}' rows="3"></textarea>
+          <button class="btn-send" onclick="sendSignal('A')">傳送信令</button>
+        </div>
+      </div>
+
+      <!-- 聊天 -->
+      <div class="section">
+        <div class="section-title">聊天訊息 — /app/chat/{bookingId}</div>
+        <div class="section-body">
+          <div class="row">
+            <div>
+              <label>messageType</label>
+              <select id="chatTypeA">
+                <option value="1">1 TEXT</option>
+                <option value="2">2 STICKER</option>
+                <option value="3">3 VOICE</option>
+                <option value="4">4 IMAGE</option>
+                <option value="5">5 VIDEO</option>
+              </select>
+            </div>
+            <div>
+              <label>role</label>
+              <select id="chatRoleA">
+                <option value="1">1 (學生)</option>
+                <option value="2">2 (導師)</option>
+              </select>
+            </div>
+          </div>
+          <label>message（TEXT 類型）</label>
+          <input id="chatMsgA" type="text" placeholder="輸入聊天訊息..." />
+          <label>mediaUrl（媒體類型）</label>
+          <input id="chatMediaA" type="text" placeholder="https://example.com/img.jpg" />
+          <button class="btn-send" onclick="sendChat('A')">傳送聊天</button>
+        </div>
+      </div>
+
+      <!-- 事件 -->
+      <div class="section">
+        <div class="section-title">房間事件 — /app/event/{bookingId}</div>
+        <div class="section-body">
+          <div class="event-btns">
+            <button class="btn-event btn-join"  onclick="sendEvent('A','joined')">加入房間 (joined)</button>
+            <button class="btn-event btn-leave" onclick="sendEvent('A','left')">離開房間 (left)</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 日誌 -->
+    <div class="log-toggle" onclick="toggleLog('A')">
+      <span id="logArrowA">▶</span> 原始訊息日誌
+      <div class="log-actions">
+        <button class="btn-clear" onclick="event.stopPropagation(); clearLog('A')">清除</button>
+      </div>
+    </div>
+    <div class="log-area" id="logAreaA">
+      <div class="log-area-inner" id="logA"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ 面板 B：導師 ══════════ -->
+  <div class="chat-panel" id="panelB">
+
+    <div class="chat-header">
+      <div class="avatar avatar-tutor">T</div>
+      <div class="chat-header-info">
+        <div class="chat-header-name">導師 (role=2)</div>
+        <div class="chat-header-sub">用戶端 B</div>
+      </div>
+      <span class="status-pill" id="pillB">離線</span>
+      <button class="btn-conn connect"    onclick="connect('B')">連線</button>
+      <button class="btn-conn disconnect" onclick="disconnect('B')">斷線</button>
+    </div>
+
+    <div class="panel-body">
+
+      <!-- 攝影機 -->
+      <div class="section">
+        <div class="section-title">本地攝影機</div>
+        <div class="section-body">
+          <div class="video-row">
+            <div class="video-wrap">
+              <label>Local B</label>
+              <video id="localVideoB" autoplay muted playsinline></video>
+            </div>
+            <div class="video-wrap">
+              <label>Remote B</label>
+              <video id="remoteVideoB" autoplay playsinline></video>
+            </div>
+          </div>
+          <div class="cam-btns">
+            <button class="btn-cam" id="btnCamB" onclick="toggleCamera('B')">開啟攝影機</button>
+            <button class="btn-cam" onclick="startCall('B')" title="作為發起方送出 offer">發起通話 (Offer)</button>
+            <button class="btn-cam" id="btnScreenB" onclick="toggleScreen('B')">螢幕分享</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 麥克風測試 -->
+      <div class="section">
+        <div class="section-title">麥克風測試</div>
+        <div class="section-body">
+          <div class="mic-test-row">
+            <button class="btn-cam" id="btnMicB" onclick="toggleMicTest('B')">測試麥克風</button>
+            <div class="mic-level-wrap"><div class="mic-level-bar" id="micBarB"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 信令 -->
+      <div class="section">
+        <div class="section-title">WebRTC 信令 — /app/signal/{bookingId}</div>
+        <div class="section-body">
+          <div class="row">
+            <div>
+              <label>type</label>
+              <select id="sigTypeB">
+                <option value="offer">offer</option>
+                <option value="answer">answer</option>
+                <option value="candidate">candidate</option>
+              </select>
+            </div>
+            <div>
+              <label>senderRole</label>
+              <select id="sigRoleB">
+                <option value="1">1 (學生)</option>
+                <option value="2" selected>2 (導師)</option>
+              </select>
+            </div>
+          </div>
+          <label>sdp（offer/answer 時填入）</label>
+          <textarea id="sigSdpB" placeholder='{"type":"answer","sdp":"v=0\r\no=- ..."}' rows="3"></textarea>
+          <button class="btn-send" onclick="sendSignal('B')">傳送信令</button>
+        </div>
+      </div>
+
+      <!-- 聊天 -->
+      <div class="section">
+        <div class="section-title">聊天訊息 — /app/chat/{bookingId}</div>
+        <div class="section-body">
+          <div class="row">
+            <div>
+              <label>messageType</label>
+              <select id="chatTypeB">
+                <option value="1">1 TEXT</option>
+                <option value="2">2 STICKER</option>
+                <option value="3">3 VOICE</option>
+                <option value="4">4 IMAGE</option>
+                <option value="5">5 VIDEO</option>
+              </select>
+            </div>
+            <div>
+              <label>role</label>
+              <select id="chatRoleB">
+                <option value="1">1 (學生)</option>
+                <option value="2" selected>2 (導師)</option>
+              </select>
+            </div>
+          </div>
+          <label>message（TEXT 類型）</label>
+          <input id="chatMsgB" type="text" placeholder="輸入聊天訊息..." />
+          <label>mediaUrl（媒體類型）</label>
+          <input id="chatMediaB" type="text" placeholder="https://example.com/img.jpg" />
+          <button class="btn-send" onclick="sendChat('B')">傳送聊天</button>
+        </div>
+      </div>
+
+      <!-- 事件 -->
+      <div class="section">
+        <div class="section-title">房間事件 — /app/event/{bookingId}</div>
+        <div class="section-body">
+          <div class="event-btns">
+            <button class="btn-event btn-join"  onclick="sendEvent('B','joined')">加入房間 (joined)</button>
+            <button class="btn-event btn-leave" onclick="sendEvent('B','left')">離開房間 (left)</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 日誌 -->
+    <div class="log-toggle" onclick="toggleLog('B')">
+      <span id="logArrowB">▶</span> 原始訊息日誌
+      <div class="log-actions">
+        <button class="btn-clear" onclick="event.stopPropagation(); clearLog('B')">清除</button>
+      </div>
+    </div>
+    <div class="log-area" id="logAreaB">
+      <div class="log-area-inner" id="logB"></div>
+    </div>
+  </div>
+
+</div><!-- /columns -->
+
+<script>
+// 自動填入 wsUrl 預設值（根據當前頁面 host）
+document.getElementById('wsUrl').value =
+  window.location.protocol + '//' + window.location.host + '/ws';
+
+// ────────────────────────────────────────────────────────
+// State
+// ────────────────────────────────────────────────────────
+const state = {
+  A: { client: null, pc: null, localStream: null, camOn: false,
+       screenStream: null, micTestStream: null, micTestAnimFrame: null, micAudioCtx: null },
+  B: { client: null, pc: null, localStream: null, camOn: false,
+       screenStream: null, micTestStream: null, micTestAnimFrame: null, micAudioCtx: null },
+};
+
+function bookingId() { return document.getElementById('bookingId').value; }
+function wsUrl()     { return document.getElementById('wsUrl').value;     }
+
+// ────────────────────────────────────────────────────────
+// Log
+// ────────────────────────────────────────────────────────
+function log(panel, tag, msg) {
+  const box  = document.getElementById('log' + panel);
+  const time = new Date().toLocaleTimeString('zh-TW', { hour12: false });
+  const cls  = { IN: 'in', OUT: 'out', SYS: 'sys', ERR: 'err' }[tag] || 'sys';
+  const line = document.createElement('div');
+  line.className = `log-line ${cls}`;
+  const text = typeof msg === 'object' ? JSON.stringify(msg, null, 2) : String(msg);
+  line.textContent = `${time} [${tag}] ${text}`;
+  box.appendChild(line);
+  box.parentElement.scrollTop = box.parentElement.scrollHeight;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function clearLog(panel) {
+  document.getElementById('log' + panel).innerHTML = '';
+}
+
+function toggleLog(panel) {
+  const area  = document.getElementById('logArea' + panel);
+  const arrow = document.getElementById('logArrow' + panel);
+  const open  = area.classList.toggle('open');
+  arrow.textContent = open ? '▼' : '▶';
+}
+
+// ────────────────────────────────────────────────────────
+// WebSocket
+// ────────────────────────────────────────────────────────
+function connect(panel) {
+  if (state[panel].client?.connected) { log(panel, 'SYS', '已連線'); return; }
+
+  const socket = new SockJS(wsUrl());
+  const client = Stomp.over(socket);
+  client.debug = null; // 關閉 STOMP debug 輸出
+
+  state[panel].client = client;
+
+  const token = document.getElementById('jwtToken').value.trim();
+  if (!token) {
+    log(panel, 'ERR', '請先在頂部填入 JWT Token');
+    return;
+  }
+  const connectHeaders = { Authorization: 'Bearer ' + token };
+
+  client.connect(connectHeaders, () => {
+    const pill = document.getElementById('pill' + panel);
+    pill.textContent = '連線中';
+    pill.classList.add('online');
+    log(panel, 'SYS', `已連線至 ${wsUrl()}`);
+
+    const bid = bookingId();
+
+    // 訂閱信令
+    client.subscribe(`/topic/room/${bid}/signal`, (frame) => {
+      const msg = JSON.parse(frame.body);
+      log(panel, 'IN', `[signal] ${JSON.stringify(msg)}`);
+      handleIncomingSignal(panel, msg);
+    });
+
+    // 訂閱聊天
+    client.subscribe(`/topic/room/${bid}/chat`, (frame) => {
+      const msg = JSON.parse(frame.body);
+      log(panel, 'IN', `[chat] id=${msg.id} role=${msg.role} type=${msg.messageType} | ${msg.message || msg.mediaUrl}`);
+    });
+
+    // 訂閱事件
+    client.subscribe(`/topic/room/${bid}/events`, (frame) => {
+      const msg = JSON.parse(frame.body);
+      log(panel, 'IN', `[event] type=${msg.type} role=${msg.role} ts=${msg.timestamp}`);
+    });
+
+  }, (err) => {
+    const pill = document.getElementById('pill' + panel);
+    pill.textContent = '離線';
+    pill.classList.remove('online');
+    log(panel, 'ERR', `連線失敗: ${err}`);
+  });
+}
+
+function disconnect(panel) {
+  const s = state[panel];
+  if (s.client?.connected) {
+    s.client.disconnect(() => {
+      const pill = document.getElementById('pill' + panel);
+      pill.textContent = '離線';
+      pill.classList.remove('online');
+      log(panel, 'SYS', '已斷線');
+    });
+  }
+  if (s.pc) { s.pc.close(); s.pc = null; }
+}
+
+// ────────────────────────────────────────────────────────
+// Send helpers
+// ────────────────────────────────────────────────────────
+function requireConnected(panel) {
+  if (!state[panel].client?.connected) {
+    log(panel, 'ERR', '請先連線 WebSocket');
+    return false;
+  }
+  return true;
+}
+
+function sendSignal(panel) {
+  if (!requireConnected(panel)) return;
+  const type       = document.getElementById('sigType' + panel).value;
+  const senderRole = parseInt(document.getElementById('sigRole' + panel).value);
+  const sdpRaw     = document.getElementById('sigSdp' + panel).value.trim();
+
+  const payload = { type, senderRole };
+
+  if (type === 'candidate') {
+    try {
+      const c = JSON.parse(sdpRaw);
+      payload.candidate     = c.candidate;
+      payload.sdpMid        = c.sdpMid;
+      payload.sdpMLineIndex = c.sdpMLineIndex;
+    } catch {
+      payload.candidate = sdpRaw;
+    }
+  } else {
+    try {
+      const s = JSON.parse(sdpRaw);
+      payload.sdp = s.sdp || sdpRaw;
+    } catch {
+      payload.sdp = sdpRaw;
+    }
+  }
+
+  state[panel].client.send(
+    `/app/signal/${bookingId()}`,
+    {},
+    JSON.stringify(payload)
+  );
+  log(panel, 'OUT', `[signal] ${JSON.stringify(payload)}`);
+}
+
+function sendChat(panel) {
+  if (!requireConnected(panel)) return;
+  const messageType = parseInt(document.getElementById('chatType' + panel).value);
+  const role        = parseInt(document.getElementById('chatRole' + panel).value);
+  const message     = document.getElementById('chatMsg'  + panel).value;
+  const mediaUrl    = document.getElementById('chatMedia'+ panel).value;
+
+  const payload = { bookingId: parseInt(bookingId()), role, messageType, message, mediaUrl };
+  state[panel].client.send(`/app/chat/${bookingId()}`, {}, JSON.stringify(payload));
+  log(panel, 'OUT', `[chat] ${JSON.stringify(payload)}`);
+}
+
+function sendEvent(panel, type) {
+  if (!requireConnected(panel)) return;
+  const role = panel === 'A' ? 1 : 2;
+  const payload = { type, role };
+  state[panel].client.send(`/app/event/${bookingId()}`, {}, JSON.stringify(payload));
+  log(panel, 'OUT', `[event] ${JSON.stringify(payload)}`);
+}
+
+// ────────────────────────────────────────────────────────
+// WebRTC — 攝影機 & PeerConnection
+// ────────────────────────────────────────────────────────
+const RTC_CONFIG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+async function toggleCamera(panel) {
+  const s   = state[panel];
+  const btn = document.getElementById('btnCam' + panel);
+  const vid = document.getElementById('localVideo' + panel);
+
+  if (s.camOn) {
+    s.localStream?.getTracks().forEach(t => t.stop());
+    s.localStream = null;
+    vid.srcObject = null;
+    s.camOn = false;
+    btn.textContent = '開啟攝影機';
+    btn.classList.remove('active');
+    log(panel, 'SYS', '攝影機已關閉');
+  } else {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      s.localStream = stream;
+      vid.srcObject = stream;
+      s.camOn = true;
+      btn.textContent = '關閉攝影機';
+      btn.classList.add('active');
+      log(panel, 'SYS', '攝影機已開啟');
+    } catch(e) {
+      log(panel, 'ERR', `攝影機失敗: ${e.message}`);
+    }
+  }
+}
+
+function makePeerConnection(panel) {
+  const s  = state[panel];
+  const pc = new RTCPeerConnection(RTC_CONFIG);
+  s.pc = pc;
+
+  // 加入本地媒體軌道
+  s.localStream?.getTracks().forEach(track => pc.addTrack(track, s.localStream));
+
+  // 收到遠端媒體軌道
+  pc.ontrack = (e) => {
+    const remVid = document.getElementById('remoteVideo' + panel);
+    remVid.srcObject = e.streams[0];
+    log(panel, 'SYS', '收到遠端媒體軌道');
+  };
+
+  // ICE candidate 產生時，透過信令中繼給對方
+  pc.onicecandidate = (e) => {
+    if (!e.candidate) return;
+    if (!state[panel].client?.connected) return;
+    const role = panel === 'A' ? 1 : 2;
+    const payload = {
+      type: 'candidate',
+      senderRole: role,
+      candidate:     e.candidate.candidate,
+      sdpMid:        e.candidate.sdpMid,
+      sdpMLineIndex: e.candidate.sdpMLineIndex,
+    };
+    state[panel].client.send(`/app/signal/${bookingId()}`, {}, JSON.stringify(payload));
+    log(panel, 'OUT', `[ICE] ${e.candidate.candidate.substring(0, 60)}...`);
+  };
+
+  pc.onconnectionstatechange = () => {
+    log(panel, 'SYS', `PeerConnection state: ${pc.connectionState}`);
+  };
+
+  return pc;
+}
+
+async function startCall(panel) {
+  if (!requireConnected(panel)) return;
+  if (!state[panel].camOn) {
+    log(panel, 'ERR', '請先開啟攝影機');
+    return;
+  }
+
+  const pc   = makePeerConnection(panel);
+  const role = panel === 'A' ? 1 : 2;
+
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+
+  const payload = { type: 'offer', senderRole: role, sdp: offer.sdp };
+  state[panel].client.send(`/app/signal/${bookingId()}`, {}, JSON.stringify(payload));
+  log(panel, 'OUT', `[offer] 已發送`);
+}
+
+async function handleIncomingSignal(panel, msg) {
+  const s = state[panel];
+
+  if (msg.type === 'offer') {
+    if (!s.pc) makePeerConnection(panel);
+    await s.pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: msg.sdp }));
+    const answer = await s.pc.createAnswer();
+    await s.pc.setLocalDescription(answer);
+
+    const role = panel === 'A' ? 1 : 2;
+    const payload = { type: 'answer', senderRole: role, sdp: answer.sdp };
+    if (s.client?.connected) {
+      s.client.send(`/app/signal/${bookingId()}`, {}, JSON.stringify(payload));
+      log(panel, 'OUT', `[answer] 已自動回應 offer`);
+    }
+
+  } else if (msg.type === 'answer') {
+    if (s.pc && s.pc.signalingState === 'have-local-offer') {
+      await s.pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: msg.sdp }));
+      log(panel, 'SYS', '[answer] remote description 已設定');
+    }
+
+  } else if (msg.type === 'candidate') {
+    if (s.pc && msg.candidate) {
+      try {
+        await s.pc.addIceCandidate(new RTCIceCandidate({
+          candidate:     msg.candidate,
+          sdpMid:        msg.sdpMid,
+          sdpMLineIndex: msg.sdpMLineIndex,
+        }));
+        log(panel, 'SYS', `[ICE] candidate 已加入`);
+      } catch(e) {
+        log(panel, 'ERR', `ICE candidate 失敗: ${e.message}`);
+      }
+    }
+  }
+}
+
+// ────────────────────────────────────────────────────────
+// Screen Sharing
+// ────────────────────────────────────────────────────────
+async function toggleScreen(panel) {
+  const s   = state[panel];
+  const btn = document.getElementById('btnScreen' + panel);
+  const vid = document.getElementById('localVideo' + panel);
+
+  if (s.screenStream) {
+    s.screenStream.getTracks().forEach(t => t.stop());
+    s.screenStream = null;
+    btn.textContent = '螢幕分享';
+    btn.classList.remove('screen-active');
+
+    vid.srcObject = s.camOn ? s.localStream : null;
+
+    if (s.pc && s.camOn && s.localStream) {
+      const camTrack = s.localStream.getVideoTracks()[0];
+      if (camTrack) {
+        const sender = s.pc.getSenders().find(sd => sd.track && sd.track.kind === 'video');
+        if (sender) sender.replaceTrack(camTrack).catch(e => log(panel, 'ERR', `replaceTrack (cam revert): ${e.message}`));
+      }
+    }
+    log(panel, 'SYS', '螢幕分享已停止');
+  } else {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      s.screenStream = stream;
+      btn.textContent = '停止分享';
+      btn.classList.add('screen-active');
+
+      vid.srcObject = stream;
+
+      if (s.pc) {
+        const screenTrack = stream.getVideoTracks()[0];
+        if (screenTrack) {
+          const sender = s.pc.getSenders().find(sd => sd.track && sd.track.kind === 'video');
+          if (sender) sender.replaceTrack(screenTrack).catch(e => log(panel, 'ERR', `replaceTrack (screen): ${e.message}`));
+        }
+      }
+
+      stream.getVideoTracks()[0].onended = () => toggleScreen(panel);
+      log(panel, 'SYS', '螢幕分享已開始');
+    } catch (e) {
+      log(panel, 'ERR', `getDisplayMedia failed: ${e.message}`);
+    }
+  }
+}
+
+// ────────────────────────────────────────────────────────
+// Microphone Test
+// ────────────────────────────────────────────────────────
+async function toggleMicTest(panel) {
+  const s   = state[panel];
+  const btn = document.getElementById('btnMic' + panel);
+  const bar = document.getElementById('micBar' + panel);
+
+  if (s.micTestStream) {
+    cancelAnimationFrame(s.micTestAnimFrame);
+    s.micTestAnimFrame = null;
+    s.micTestStream.getTracks().forEach(t => t.stop());
+    s.micTestStream = null;
+    if (s.micAudioCtx) { s.micAudioCtx.close(); s.micAudioCtx = null; }
+    bar.style.width = '0%';
+    btn.textContent = '測試麥克風';
+    btn.classList.remove('active');
+    log(panel, 'SYS', '麥克風測試已停止');
+  } else {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      s.micTestStream = stream;
+      btn.textContent = '停止測試';
+      btn.classList.add('active');
+
+      const ctx      = new AudioContext();
+      s.micAudioCtx  = ctx;
+      const source   = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      function drawLevel() {
+        if (!s.micTestStream) return;
+        s.micTestAnimFrame = requestAnimationFrame(drawLevel);
+        analyser.getByteFrequencyData(dataArray);
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+        const percent = Math.min(100, (sum / dataArray.length / 128) * 100);
+        bar.style.width = percent + '%';
+        bar.style.background = percent > 80 ? '#ea4335' : percent > 50 ? '#fbbc04' : '#34a853';
+      }
+      drawLevel();
+      log(panel, 'SYS', '麥克風測試已開始');
+    } catch (e) {
+      log(panel, 'ERR', `getUserMedia (mic) failed: ${e.message}`);
+    }
+  }
+}
+</script>
+</body>
+</html>

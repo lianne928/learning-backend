@@ -3,6 +3,7 @@ package com.learning.api.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -41,10 +42,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/tutor/**").permitAll()  // 前台老師資料頁公開
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/teacher/schedules/*").permitAll()  // 查詢課表公開
+
                         // 老師後台專用
                         .requestMatchers("/api/teacher/**").hasRole("TUTOR")
 
                         // 登入才能預約
+                        .requestMatchers(HttpMethod.GET, "/api/bookings/tutor/**").permitAll()
                         .requestMatchers("/api/bookings/**").authenticated()
                         // 登入才能結帳
                         .requestMatchers("/api/shop/**").authenticated()

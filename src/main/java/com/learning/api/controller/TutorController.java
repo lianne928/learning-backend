@@ -88,6 +88,10 @@ public class TutorController {
         dto.setVideoUrl1(tutor.getVideoUrl1());
         dto.setVideoUrl2(tutor.getVideoUrl2());
 
+        dto.setExperience1(tutor.getExperience1());
+        dto.setExperience2(tutor.getExperience2());
+        dto.setEducation(tutor.getEducation());
+
         List<TutorScheduleDTO> scheduleDTOs = schedules.stream()
                 .map(s -> new TutorScheduleDTO(s.getWeekday(), s.getHour()))
                 .toList();

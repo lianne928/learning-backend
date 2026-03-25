@@ -54,7 +54,7 @@ public class TutorService {
 
     /**
      * 將 Tutor entity 轉換為 TutorUpdateDTO，用於老師後台編輯頁面
-     * 包含所有可編輯欄位：頭貼、職稱、介紹、證照、影片、經歷
+     * 包含所有可編輯欄位：頭貼、職稱、介紹、證照、影片、經歷、學歷
      */
     public TutorUpdateDTO getProfileDTO(Long tutorId) {
         Tutor tutor = tutorRepo.findById(tutorId)
@@ -70,14 +70,15 @@ public class TutorService {
         dto.setCertificateName2(tutor.getCertificateName2());
         dto.setVideoUrl1(tutor.getVideoUrl1());
         dto.setVideoUrl2(tutor.getVideoUrl2());
-        dto.setExperience1(tutor.getExperience1()); // 經歷1
-        dto.setExperience2(tutor.getExperience2()); // 經歷2
+        dto.setExperience1(tutor.getExperience1()); // 教學經歷1
+        dto.setExperience2(tutor.getExperience2()); // 教學經歷2
+        dto.setEducation(tutor.getEducation());     // 最高學歷
         return dto;
     }
 
     /**
      * 完整更新老師個人資料（支援部分更新：DTO 欄位為 null 則不更新）
-     * 包含：頭貼、職稱、介紹、證照（位址+名稱）、影片、教學經歷
+     * 包含：頭貼、職稱、介紹、證照（位址+名稱）、影片、教學經歷、最高學歷
      */
     @Transactional
     public void updateProfile(Long tutorId, TutorUpdateDTO dto) {
@@ -99,9 +100,12 @@ public class TutorService {
         if (dto.getVideoUrl1() != null)        tutor.setVideoUrl1(dto.getVideoUrl1());
         if (dto.getVideoUrl2() != null)        tutor.setVideoUrl2(dto.getVideoUrl2());
 
-        // 教學經歷（新增）
+        // 教學經歷
         if (dto.getExperience1() != null)      tutor.setExperience1(dto.getExperience1());
         if (dto.getExperience2() != null)      tutor.setExperience2(dto.getExperience2());
+
+        // 最高學歷（新增）
+        if (dto.getEducation() != null)        tutor.setEducation(dto.getEducation());
 
         tutorRepo.save(tutor);
     }

@@ -69,8 +69,10 @@ public class MemberService {
         if (!BCrypt.checkpw(rawPassword, user.getPassword())) throw new IllegalArgumentException("密碼錯誤");
 
         // token JwtService
-        String token = jwtService.generateToken(user);
- */
+        String token = jwtService.generateToken(user); */
+
+        /* String token = jwtService.generateToken(user); */
+ 
 /*         UserResp userResp = new UserResp(
                 user.getId(),
                 user.getName(),

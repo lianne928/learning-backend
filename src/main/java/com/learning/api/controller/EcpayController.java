@@ -9,11 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.WebSocket.util.EcpayUtil;
+import com.learning.api.dto.EcPayRequestDto;
 import com.learning.api.dto.EcpayReturnDto;
 import com.learning.api.entity.User;
 import com.learning.api.repo.UserRepo;
@@ -47,7 +49,7 @@ public class EcpayController {
 
     
     @PostMapping("/pay")
-    public String pay(@RequestParam String ecpayprice, HttpServletRequest request) throws Exception {
+    public String pay(@RequestBody EcPayRequestDto payRequest, HttpServletRequest request) throws Exception {
     	String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             throw new RuntimeException("No token");
@@ -55,15 +57,16 @@ public class EcpayController {
         String token = authHeader.substring(7);
         String email = jwtService.email(token); // 從 token 拿 email
         User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         Long userId = user.getId(); // 正確的使用者ID
-        System.out.println("價格: " + ecpayprice);
+        System.out.println("價格: " + payRequest.getEcpayprice());
         System.out.println("userId: " + userId);
     	
         Map<String, String> params = new LinkedHashMap<>();
 
         params.put("CustomField1", String.valueOf(userId));
+        params.put("CustomField2", String.valueOf(payRequest.getDType()));
         //商店代號
         params.put("MerchantID", MERCHANT_ID);
         //訂單編號
@@ -74,7 +77,7 @@ public class EcpayController {
         //付款型態(規定aio)
         params.put("PaymentType", "aio");
         //金額
-        params.put("TotalAmount", ecpayprice);
+        params.put("TotalAmount", payRequest.getEcpayprice());
         //交易描述
         params.put("TradeDesc", "儲值");
         //商品名稱
@@ -149,6 +152,7 @@ public class EcpayController {
         dto.setRtnCode(data.get("RtnCode"));
         dto.setTradeAmt(data.get("TradeAmt"));
         dto.setCustomField1(data.get("CustomField1"));
+        dto.setCustomField2(data.get("CustomField2"));
         if ("1".equals(dto.getRtnCode())) {
             try {
                 walletLogsService.processWalletDeposit(dto);

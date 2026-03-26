@@ -6,7 +6,7 @@ import com.learning.api.entity.User;
 import com.learning.api.repo.UserRepo;
 import com.learning.api.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
-/* import org.springframework.http.ResponseEntity; */
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,12 +22,15 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public LoginResp loginReq(LoginReq loginReq){
+    public LoginResp loginReq(LoginReq loginReq) {
+        // Email 正規化（與註冊一致）
+        String email = loginReq.getEmail().trim().toLowerCase();
+
         // 查人
-        User user = memberRepo.findByEmail(loginReq.getEmail()).orElse(null);
+        User user = memberRepo.findByEmail(email).orElse(null);
         if (user == null) throw new IllegalArgumentException("帳號或密碼錯誤");
 
-        // 查密碼
+        // 查密碼（使用 PasswordEncoder，與註冊一致）
         boolean isU = passwordEncoder.matches(loginReq.getPassword(), user.getPassword());
         if (!isU) {
             throw new IllegalArgumentException("帳號或密碼錯誤");

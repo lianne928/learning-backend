@@ -67,16 +67,18 @@ public interface DashboardRepo extends JpaRepository<User, Long> {
     // ── 平台營收 ──────────────────────────────────────────────────────
 
     /**
-     * 平台營收 = related_type=2（booking）且 amount 為負數的絕對值加總
+     * 平台營收 = transaction_type=3（booking）且 amount 為負數的絕對值加總
      * 代表每堂課完成後從老師 wallet 扣掉流入平台的金額
      */
     @Query(value = """
-        SELECT COALESCE(SUM(ABS(amount)), 0)
-        FROM wallet_logs
-        WHERE related_type = 2
-          AND amount < 0
-          AND created_at >= :from
-          AND created_at  < :to
+        SELECT COALESCE(SUM(o.discount_price - w.amount), 0)
+        FROM wallet_logs w
+        LEFT JOIN bookings b ON w.related_id = b.id
+        LEFT JOIN orders o   ON o.id = b.order_id
+        WHERE w.transaction_type = 3
+        AND w.amount > 0 and w.amount < 1000
+        AND w.created_at >= :from
+        AND w.created_at  < :to
         """, nativeQuery = true)
     Long sumPlatformRevenue(
         @Param("from") Instant from,

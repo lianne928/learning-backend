@@ -42,13 +42,15 @@ public class SecurityConfig {
                         .requestMatchers("/api/tutor/**").permitAll()  // 前台老師資料頁公開
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/teacher/schedules/*").permitAll()  // 查詢課表公開
+                        .requestMatchers("/api/bookings/**").permitAll()
 
                         // 老師後台專用
                         .requestMatchers("/api/teacher/**").hasRole("TUTOR")
 
                         // 登入才能預約
                         .requestMatchers(HttpMethod.GET, "/api/bookings/tutor/**").permitAll()
-                        .requestMatchers("/api/bookings/**").authenticated()
+                        //.requestMatchers("/api/bookings/**").authenticated()
+
                         // 登入才能結帳
                         .requestMatchers("/api/shop/**").authenticated()
                         // 學生專用

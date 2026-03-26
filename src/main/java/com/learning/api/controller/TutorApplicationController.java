@@ -1,44 +1,62 @@
 package com.learning.api.controller;
 
 import com.learning.api.dto.auth.BecomeTutorReq;
-import com.learning.api.security.JwtService;
+import com.learning.api.security.SecurityUser;
 import com.learning.api.service.TutorApplicationService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/tutor")
+@CrossOrigin(origins = "http://localhost:5173")
 public class TutorApplicationController {
 
     @Autowired
     private TutorApplicationService tutorApplicationService;
 
-    @Autowired
-    private JwtService jwtService;
-
     /**
-     * POST /api/tutor/become
      * 申請成為老師
+     * POST /api/tutor/become
      */
     @PostMapping("/become")
     public ResponseEntity<?> becomeTutor(
-            @Valid @RequestBody BecomeTutorReq req,
-            HttpServletRequest request
-    ) {
-        // 從 JWT 取得 userId
-        String token = request.getHeader("Authorization").substring(7);
-        Long userId = jwtService.userId(token);
+            @AuthenticationPrincipal SecurityUser me,
+            @RequestBody BecomeTutorReq req) {
 
-        tutorApplicationService.becomeTutor(userId, req);
+        try {
+            Long userId = me.getUser().getId();
+            tutorApplicationService.becomeTutor(userId, req);
 
-        return ResponseEntity.ok().body(Map.of("msg", "成為老師申請成功！"));
+            return ResponseEntity.ok(Map.of("msg", "申請已提交，請等待審核"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("msg", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("msg", "申請失敗：" + e.getMessage()));
+        }
+    }
+
+    /**
+     * 查詢自己的申請狀態
+     * GET /api/tutor/application/status
+     */
+    @GetMapping("/application/status")
+    public ResponseEntity<?> getApplicationStatus(@AuthenticationPrincipal SecurityUser me) {
+        try {
+            Long userId = me.getUser().getId();
+            Integer status = tutorApplicationService.getApplicationStatus(userId);
+
+            if (status == null) {
+                // 沒有申請記錄
+                return ResponseEntity.status(404).body(Map.of("msg", "尚未申請"));
+            }
+
+            return ResponseEntity.ok(Map.of("status", status));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("msg", "查詢失敗：" + e.getMessage()));
+        }
     }
 }

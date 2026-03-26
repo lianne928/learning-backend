@@ -306,7 +306,7 @@ public class StudentCourseService {
     public CancelResponseDTO cancelBooking(Long bookingId, Long userId) {
         // 1. 查找預約並驗證身分
         Booking booking = bookingsRepo.findByIdAndStudentId(bookingId, userId)
-                .orElseThrow(() -> new RuntimeException("預約不存在或無權限"));
+                .orElseThrow(() -> new IllegalArgumentException("預約不存在或無權限"));
 
         // 2. 狀態檢查：僅 status=1 (排程中) 可申請取消
         if (booking.getStatus() != 1) {
@@ -346,7 +346,7 @@ public class StudentCourseService {
     public String refundEntireOrder(Long orderId, Long userId) {
         // 1. 查找訂單並驗證權限
         Order order = ordersRepo.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("訂單不存在"));
+                .orElseThrow(() -> new IllegalArgumentException("訂單不存在"));
 
         // 【新增安全性檢查】：確保這張訂單真的屬於該使用者
         if (!order.getUserId().equals(userId)) {

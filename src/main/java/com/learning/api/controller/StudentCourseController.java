@@ -21,20 +21,42 @@ import com.learning.api.dto.CourseResponseDto;
 import com.learning.api.dto.PackageResponseDTO;
 import com.learning.api.dto.RefundOrderRequestDTO;
 import com.learning.api.dto.TodayCourseDto;
+import com.learning.api.entity.User;
+import com.learning.api.repo.UserRepo;
+import com.learning.api.security.JwtService;
 import com.learning.api.service.StudentCourseService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 
 @RestController
 @RequestMapping("/api")
 public class StudentCourseController {
+	
+	@Autowired
+	private JwtService jwtService;
+	
+	@Autowired
+	private UserRepo userRepo;
 
     @Autowired
     private StudentCourseService courseService;
-
+    
+    private User getJWT(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+        String token = authHeader.substring(7);
+        String email = jwtService.email(token);
+        return userRepo.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    }
     // 4 & 6. 取得我的所有課程包 (Student Package / My Courses)
     @GetMapping({"/student-packages/me", "/orders/me"})
-    public List<PackageResponseDTO> getMyPackages(@RequestParam("userId") Long userId) {
-        return courseService.getMyPackages(userId);
+    public List<PackageResponseDTO> getMyPackages(HttpServletRequest request) {
+    	User user = getJWT(request);
+        return courseService.getMyPackages(user.getId());
     }
 
     // 4. 取得特定課程包資訊
@@ -45,8 +67,9 @@ public class StudentCourseController {
 
     // 6. 取得我的預約紀錄 (My Bookings)
     @GetMapping("/courses/me")
-    public List<BookingResponseDTO> getMycourses(@RequestParam("userId") Long userId) {
-        return courseService.getMyCourses(userId);
+    public List<BookingResponseDTO> getMycourses(HttpServletRequest request) {
+    	User user = getJWT(request);
+        return courseService.getMyCourses(user.getId());
     }
     
     @GetMapping("/bookings/me")
@@ -55,31 +78,35 @@ public class StudentCourseController {
     }
     
     @GetMapping("/today/me")
-    public List<TodayCourseDto> getMyTodayCourses(@RequestParam("userId") Long userId) {
-        // userId 傳入後對應到資料庫的 studentId
-        return courseService.getTodayCourses(userId);
+    public List<TodayCourseDto> getMyTodayCourses(HttpServletRequest request) {
+    	User user = getJWT(request);
+        return courseService.getTodayCourses(user.getId());
     }
     
     @GetMapping("/daily/me")
     public List<CourseResponseDto> getMyCoursesByDate(
-            @RequestParam("userId") Long userId,
+    		HttpServletRequest request,
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return courseService.getCoursesByDate(userId, date);
+    	User user = getJWT(request);
+        return courseService.getCoursesByDate(user.getId(), date);
     }
     
     @GetMapping("/future/me")
-    public List<TodayCourseDto> getMyFutureCourses(@RequestParam("userId") Long userId) {
-        return courseService.getFutureCourses(userId);
+    public List<TodayCourseDto> getMyFutureCourses(HttpServletRequest request) {
+    	User user = getJWT(request);
+        return courseService.getFutureCourses(user.getId());
     }
     
     @PostMapping("/bookings/cancel")
-    public CancelResponseDTO cancelBooking(@RequestBody CancelBookingRequestDTO request) {
-        return courseService.cancelBooking(request.bookingId(), request.userId());
+    public CancelResponseDTO cancelBooking(@RequestParam("bookingId")Long bookingId,HttpServletRequest request) {
+    	User user = getJWT(request);
+        return courseService.cancelBooking(bookingId, user.getId());
     }
 
     @PostMapping("/orders/refund")
-    public String refundOrder(@RequestBody RefundOrderRequestDTO request) {
-        return courseService.refundEntireOrder(request.orderId(), request.userId());
+    public String refundOrder(@RequestParam("orderId") Long orderId,HttpServletRequest request) {
+    	User user = getJWT(request);
+        return courseService.refundEntireOrder(orderId, user.getId());
     }
 
 //    // 新增購買課程的 API

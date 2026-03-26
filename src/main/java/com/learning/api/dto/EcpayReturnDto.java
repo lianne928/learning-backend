@@ -9,5 +9,6 @@ public class EcpayReturnDto {
     private String TradeAmt;     // 交易金額
     private String PaymentDate;
     private String CustomField1; // 我們放的 userId
-    private String TradeNo;      // 綠界流水號
+    private String TradeNo; 
+    private String CustomField2;// 綠界流水號
 }

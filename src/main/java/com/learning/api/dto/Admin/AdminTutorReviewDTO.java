@@ -1,16 +1,18 @@
 package com.learning.api.dto.Admin;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
-@Getter
+@Data  // ← 改用 @Data，包含 Getter 和 Setter
+@NoArgsConstructor
 @AllArgsConstructor
 public class AdminTutorReviewDTO {
 
     // ── User 基本資料 ──────────────────────────────────────────────────
-    private Long id;
+    private Long tutorId;  // ← 注意：AdminTutorService 使用 tutorId
     private String name;
     private String email;
 
@@ -31,7 +33,7 @@ public class AdminTutorReviewDTO {
     private String certificate2;
     private String certificateName2;
 
-    //學歷
+    // 學歷
     private String education;
 
     // 影片

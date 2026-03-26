@@ -44,45 +44,4 @@ public class MemberService {
 
         memberRepo.save(user);
     }
-
-    public User buildMember(RegisterReq registerReq, String email, String hashPassword){
-        User newMember = new User();
-        newMember.setName(registerReq.getName());
-        newMember.setEmail(email);
-        newMember.setPassword(hashPassword);
-        newMember.setBirthday(registerReq.getBirthday());
-        newMember.setRole(registerReq.getRole());
-        newMember.setWallet(0);
-        return newMember;
-    }
-
-    // login
-    public LoginResp login(LoginReq loginReq) {
-        String rawEmail = loginReq.getEmail().trim().toLowerCase();
-        //String rawPassword = loginReq.getPassword().trim();
-        String rawPassword = loginReq.getPassword();
-
-        User user = memberRepo.findByEmail(rawEmail).orElse(null);
-
-        if (user == null) throw new IllegalArgumentException("你沒有註冊喔");
-
-        if (!BCrypt.checkpw(rawPassword, user.getPassword())) throw new IllegalArgumentException("密碼錯誤");
-
-        // token JwtService
-        String token = jwtService.generateToken(user);
-
-        UserResp userResp = new UserResp(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getBirthday(),
-                user.getRole(),
-                user.getWallet(),
-                user.getCreatedAt(),
-                user.getUpdatedAt()
-        );
-
-
-        return new LoginResp(token);
-    }
 }

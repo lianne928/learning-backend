@@ -16,67 +16,48 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "tutors")
-@Getter
-@Setter
+@Getter  // ⚠️ 這個很重要！
+@Setter  // ⚠️ 這個很重要！
 public class Tutor {
 
     @Id
-    private Long id; // 與 users.id 共享（@MapsId）
+    private Long id;
 
     @OneToOne
-    @MapsId // 讓此 ID 同時作為外鍵指向 User 的 ID
+    @MapsId
     @JoinColumn(name = "id")
     private User user;
 
+    // ⚠️ 申請日期（必須加上！）
     @Column(name = "apply_date")
-    private LocalDate applyDate; // 申請日期
-
-    /**
-     * 審核狀態：
-     * 1 = pending（待審核）
-     * 2 = qualified（已開通）
-     * 3 = 停權
-     */
-    @Column
-    private Integer status;
-
-    @Column(length = 50)
-    private String title; // 吸睛標題，如「TESL認證英語教師」
+    private LocalDate applyDate;
 
     @Column(length = 500)
     private String avatar;
 
+    @Column(length = 50)
+    private String title;
+
     @Column(length = 1000)
-    private String intro; // 自我介紹
+    private String intro;
 
     @Column(name = "certificate_1", length = 500)
-    private String certificate1; // 證照圖片位址
+    private String certificate1;
 
-    @Column(name = "certificate_name_1", length = 500)
-    private String certificateName1; // 證照名稱
+    @Column(name = "certificate_name_1", length = 40)
+    private String certificateName1;
 
     @Column(name = "certificate_2", length = 500)
-    private String certificate2; // 證照圖片位址
+    private String certificate2;
 
     @Column(name = "certificate_name_2", length = 500)
-    private String certificateName2; // 證照名稱
+    private String certificateName2;
 
     @Column(name = "video_url_1", length = 500)
-    private String videoUrl1; // 自我介紹影片
+    private String videoUrl1;
 
     @Column(name = "video_url_2", length = 500)
-    private String videoUrl2; // 教學示範影片
-
-    // 教學經歷
-    @Column(name = "experience_1", length = 200)
-    private String experience1; // 經歷1
-
-    @Column(name = "experience_2", length = 200)
-    private String experience2; // 經歷2
-
-    // 最高學歷（新增）
-    @Column(name = "education", length = 100)
-    private String education;
+    private String videoUrl2;
 
     @Column(name = "bank_code", length = 10)
     private String bankCode;
@@ -84,7 +65,19 @@ public class Tutor {
     @Column(name = "bank_account", length = 20)
     private String bankAccount;
 
-    // 為了讓 CourseSpec 能順利從課程連動到課表
+    // ⚠️ 審核狀態（必須加上！）
+    @Column(name = "status")
+    private Integer status = 1;
+
+    @Column(name = "experience_1", length = 200)
+    private String experience1;
+
+    @Column(name = "experience_2", length = 200)
+    private String experience2;
+
+    @Column(name = "education", length = 100)
+    private String education;
+
     @OneToMany(mappedBy = "tutor")
     private List<TutorSchedule> schedules;
 }

@@ -1,11 +1,9 @@
 package com.learning.api.service;
 
 import com.learning.api.dto.auth.BecomeTutorReq;
-import com.learning.api.entity.Tutor;
-import com.learning.api.entity.User;
+import com.learning.api.entity.*;
 import com.learning.api.enums.UserRole;
-import com.learning.api.repo.TutorRepo;
-import com.learning.api.repo.UserRepo;
+import com.learning.api.repo.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,5 +58,15 @@ public class TutorApplicationService {
         tutor.setCertificateName2(req.getCertificateName2());
 
         entityManager.persist(tutor);
+    }
+
+    /**
+     * 查詢申請狀態
+     * @return status (1=待審核, 2=已核准, 3=停權) 或 null (未申請)
+     */
+    public Integer getApplicationStatus(Long userId) {
+        return tutorRepo.findById(userId)
+                .map(Tutor::getStatus)
+                .orElse(null);
     }
 }

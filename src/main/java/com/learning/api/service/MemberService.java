@@ -45,11 +45,7 @@ public class MemberService {
         memberRepo.save(user);
     }
 
-<<<<<<< HEAD
-   /*  public User buildMember(RegisterReq registerReq, String email, String hashPassword){
-=======
     /* public User buildMember(RegisterReq registerReq, String email, String hashPassword){
->>>>>>> feature/develop
         User newMember = new User();
         newMember.setName(registerReq.getName());
         newMember.setEmail(email);

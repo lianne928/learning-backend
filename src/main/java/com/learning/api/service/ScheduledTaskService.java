@@ -52,18 +52,28 @@ public class ScheduledTaskService {
                     return;
                 }
 
+                // 判斷是否為體驗課
+                long tutorIncome;
+                if (Boolean.TRUE.equals(order.getIsExperienced())) {
+                    // 體驗課：老師拿原價
+                    tutorIncome = order.getUnitPrice();
+                } else {
+                    // 正式課：老師拿 8 成
+                    tutorIncome = Math.round(order.getUnitPrice() * 0.8);
+                }
+
                 // 建立老師收入 wallet_log
                 WalletLog log = new WalletLog();
                 log.setUserId(b.getTutorId());           // 老師的 userId
                 log.setTransactionType(3);               // 3 = 授課收入
-                log.setAmount((long) order.getDiscountPrice()); // 折扣後單堂價
-                log.setRelatedType(2);                   // 2 = 關聯到 booking
+                log.setAmount(tutorIncome);              // 老師收入（依規則計算）
+                log.setRelatedType(2);                   // 2 = booking
                 log.setRelatedId(b.getId());             // 綁定 booking ID
                 log.setMerchantTradeNo(tradeNo);         // 唯一交易序號
                 walletLogRepo.save(log);
 
                 System.out.println("✅ 已撥款給老師 tutorId=" + b.getTutorId()
-                        + "，金額=" + order.getDiscountPrice()
+                        + "，金額=" + tutorIncome
                         + "，bookingId=" + b.getId());
             });
         });

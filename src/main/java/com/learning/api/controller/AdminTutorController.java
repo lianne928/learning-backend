@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/tutors")
@@ -78,11 +79,13 @@ public class AdminTutorController {
             @PathVariable Long tutorId,
             @RequestBody AdminTutorReviewReq req) {
         try {
-            return ResponseEntity.ok(adminTutorService.updateStatus(tutorId, req.getStatus()));
+            Map<String, Object> result = adminTutorService.updateStatus(tutorId, req.getStatus());
+            return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
     /**
      * 獲取各狀態老師的數量統計
      * GET /api/admin/tutors/counts
@@ -92,5 +95,4 @@ public class AdminTutorController {
         TutorReviewCountDTO counts = adminTutorService.getCounts();
         return ResponseEntity.ok(counts);
     }
-
 }

@@ -1,6 +1,7 @@
 package com.learning.api.controller;
 
 import com.learning.api.dto.auth.*;
+import com.learning.api.dto.auth.RegisterReq.RegisterReqV2;
 import com.learning.api.service.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,12 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterReq registerReq){
+        memberService.register(registerReq);
+        return ResponseEntity.ok().body(Map.of("msg", "註冊成功"));
+    }
+
+    @PostMapping("/registerV2")
+    public ResponseEntity<?> registerV2(@Valid @RequestBody RegisterReqV2 registerReq){
         memberService.register(registerReq);
         return ResponseEntity.ok().body(Map.of("msg", "註冊成功"));
     }

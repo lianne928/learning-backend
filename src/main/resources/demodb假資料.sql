@@ -4,8 +4,19 @@
 -- ============================================================
 
 
-SET
-FOREIGN_KEY_CHECKS = 0;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- 🌟 這次保證暢通無阻的刪除法
+DELETE FROM `wallet_logs`;
+DELETE FROM `chat_messages`;
+DELETE FROM `reviews`;
+DELETE FROM `lesson_feedback`;
+DELETE FROM `bookings`;
+DELETE FROM `orders`;
+DELETE FROM `tutor_schedules`;
+DELETE FROM `courses`;
+DELETE FROM `tutors`;
+DELETE FROM `users`;
 
 -- ============================================================
 -- users (role: 1=學生 2=老師 3=管理者)
@@ -40,7 +51,7 @@ VALUES
 -- tutors (id 對應 users.id，status: 1=pending 2=qualified 3=停權)
 -- ============================================================
 INSERT INTO `tutors` (`id`, `apply_date`, `avatar`, `title`, `intro`, `certificate_1`, `certificate_name_1`,
-                      `certificate_2`, `certificate_name_2`, `video_url_1`, `video_url_2`, 'experience_1','experience_2',`bank_code`, `bank_account`,
+                      `certificate_2`, `certificate_name_2`, `video_url_1`, `video_url_2`, `experience_1`, `experience_2`, `bank_code`, `bank_account`,
                       `status`)
 VALUES (6, '2025-08-01', 'https://drive.google.com/file/d/1DXU3uHxuMw2IvxwI6i0Sp5FLRMziZeq_/view?usp=drive_link',
         '兒童英語教學專家',

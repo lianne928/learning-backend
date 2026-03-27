@@ -4,10 +4,10 @@ import com.learning.api.dto.ChatRoom.ChatMessageRequest;
 import com.learning.api.dto.videoroom.RoomError;
 import com.learning.api.dto.videoroom.RoomEvent;
 import com.learning.api.dto.videoroom.SignalingMessage;
-import com.learning.api.entity.Booking;
+import com.learning.api.entity.Order;
 import com.learning.api.entity.ChatMessage;
 import com.learning.api.enums.MessageType;
-import com.learning.api.repo.BookingRepo;
+import com.learning.api.repo.OrderRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -31,7 +31,7 @@ public class VideoRoomController {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatMessageService chatMessageService;
-    private final BookingRepo bookingRepo;
+    private final OrderRepository orderRepo;  // ✅ 改用 OrderRepository
     private final RoomService roomService;
 
     // ─── 信令轉發（WebRTC offer / answer / candidate）────────
@@ -62,9 +62,10 @@ public class VideoRoomController {
                     ? request.getMessageType()
                     : MessageType.TEXT.getValue();
 
+            // ✅ 直接用 roleNum（Integer）
             ChatMessage saved = chatMessageService.save(
                     bookingId,
-                    normalizeRole(request.getRole()),
+                    roleNum,
                     typeValue,
                     request.getMessage(),
                     request.getMediaUrl()
@@ -112,16 +113,16 @@ public class VideoRoomController {
     private boolean validateBookingAndRole(Long bookingId, Integer role, SimpMessageHeaderAccessor accessor) {
         String sessionId = accessor.getSessionId();
 
-        // 1. bookingId 存在
-        Optional<Booking> bookingOpt = bookingRepo.findById(bookingId);
-        if (bookingOpt.isEmpty()) {
+        // 1. bookingId 存在（改用 orderRepo）
+        Optional<Order> orderOpt = orderRepo.findById(bookingId);  // ✅ 改這裡
+        if (orderOpt.isEmpty()) {
             sendError(bookingId, sessionId, "BOOKING_NOT_FOUND",
                     "Booking " + bookingId + " 不存在");
             return false;
         }
 
         // 2. booking 未取消（status != 3）
-        if (bookingOpt.get().getStatus() == 3) {
+        if (orderOpt.get().getStatus() == 3) {  // ✅ 改這裡
             sendError(bookingId, sessionId, "BOOKING_CANCELLED",
                     "Booking " + bookingId + " 已取消");
             return false;
@@ -141,12 +142,6 @@ public class VideoRoomController {
         if ("student".equals(role) || "1".equals(role)) return 1;
         if ("tutor".equals(role)   || "2".equals(role)) return 2;
         return null;
-    }
-
-    private String normalizeRole(String role) {
-        Integer num = parseRole(role);
-        if (num == null) return role;
-        return num == 1 ? "student" : "tutor";
     }
 
     /**

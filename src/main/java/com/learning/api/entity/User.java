@@ -36,7 +36,6 @@ public class User {
 
     @Convert(converter = UserRoleConverter.class)
     @Column(nullable = false)
-    /* @Enumerated(EnumType.STRING) */
     private UserRole role;
 
     @Column(nullable = false)

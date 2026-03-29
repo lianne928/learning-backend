@@ -2,7 +2,10 @@ package com.learning.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.learning.api.entity.Course;
+import com.learning.api.entity.Tutor;
+import com.learning.api.enums.UserRole;
 import com.learning.api.repo.CourseRepo;
+import com.learning.api.repo.TutorRepository;
 import com.learning.api.repo.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +35,9 @@ class CourseControllerTest {
     private CourseRepo courseRepo;
 
     @Autowired
+    private TutorRepository tutorRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired(required = false)
@@ -54,8 +60,8 @@ class CourseControllerTest {
         tutor.setName("Test Tutor");
         tutor.setEmail("coursetest.tutor@example.com");
         tutor.setPassword("hashedpassword");
-        tutor.setRole(2);
-        tutor.setWallet(0L);
+        tutor.setRole(UserRole.TUTOR);
+        tutor.setWallet(0);
         tutor = userRepository.save(tutor);
         savedTutorId = tutor.getId();
 
@@ -64,19 +70,23 @@ class CourseControllerTest {
         student.setName("Test Student");
         student.setEmail("coursetest.student@example.com");
         student.setPassword("hashedpassword");
-        student.setRole(1);
-        student.setWallet(0L);
+        student.setRole(UserRole.STUDENT);
+        student.setWallet(0);
         student = userRepository.save(student);
         savedStudentId = student.getId();
 
         // 建立基礎課程
         Course course = new Course();
-        course.setTutorId(savedTutorId);
+        com.learning.api.entity.Tutor courseTutor = new com.learning.api.entity.Tutor();
+        courseTutor.setId(savedTutorId);
+        courseTutor.setUser(tutor);
+        courseTutor = tutorRepository.save(courseTutor);
+        course.setTutor(courseTutor);
         course.setName("Test Course");
         course.setSubject(11);
         course.setDescription("Setup course");
         course.setPrice(500);
-        course.setActive(true);
+        course.setIsActive(true);
         course = courseRepo.save(course);
         savedCourseId = course.getId();
     }
@@ -121,11 +131,15 @@ class CourseControllerTest {
     void getByTutorIdActive_shouldReturnOnlyActiveCourses() throws Exception {
         // 建立一筆下架課程
         Course inactive = new Course();
-        inactive.setTutorId(savedTutorId);
+        com.learning.api.entity.Tutor courseTutor = new com.learning.api.entity.Tutor();
+        courseTutor.setId(savedTutorId);
+        courseTutor.setUser(userRepository.findById(savedTutorId).orElseThrow());
+        courseTutor = tutorRepository.save(courseTutor);
+        inactive.setTutor(courseTutor);
         inactive.setName("Inactive Course");
         inactive.setSubject(12);
         inactive.setPrice(300);
-        inactive.setActive(false);
+        inactive.setIsActive(false);
         courseRepo.save(inactive);
 
         mockMvc.perform(get("/api/courses/tutor/{tutorId}/active", savedTutorId))

@@ -8,12 +8,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
-import com.learning.api.dto.ChatMessageRequest;
-import com.learning.api.dto.RoomEvent;
-import com.learning.api.dto.SignalingMessage;
+import com.learning.api.dto.ChatRoom.ChatMessageRequest;
+import com.learning.api.dto.videoroom.RoomEvent;
+import com.learning.api.dto.videoroom.SignalingMessage;
 import com.learning.api.entity.ChatMessage;
 import com.learning.api.enums.MessageType;
-import com.learning.api.service.ChatMessageService;
+import com.learning.api.service.Chat.ChatMessageService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -112,7 +112,7 @@ class VideoRoomControllerTest {
     void chat_nullMessageType_shouldDefaultToText() {
         ChatMessageRequest request = new ChatMessageRequest();
         request.setBookingId(BOOKING_ID);
-        request.setRole(1);
+        request.setRole("1");
         request.setMessageType(null);
         request.setMessage("Hello!");
 
@@ -252,7 +252,7 @@ class VideoRoomControllerTest {
     private ChatMessageRequest buildTextRequest(String message) {
         ChatMessageRequest req = new ChatMessageRequest();
         req.setBookingId(BOOKING_ID);
-        req.setRole(1);
+        req.setRole("1");
         req.setMessageType(MessageType.TEXT.getValue());
         req.setMessage(message);
         return req;
@@ -261,7 +261,7 @@ class VideoRoomControllerTest {
     private ChatMessageRequest buildMediaRequest(int messageType, String mediaUrl) {
         ChatMessageRequest req = new ChatMessageRequest();
         req.setBookingId(BOOKING_ID);
-        req.setRole(2);
+        req.setRole("2");
         req.setMessageType(messageType);
         req.setMediaUrl(mediaUrl);
         return req;

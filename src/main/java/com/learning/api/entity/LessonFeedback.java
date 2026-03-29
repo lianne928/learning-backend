@@ -26,6 +26,9 @@ public class LessonFeedback {
     @Column(name = "confidence_score", nullable = false)
     private Integer confidenceScore;
 
+    @Column(nullable = false)
+    private Integer rating;
+
     @Column(nullable = true, length = 1000)
     private String comment;
 

@@ -3,6 +3,7 @@ package com.learning.api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.learning.api.entity.User;
 import com.learning.api.entity.Tutor;
+import com.learning.api.enums.UserRole;
 import com.learning.api.repo.TutorRepository;
 import com.learning.api.repo.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,8 +57,8 @@ class TutorProfileControllerTest {
         testTutor.setName("Test Teacher");
         testTutor.setEmail("teacher_profile_test@example.com");
         testTutor.setPassword("hashedpassword");
-        testTutor.setRole(2);
-        testTutor.setWallet(0L);
+        testTutor.setRole(UserRole.TUTOR);
+        testTutor.setWallet(0);
         testTutor = userRepository.save(testTutor);
     }
 

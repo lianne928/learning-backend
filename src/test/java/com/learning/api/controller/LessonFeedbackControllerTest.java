@@ -9,11 +9,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import com.learning.api.entity.Bookings;
+import com.learning.api.entity.Booking;
 import com.learning.api.entity.LessonFeedback;
 import com.learning.api.entity.Order;
-import com.learning.api.repo.BookingRepository;
+import com.learning.api.enums.UserRole;
+import com.learning.api.repo.BookingRepo;
 import com.learning.api.repo.CourseRepo;
+import com.learning.api.repo.TutorRepository;
 import com.learning.api.repo.LessonFeedbackRepository;
 import com.learning.api.repo.OrderRepository;
 import com.learning.api.repo.UserRepository;
@@ -39,10 +41,13 @@ public class LessonFeedbackControllerTest {
     private LessonFeedbackRepository lessonFeedbackRepository;
 
     @Autowired
-    private BookingRepository bookingRepository;
+    private BookingRepo bookingRepo;
 
     @Autowired
     private CourseRepo courseRepo;
+
+    @Autowired
+    private TutorRepository tutorRepository;
 
     @Autowired
     private OrderRepository orderRepo;
@@ -69,26 +74,30 @@ public class LessonFeedbackControllerTest {
         tutor.setName("Test Tutor");
         tutor.setEmail("tutor_feedback@example.com");
         tutor.setPassword("hashedpassword");
-        tutor.setRole(2);
-        tutor.setWallet(0L);
+        tutor.setRole(UserRole.TUTOR);
+        tutor.setWallet(0);
         tutor = userRepository.save(tutor);
 
         com.learning.api.entity.User student = new com.learning.api.entity.User();
         student.setName("Test Student");
         student.setEmail("student_feedback@example.com");
         student.setPassword("hashedpassword");
-        student.setRole(1);
-        student.setWallet(0L);
+        student.setRole(UserRole.STUDENT);
+        student.setWallet(0);
         student = userRepository.save(student);
 
         com.learning.api.entity.Course course = new com.learning.api.entity.Course();
-        course.setTutorId(tutor.getId());
+        com.learning.api.entity.Tutor courseTutor = new com.learning.api.entity.Tutor();
+        courseTutor.setId(tutor.getId());
+        courseTutor.setUser(tutor);
+        courseTutor = tutorRepository.save(courseTutor);
+        course.setTutor(courseTutor);
         course.setName("Test Course");
         course.setSubject(1);
         /* course.setLevel(1); */
         course.setDescription("Course for feedback testing");
         course.setPrice(500);
-        course.setActive(true);
+        course.setIsActive(true);
         course = courseRepo.save(course);
 
         Order order = new Order();
@@ -101,14 +110,14 @@ public class LessonFeedbackControllerTest {
         order.setStatus(1);
         order = orderRepo.save(order);
 
-        Bookings booking = new Bookings();
+        Booking booking = new Booking();
         booking.setOrderId(order.getId());
         booking.setTutorId(tutor.getId());
         booking.setStudentId(student.getId());
         booking.setDate(LocalDate.now());
         booking.setHour(10);
-        booking.setStatus((byte) 1);
-        booking = bookingRepository.save(booking);
+        booking.setStatus(1);
+        booking = bookingRepo.save(booking);
         savedBookingId = booking.getId();
 
         LessonFeedback feedback = new LessonFeedback();

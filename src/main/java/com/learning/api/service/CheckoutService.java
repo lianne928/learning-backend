@@ -47,7 +47,7 @@ public class CheckoutService {
 
     public List<CheckoutReq.Slot> getStudentFutureBookings(Long studentId) {
 
-        // 1️⃣ 先拿 tutorId（這裡才需要 Optional）
+        // 1️⃣ 先拿學生是否存在
         userRepo.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("查無此人"));
 
@@ -60,14 +60,14 @@ public class CheckoutService {
                 ? start.getHour()
                 : start.getHour() + 1;
 
-        // 3️⃣ 查 booking（已被預約的）
+        // 3️⃣ 查 booking（已被預約的），並轉成 CheckoutReq.Slot
         return bookingRepo.findStudentFutureBookings(
                 studentId,
                 start.toLocalDate(),
                 end.toLocalDate(),
                 startHour,
                 end.getHour()
-        );
+        ).stream().map(b -> new CheckoutReq.Slot(b.getDate(), b.getHour())).toList();
     }
 
 
@@ -88,14 +88,14 @@ public class CheckoutService {
                 ? start.getHour()
                 : start.getHour() + 1;
 
-        // 3️⃣ 查 booking（已被預約的）
+        // 3️⃣ 查 booking（已被預約的），並轉成 CheckoutReq.Slot
         return bookingRepo.findTutorFutureBookings(
                 tutorId,
                 start.toLocalDate(),
                 end.toLocalDate(),
                 startHour,
                 end.getHour()
-        );
+        ).stream().map(b -> new CheckoutReq.Slot(b.getDate(), b.getHour())).toList();
     }
 
 

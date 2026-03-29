@@ -12,9 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import com.learning.api.entity.Order;
 import com.learning.api.entity.ChatMessage;
+import com.learning.api.entity.Tutor;
+import com.learning.api.enums.UserRole;
 import com.learning.api.repo.OrderRepository;
 import com.learning.api.repo.ChatMessageRepository;
 import com.learning.api.repo.CourseRepo;
+import com.learning.api.repo.TutorRepository;
 import com.learning.api.repo.UserRepository;
 
 import java.util.Map;
@@ -39,8 +42,9 @@ class ChatMessageControllerTest {
     @Autowired
     private CourseRepo courseRepo;
 
-    @Autowired
-    private UserRepository userRepository;
+    @Autowired    private TutorRepository tutorRepository;
+
+    @Autowired    private UserRepository userRepository;
 
     @Autowired(required = false)
     private ObjectMapper objectMapper;
@@ -61,19 +65,23 @@ class ChatMessageControllerTest {
         testUser.setName("Test Tutor");
         testUser.setEmail("testtutor@example.com");
         testUser.setPassword("hashedpassword");
-        testUser.setRole(2);
-        testUser.setWallet(0L);
+        testUser.setRole(UserRole.TUTOR);
+        testUser.setWallet(0);
         testUser = userRepository.save(testUser);
 
+        com.learning.api.entity.Tutor courseTutor = new com.learning.api.entity.Tutor();
+        courseTutor.setId(testUser.getId());
+        courseTutor.setUser(testUser);
+        courseTutor = tutorRepository.save(courseTutor);
 
         com.learning.api.entity.Course testCourse = new com.learning.api.entity.Course();
-        testCourse.setTutorId(testUser.getId());
+        testCourse.setTutor(courseTutor);
         testCourse.setName("Test Course");
         testCourse.setSubject(1);
         /* testCourse.setLevel(1); */
         testCourse.setDescription("Course for testing");
         testCourse.setPrice(500);
-        testCourse.setActive(true);
+        testCourse.setIsActive(true);
         testCourse = courseRepo.save(testCourse);
 
         testBooking = new Order();
@@ -88,7 +96,7 @@ class ChatMessageControllerTest {
 
         ChatMessage msg = new ChatMessage();
         msg.setOrderId(testBooking.getId());
-        msg.setRole((Integer) 1);
+        msg.setRole("student");
         msg.setMessage("Initial message");
         savedMessage = chatMessageRepository.save(msg);
     }

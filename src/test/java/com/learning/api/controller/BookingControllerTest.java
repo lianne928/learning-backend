@@ -54,28 +54,33 @@ class BookingControllerTest {
         user.setName("Test Student");
         user.setEmail("student_booking@example.com");
         user.setPassword("hashedpassword");
-        user.setRole(1);
-        user.setWallet(0L);
+        user.setRole(UserRole.STUDENT);
+        user.setWallet(0);
         user = userRepository.save(user);
         testUserId = user.getId();
 
+        com.learning.api.entity.Tutor tutor = new com.learning.api.entity.Tutor();
+        tutor.setId(user.getId());
+        tutor.setUser(user);
+        tutor = tutorRepository.save(tutor);
+
         Course activeCourse = new Course();
-        activeCourse.setTutorId(user.getId());
+        activeCourse.setTutor(tutor);
         activeCourse.setName("Active Course");
         activeCourse.setSubject(11);
         /* activeCourse.setLevel(1); */
         activeCourse.setPrice(500);
-        activeCourse.setActive(true);
+        activeCourse.setIsActive(true);
         activeCourse = courseRepo.save(activeCourse);
         testCourseId = activeCourse.getId();
 
         Course inactiveCourse = new Course();
-        inactiveCourse.setTutorId(user.getId());
+        inactiveCourse.setTutor(tutor);
         inactiveCourse.setName("Inactive Course");
         inactiveCourse.setSubject(11);
         /* inactiveCourse.setLevel(1); */
         inactiveCourse.setPrice(500);
-        inactiveCourse.setActive(false);
+        inactiveCourse.setIsActive(false);
         inactiveCourse = courseRepo.save(inactiveCourse);
         inactiveCourseId = inactiveCourse.getId();
     }

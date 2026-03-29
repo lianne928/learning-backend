@@ -1,18 +1,24 @@
 package com.learning.api.entity;
 
+import com.learning.api.enums.UserRole;
+import com.learning.api.enums.UserRoleConverter;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+/* import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+ */
 
 import java.time.Instant;
 import java.time.LocalDate;
-
 
 @Entity
 @Table(name = "users")
 @Getter
 @Setter
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,15 +34,16 @@ public class User {
 
     private LocalDate birthday;
 
+    @Convert(converter = UserRoleConverter.class)
     @Column(nullable = false)
-    private Integer role; //1:student/2:teacher/3admin
+    private UserRole role;
 
-    @Column(nullable=false)
-    private Long wallet=0L;
+    @Column(nullable = false)
+    private Integer wallet = 0;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private Instant createdAt;
-    
+
     @Column(name = "updated_at", insertable = false, updatable = false)
     private Instant updatedAt;
 }

@@ -1,72 +1,112 @@
 package com.learning.api.service;
 
-import com.learning.api.dto.tutor.TutorReq;
-import com.learning.api.entity.Tutor;
-import com.learning.api.entity.User;
-import com.learning.api.repo.TutorRepository;
-import com.learning.api.repo.UserRepository;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.learning.api.dto.TutorUpdateDTO;
+import com.learning.api.entity.Course;
+import com.learning.api.entity.Review;
+import com.learning.api.entity.Tutor;
+import com.learning.api.entity.TutorSchedule;
+import com.learning.api.repo.CourseRepo;
+import com.learning.api.repo.ReviewRepository;
+import com.learning.api.repo.TutorRepo;
+import com.learning.api.repo.TutorScheduleRepo;
 
 @Service
 public class TutorService {
 
-    @Autowired
-    private TutorRepository tutorRepo;
+    @Autowired private TutorRepo         tutorRepo;
+    @Autowired private CourseRepo        courseRepo;
+    @Autowired private TutorScheduleRepo scheduleRepo;
+    @Autowired private ReviewRepository  reviewRepo;
 
-    @Autowired
-    private UserRepository userRepo;
+    // ── 查詢功能 ──────────────────────────────────────────────────
 
-    public Tutor getTutor(Long id) {
+    /** 取得老師實體物件 */
+    public Tutor findTutorById(Long id) {
         return tutorRepo.findById(id).orElse(null);
     }
 
-    public boolean createTutor(TutorReq req) {
-        if (req == null || req.getTutorId() == null) return false;
+    /** 取得特定老師的課表排程，並排序 */
+    public List<TutorSchedule> findSchedulesByTutorId(Long tutorId) {
+        return scheduleRepo.findByTutorIdOrderByWeekdayAscHourAsc(tutorId);
+    }
 
-        User user = userRepo.findById(req.getTutorId()).orElse(null);
-        if (user == null) return false;
+    /** 取得老師的所有課程 */
+    public List<Course> findCoursesByTutorId(Long tutorId) {
+        return courseRepo.findByTutorId(tutorId);
+    }
 
-        if (user.getRole() != 2) return false;
+    /** 取得單一課程資訊 */
+    public Course findCourseById(Long courseId) {
+        return courseRepo.findById(courseId).orElse(null);
+    }
 
-        if (tutorRepo.existsById(req.getTutorId())) return false;
+    /** 取得課程的評價列表 */
+    public List<Review> findReviewsByCourseId(Long courseId) {
+        return reviewRepo.findByCourseIdOrderByUpdatedAtDesc(courseId);
+    }
 
-        Tutor tutor = new Tutor();
-        tutor.setId(req.getTutorId());
-        applyFields(tutor, req);
+    // ── 個人資料處理 ──────────────────────────────────────────────
+
+    /**
+     * 將 Tutor entity 轉換為 TutorUpdateDTO，用於老師後台編輯頁面
+     * 包含所有可編輯欄位：頭貼、職稱、介紹、證照、影片、經歷、學歷
+     */
+    public TutorUpdateDTO getProfileDTO(Long tutorId) {
+        Tutor tutor = tutorRepo.findById(tutorId)
+                .orElseThrow(() -> new RuntimeException("找不到老師 id=" + tutorId));
+
+        TutorUpdateDTO dto = new TutorUpdateDTO();
+        dto.setAvatar(tutor.getAvatar());
+        dto.setTitle(tutor.getTitle());
+        dto.setIntro(tutor.getIntro());
+        dto.setCertificate1(tutor.getCertificate1());
+        dto.setCertificateName1(tutor.getCertificateName1());
+        dto.setCertificate2(tutor.getCertificate2());
+        dto.setCertificateName2(tutor.getCertificateName2());
+        dto.setVideoUrl1(tutor.getVideoUrl1());
+        dto.setVideoUrl2(tutor.getVideoUrl2());
+        dto.setExperience1(tutor.getExperience1()); // 教學經歷1
+        dto.setExperience2(tutor.getExperience2()); // 教學經歷2
+        dto.setEducation(tutor.getEducation());     // 最高學歷
+        return dto;
+    }
+
+    /**
+     * 完整更新老師個人資料（支援部分更新：DTO 欄位為 null 則不更新）
+     * 包含：頭貼、職稱、介紹、證照（位址+名稱）、影片、教學經歷、最高學歷
+     */
+    @Transactional
+    public void updateProfile(Long tutorId, TutorUpdateDTO dto) {
+        Tutor tutor = tutorRepo.findById(tutorId)
+                .orElseThrow(() -> new RuntimeException("找不到老師 id=" + tutorId));
+
+        // 核心欄位
+        if (dto.getAvatar() != null)           tutor.setAvatar(dto.getAvatar());
+        if (dto.getTitle() != null)            tutor.setTitle(dto.getTitle());
+        if (dto.getIntro() != null)            tutor.setIntro(dto.getIntro());
+
+        // 證照
+        if (dto.getCertificate1() != null)     tutor.setCertificate1(dto.getCertificate1());
+        if (dto.getCertificateName1() != null) tutor.setCertificateName1(dto.getCertificateName1());
+        if (dto.getCertificate2() != null)     tutor.setCertificate2(dto.getCertificate2());
+        if (dto.getCertificateName2() != null) tutor.setCertificateName2(dto.getCertificateName2());
+
+        // 影片
+        if (dto.getVideoUrl1() != null)        tutor.setVideoUrl1(dto.getVideoUrl1());
+        if (dto.getVideoUrl2() != null)        tutor.setVideoUrl2(dto.getVideoUrl2());
+
+        // 教學經歷
+        if (dto.getExperience1() != null)      tutor.setExperience1(dto.getExperience1());
+        if (dto.getExperience2() != null)      tutor.setExperience2(dto.getExperience2());
+
+        // 最高學歷（新增）
+        if (dto.getEducation() != null)        tutor.setEducation(dto.getEducation());
+
         tutorRepo.save(tutor);
-        return true;
-    }
-
-    public boolean updateTutor(Long id, TutorReq req) {
-        if (req == null) return false;
-
-        Tutor tutor = tutorRepo.findById(id).orElse(null);
-        if (tutor == null) return false;
-
-        applyFields(tutor, req);
-        tutorRepo.save(tutor);
-        return true;
-    }
-
-    public boolean deleteTutor(Long id) {
-        if (!tutorRepo.existsById(id)) return false;
-        tutorRepo.deleteById(id);
-        return true;
-    }
-
-    private void applyFields(Tutor tutor, TutorReq req) {
-        if (req.getTitle() != null) tutor.setTitle(req.getTitle());
-        if (req.getAvatarUrl() != null) tutor.setAvatarUrl(req.getAvatarUrl());
-        if (req.getIntro() != null) tutor.setIntro(req.getIntro());
-        if (req.getEducation() != null) tutor.setEducation(req.getEducation());
-        if (req.getCertificate1() != null) tutor.setCertificate1(req.getCertificate1());
-        if (req.getCertificateName1() != null) tutor.setCertificateName1(req.getCertificateName1());
-        if (req.getCertificate2() != null) tutor.setCertificate2(req.getCertificate2());
-        if (req.getCertificateName2() != null) tutor.setCertificateName2(req.getCertificateName2());
-        if (req.getVideoUrl1() != null) tutor.setVideoUrl1(req.getVideoUrl1());
-        if (req.getVideoUrl2() != null) tutor.setVideoUrl2(req.getVideoUrl2());
-        if (req.getBankCode() != null) tutor.setBankCode(req.getBankCode());
-        if (req.getBankAccount() != null) tutor.setBankAccount(req.getBankAccount());
     }
 }

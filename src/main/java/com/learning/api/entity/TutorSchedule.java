@@ -5,7 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "tutor_schedules")
+@Table(name = "tutor_schedules",
+       uniqueConstraints = {@UniqueConstraint(columnNames = {"tutor_id", "weekday", "hour"})})
 @Getter
 @Setter
 public class TutorSchedule {
@@ -14,8 +15,9 @@ public class TutorSchedule {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "tutor_id", nullable = false)
-    private Long tutorId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tutor_id", nullable = false)
+    private Tutor tutor; // 關聯 Tutor（不直接關聯 User）
 
     @Column(nullable = false)
     private Integer weekday; // 1-7 (星期一到星期日)
@@ -23,8 +25,7 @@ public class TutorSchedule {
     @Column(nullable = false)
     private Integer hour; // 9-21 (開放時段)
 
-    // 老師的開放課表設定
-    // 狀態：'available' (開放常態預約), 'inactive' (老師暫停開放此時段)
-    @Column(nullable = false, length = 20)
-    private String status = "available";
+    // 👉 修正：對齊 DB 的 is_available
+    @Column(name = "is_available", nullable = false)
+    private Boolean isAvailable = true;
 }

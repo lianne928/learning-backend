@@ -39,28 +39,29 @@ public class JwtFilter extends OncePerRequestFilter {
         // 去掉 Bearer
         String token = authHeader.substring(7);
 
-        String email = jwtService.email(token);
+        try {
+            String email = jwtService.email(token);
 
-        UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
-        SecurityUser securityUser = (SecurityUser) userDetails;
-        User user = securityUser.getUser();
+            UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
+            SecurityUser securityUser = (SecurityUser) userDetails;
+            User user = securityUser.getUser();
 
-        if (jwtService.isTokenValid(token, user)){
-            UsernamePasswordAuthenticationToken authenticationToken =
-                    new UsernamePasswordAuthenticationToken(
-                            userDetails, // who
-                            null, // 密碼先不比
-                            userDetails.getAuthorities() // role
-                    );
-            authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            if (jwtService.isTokenValid(token, user)){
+                UsernamePasswordAuthenticationToken authenticationToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails, // who
+                                null, // 密碼先不比
+                                userDetails.getAuthorities() // role
+                        );
+                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            }
+        } catch (Exception e) {
+            // Token 過期或格式錯誤 → 清除 context，以匿名身份繼續（Spring Security 後續會回 401/403）
+            SecurityContextHolder.clearContext();
         }
-        filterChain.doFilter(request, response);
 
-        System.out.printf("authHeader = %d", authHeader);
-        System.out.printf("token = %d", token) ;
-        System.out.printf("email = %d", email);
-        System.out.printf("isTokenValid = %d", jwtService.isTokenValid(token, user));
+        filterChain.doFilter(request, response);
     }
 }

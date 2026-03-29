@@ -37,6 +37,7 @@ src/main/resources/application.properties
 ### VS Code ###
 .vscode/
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 # ignore application.properties in project root
 application.properties
@@ -72,3 +73,6 @@ Thumbs.db
 =======
 src/main/resources/application.properties.example.properties
 >>>>>>> upstream/feature/Review
+=======
+*.md
+>>>>>>> feature/developChatUpdate

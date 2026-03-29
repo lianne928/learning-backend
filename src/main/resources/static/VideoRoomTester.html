@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VideoRoom WebSocket Tester</title>
+  <title>視訊房間測試 — 雙人對話</title>
   <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
   <style>
@@ -11,104 +11,146 @@
 
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #0f1117;
-      color: #e2e8f0;
+      background: #f0f2f5;
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
-    header {
-      background: #1a1d2e;
-      border-bottom: 1px solid #2d3748;
-      padding: 14px 24px;
+    /* ── 頂部設定列 ── */
+    .topbar {
+      background: #1a73e8;
+      color: #fff;
+      padding: 12px 20px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
+      flex-wrap: wrap;
     }
-    header h1 { font-size: 18px; font-weight: 600; color: #90cdf4; }
-    header span { font-size: 13px; color: #718096; }
+    .topbar h1 { font-size: 16px; font-weight: 700; white-space: nowrap; }
+    .topbar label { font-size: 13px; white-space: nowrap; opacity: 0.85; }
+    .topbar input {
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 13px;
+      width: 120px;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+    }
+    .topbar input::placeholder { color: rgba(255,255,255,0.6); }
+    .topbar input:focus { outline: 2px solid rgba(255,255,255,0.6); background: rgba(255,255,255,0.25); }
+    #wsUrl { width: 240px; }
+    .topbar-hint { font-size: 12px; opacity: 0.7; margin-left: auto; }
 
-    .layout {
+    /* ── 雙欄佈局 ── */
+    .columns {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      padding: 16px;
-      max-width: 1400px;
-      margin: 0 auto;
+      gap: 12px;
+      padding: 12px;
+      flex: 1;
+      min-height: 0;
     }
 
-    /* ── Panel ── */
-    .panel {
-      background: #1a1d2e;
-      border: 1px solid #2d3748;
-      border-radius: 10px;
+    /* ── 面板 ── */
+    .chat-panel {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
     }
-    .panel-header {
+
+    .chat-header {
       padding: 12px 16px;
       display: flex;
       align-items: center;
       gap: 10px;
-      border-bottom: 1px solid #2d3748;
+      border-bottom: 1px solid #e0e0e0;
     }
-    .panel-header .role-badge {
+    .avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+    .avatar-student { background: #1a73e8; }
+    .avatar-tutor   { background: #34a853; }
+
+    .chat-header-info { flex: 1; }
+    .chat-header-name { font-size: 15px; font-weight: 600; }
+    .chat-header-sub  { font-size: 12px; color: #888; }
+
+    .status-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: #f1f3f4;
+      color: #888;
+      transition: all 0.3s;
+    }
+    .status-pill.online { background: #e6f4ea; color: #137333; }
+
+    .btn-conn {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 20px;
       font-size: 12px;
       font-weight: 600;
-      padding: 2px 10px;
-      border-radius: 12px;
+      cursor: pointer;
+      transition: opacity 0.2s;
     }
-    .badge-student { background: #2b6cb0; color: #bee3f8; }
-    .badge-tutor   { background: #276749; color: #c6f6d5; }
-    .panel-header h2 { font-size: 14px; font-weight: 600; flex: 1; }
-    .status-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: #718096;
-      transition: background 0.3s;
-    }
-    .status-dot.connected { background: #48bb78; }
+    .btn-conn:hover { opacity: 0.8; }
+    .btn-conn.connect    { background: #1a73e8; color: #fff; }
+    .btn-conn.disconnect { background: #ea4335; color: #fff; }
 
-    .panel-body { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+    /* ── 面板主體 ── */
+    .panel-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 
     /* ── Section ── */
     .section {
-      background: #0f1117;
-      border: 1px solid #2d3748;
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
       border-radius: 8px;
       overflow: hidden;
     }
     .section-title {
-      background: #171923;
-      padding: 8px 12px;
+      background: #f1f3f4;
+      padding: 7px 12px;
       font-size: 12px;
       font-weight: 600;
-      color: #90cdf4;
+      color: #1a73e8;
       letter-spacing: 0.5px;
       text-transform: uppercase;
+      border-bottom: 1px solid #e0e0e0;
     }
     .section-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
 
-    /* ── Form controls ── */
-    label { font-size: 12px; color: #a0aec0; margin-bottom: 2px; display: block; }
+    /* ── 表單控件 ── */
+    label { font-size: 12px; color: #666; margin-bottom: 2px; display: block; }
     input, select, textarea {
       width: 100%;
-      background: #1a1d2e;
-      border: 1px solid #2d3748;
+      background: #fff;
+      border: 1px solid #ddd;
       border-radius: 6px;
-      color: #e2e8f0;
+      color: #202124;
       font-size: 13px;
       padding: 6px 10px;
     }
     input:focus, select:focus, textarea:focus {
       outline: none;
-      border-color: #4299e1;
+      border-color: #1a73e8;
     }
     textarea { resize: vertical; min-height: 60px; font-family: monospace; font-size: 12px; }
-    select option { background: #1a1d2e; }
 
     .row { display: flex; gap: 8px; }
     .row > * { flex: 1; }
 
-    /* ── Buttons ── */
+    /* ── 通用按鈕 ── */
     button {
       padding: 7px 14px;
       border: none;
@@ -122,134 +164,149 @@
     button:active { transform: scale(0.97); }
     button:disabled { opacity: 0.35; cursor: not-allowed; }
 
-    .btn-connect    { background: #48bb78; color: #1a202c; }
-    .btn-disconnect { background: #fc8181; color: #1a202c; }
-    .btn-send       { background: #4299e1; color: #fff; width: 100%; }
-    .btn-send-sm    { background: #4299e1; color: #fff; flex: 0 0 auto; }
-    .btn-clear      { background: #2d3748; color: #a0aec0; font-size: 11px; padding: 4px 10px; }
+    .btn-send    { background: #1a73e8; color: #fff; width: 100%; border-radius: 22px; }
+    .btn-send-sm { background: #1a73e8; color: #fff; flex: 0 0 auto; border-radius: 22px; }
 
-    /* ── Log ── */
-    .log-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 12px;
-      background: #171923;
-      border-top: 1px solid #2d3748;
-    }
-    .log-title { font-size: 12px; font-weight: 600; color: #90cdf4; text-transform: uppercase; letter-spacing: 0.5px; }
-    .log-box {
-      height: 200px;
-      overflow-y: auto;
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      background: #0a0c14;
-      font-family: monospace;
+    /* ── 事件按鈕 ── */
+    .event-btns { display: flex; gap: 6px; }
+    .btn-event {
+      padding: 5px 12px;
+      border: none;
+      border-radius: 20px;
       font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      flex: 1;
     }
-    .log-box::-webkit-scrollbar { width: 4px; }
-    .log-box::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 2px; }
+    .btn-join  { background: #e6f4ea; color: #137333; }
+    .btn-leave { background: #fce8e6; color: #c5221f; }
 
-    .log-entry { display: flex; gap: 8px; line-height: 1.5; }
-    .log-time  { color: #4a5568; flex: 0 0 auto; }
-    .log-tag   { flex: 0 0 auto; padding: 0 5px; border-radius: 3px; font-size: 11px; font-weight: 700; }
-    .tag-in    { background: #1a365d; color: #90cdf4; }
-    .tag-out   { background: #1c4532; color: #68d391; }
-    .tag-sys   { background: #44337a; color: #d6bcfa; }
-    .tag-err   { background: #742a2a; color: #fc8181; }
-    .log-msg   { color: #cbd5e0; word-break: break-all; }
-
-    /* ── Video area ── */
-    .video-row {
-      display: flex;
-      gap: 8px;
-    }
+    /* ── 攝影機區 ── */
+    .video-row { display: flex; gap: 8px; }
     .video-wrap {
       flex: 1;
-      background: #0a0c14;
-      border: 1px solid #2d3748;
+      background: #000;
+      border: 1px solid #e0e0e0;
       border-radius: 6px;
       overflow: hidden;
       position: relative;
     }
     .video-wrap label {
       position: absolute;
-      top: 6px;
-      left: 8px;
-      font-size: 11px;
-      font-weight: 600;
-      color: #a0aec0;
-      background: rgba(0,0,0,0.6);
+      top: 6px; left: 8px;
+      font-size: 11px; font-weight: 600;
+      color: #fff;
+      background: rgba(0,0,0,0.5);
       padding: 2px 6px;
       border-radius: 4px;
-      margin: 0;
-      z-index: 1;
+      margin: 0; z-index: 1;
     }
     video {
-      width: 100%;
-      height: 120px;
-      object-fit: cover;
-      display: block;
+      width: 100%; height: 120px;
+      object-fit: cover; display: block;
       background: #000;
     }
-    .cam-btns { display: flex; gap: 6px; padding: 6px; }
-    .btn-cam { background: #2d3748; color: #e2e8f0; font-size: 11px; padding: 4px 10px; flex: 1; }
-    .btn-cam.active { background: #e53e3e; }
+    .cam-btns { display: flex; gap: 6px; padding: 6px 0 2px; }
+    .btn-cam {
+      background: #f1f3f4; color: #202124;
+      font-size: 11px; padding: 5px 10px;
+      flex: 1; border-radius: 20px;
+    }
+    .btn-cam.active        { background: #ea4335; color: #fff; }
+    .btn-cam.screen-active { background: #7c3aed; color: #fff; }
 
-    /* ── Booking ID shared ── */
-    #sharedConfig {
-      background: #1a1d2e;
-      border: 1px solid #4a5568;
-      border-radius: 10px;
-      padding: 14px 16px;
+    /* ── 麥克風測試 ── */
+    .mic-test-row { display: flex; align-items: center; gap: 8px; }
+    .mic-level-wrap { flex: 1; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; }
+    .mic-level-bar  { height: 100%; width: 0%; background: #34a853; border-radius: 4px; transition: width 0.05s linear; }
+
+    /* ── 日誌 ── */
+    .log-toggle {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 6px;
+      padding: 6px 14px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 12px;
+      color: #888;
+      border-top: 1px solid #f0f0f0;
+      background: #fafafa;
     }
-    #sharedConfig label { color: #90cdf4; font-weight: 600; white-space: nowrap; margin: 0; }
-    #sharedConfig input { max-width: 120px; }
-    #sharedConfig .hint { font-size: 12px; color: #718096; }
+    .log-toggle:hover { background: #f0f0f0; }
+    .log-area {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: #1e1e1e;
+    }
+    .log-area.open { max-height: 200px; overflow-y: auto; }
+    .log-area::-webkit-scrollbar { width: 4px; }
+    .log-area::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+    .log-area-inner {
+      padding: 6px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .log-line {
+      font-family: monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      color: #ccc;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .log-line.in  { color: #82cfff; }
+    .log-line.out { color: #a8e6a3; }
+    .log-line.sys { color: #d4a8ff; }
+    .log-line.err { color: #ff8b8b; }
+
+    .log-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+    }
+    .btn-clear {
+      background: transparent; color: #aaa;
+      font-size: 11px; padding: 2px 8px;
+      border: 1px solid #ddd; border-radius: 10px;
+    }
+    .btn-clear:hover { background: #f1f3f4; color: #666; opacity: 1; }
   </style>
 </head>
 <body>
 
-<header>
-  <h1>VideoRoom WebSocket Tester</h1>
-  <span>STOMP / SockJS — Spring Boot</span>
-</header>
-
-<div style="padding: 12px 16px; max-width: 1400px; margin: 0 auto;">
-  <div id="sharedConfig">
-    <label>Booking ID</label>
-    <input id="bookingId" type="number" value="1" min="1" style="width:100px;" />
-    <span class="hint">兩個面板共用此 ID，模擬同一視訊房間</span>
-    <input id="wsUrl" type="text" value="http://localhost:8080/ws" style="flex:1; max-width:300px;" placeholder="WebSocket URL" />
-  </div>
+<!-- 頂部設定列 -->
+<div class="topbar">
+  <h1>📹 視訊房間測試</h1>
+  <label>Booking ID</label>
+  <input id="bookingId" type="number" value="1" min="1" />
+  <label>WebSocket URL</label>
+  <input id="wsUrl" type="text" placeholder="ws URL" />
+  <label>JWT Token</label>
+  <input id="jwtToken" type="text" placeholder="Bearer token（連線必填）" style="width:260px;" />
+  <span class="topbar-hint">兩個面板共用同一房間，模擬學生與導師視訊對話</span>
 </div>
 
-<div class="layout">
+<div class="columns">
 
-  <!-- ════════════ PANEL A：學生 ════════════ -->
-  <div class="panel" id="panelA">
-    <div class="panel-header">
-      <span class="role-badge badge-student">學生 role=1</span>
-      <h2>用戶端 A</h2>
-      <div class="status-dot" id="dotA"></div>
-    </div>
-    <div class="panel-body">
+  <!-- ══════════ 面板 A：學生 ══════════ -->
+  <div class="chat-panel" id="panelA">
 
-      <!-- 連線 -->
-      <div class="section">
-        <div class="section-title">WebSocket 連線</div>
-        <div class="section-body">
-          <div class="row">
-            <button class="btn-connect"    onclick="connect('A')">連線</button>
-            <button class="btn-disconnect" onclick="disconnect('A')">斷線</button>
-          </div>
-        </div>
+    <div class="chat-header">
+      <div class="avatar avatar-student">S</div>
+      <div class="chat-header-info">
+        <div class="chat-header-name">學生 (role=1)</div>
+        <div class="chat-header-sub">用戶端 A</div>
       </div>
+      <span class="status-pill" id="pillA">離線</span>
+      <button class="btn-conn connect"    onclick="connect('A')">連線</button>
+      <button class="btn-conn disconnect" onclick="disconnect('A')">斷線</button>
+    </div>
+
+    <div class="panel-body">
 
       <!-- 攝影機 -->
       <div class="section">
@@ -268,6 +325,18 @@
           <div class="cam-btns">
             <button class="btn-cam" id="btnCamA" onclick="toggleCamera('A')">開啟攝影機</button>
             <button class="btn-cam" onclick="startCall('A')" title="作為發起方送出 offer">發起通話 (Offer)</button>
+            <button class="btn-cam" id="btnScreenA" onclick="toggleScreen('A')">螢幕分享</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 麥克風測試 -->
+      <div class="section">
+        <div class="section-title">麥克風測試</div>
+        <div class="section-body">
+          <div class="mic-test-row">
+            <button class="btn-cam" id="btnMicA" onclick="toggleMicTest('A')">測試麥克風</button>
+            <div class="mic-level-wrap"><div class="mic-level-bar" id="micBarA"></div></div>
           </div>
         </div>
       </div>
@@ -334,42 +403,42 @@
       <div class="section">
         <div class="section-title">房間事件 — /app/event/{bookingId}</div>
         <div class="section-body">
-          <div class="row">
-            <button class="btn-send" onclick="sendEvent('A','joined')">加入房間 (joined)</button>
-            <button class="btn-send" onclick="sendEvent('A','left')"   style="background:#e53e3e;">離開房間 (left)</button>
+          <div class="event-btns">
+            <button class="btn-event btn-join"  onclick="sendEvent('A','joined')">加入房間 (joined)</button>
+            <button class="btn-event btn-leave" onclick="sendEvent('A','left')">離開房間 (left)</button>
           </div>
         </div>
       </div>
 
     </div>
 
-    <!-- Log -->
-    <div class="log-header">
-      <span class="log-title">訊息紀錄 A</span>
-      <button class="btn-clear" onclick="clearLog('A')">清除</button>
+    <!-- 日誌 -->
+    <div class="log-toggle" onclick="toggleLog('A')">
+      <span id="logArrowA">▶</span> 原始訊息日誌
+      <div class="log-actions">
+        <button class="btn-clear" onclick="event.stopPropagation(); clearLog('A')">清除</button>
+      </div>
     </div>
-    <div class="log-box" id="logA"></div>
+    <div class="log-area" id="logAreaA">
+      <div class="log-area-inner" id="logA"></div>
+    </div>
   </div>
 
-  <!-- ════════════ PANEL B：導師 ════════════ -->
-  <div class="panel" id="panelB">
-    <div class="panel-header">
-      <span class="role-badge badge-tutor">導師 role=2</span>
-      <h2>用戶端 B</h2>
-      <div class="status-dot" id="dotB"></div>
-    </div>
-    <div class="panel-body">
+  <!-- ══════════ 面板 B：導師 ══════════ -->
+  <div class="chat-panel" id="panelB">
 
-      <!-- 連線 -->
-      <div class="section">
-        <div class="section-title">WebSocket 連線</div>
-        <div class="section-body">
-          <div class="row">
-            <button class="btn-connect"    onclick="connect('B')">連線</button>
-            <button class="btn-disconnect" onclick="disconnect('B')">斷線</button>
-          </div>
-        </div>
+    <div class="chat-header">
+      <div class="avatar avatar-tutor">T</div>
+      <div class="chat-header-info">
+        <div class="chat-header-name">導師 (role=2)</div>
+        <div class="chat-header-sub">用戶端 B</div>
       </div>
+      <span class="status-pill" id="pillB">離線</span>
+      <button class="btn-conn connect"    onclick="connect('B')">連線</button>
+      <button class="btn-conn disconnect" onclick="disconnect('B')">斷線</button>
+    </div>
+
+    <div class="panel-body">
 
       <!-- 攝影機 -->
       <div class="section">
@@ -388,6 +457,18 @@
           <div class="cam-btns">
             <button class="btn-cam" id="btnCamB" onclick="toggleCamera('B')">開啟攝影機</button>
             <button class="btn-cam" onclick="startCall('B')" title="作為發起方送出 offer">發起通話 (Offer)</button>
+            <button class="btn-cam" id="btnScreenB" onclick="toggleScreen('B')">螢幕分享</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 麥克風測試 -->
+      <div class="section">
+        <div class="section-title">麥克風測試</div>
+        <div class="section-body">
+          <div class="mic-test-row">
+            <button class="btn-cam" id="btnMicB" onclick="toggleMicTest('B')">測試麥克風</button>
+            <div class="mic-level-wrap"><div class="mic-level-bar" id="micBarB"></div></div>
           </div>
         </div>
       </div>
@@ -454,32 +535,42 @@
       <div class="section">
         <div class="section-title">房間事件 — /app/event/{bookingId}</div>
         <div class="section-body">
-          <div class="row">
-            <button class="btn-send" onclick="sendEvent('B','joined')">加入房間 (joined)</button>
-            <button class="btn-send" onclick="sendEvent('B','left')"   style="background:#e53e3e;">離開房間 (left)</button>
+          <div class="event-btns">
+            <button class="btn-event btn-join"  onclick="sendEvent('B','joined')">加入房間 (joined)</button>
+            <button class="btn-event btn-leave" onclick="sendEvent('B','left')">離開房間 (left)</button>
           </div>
         </div>
       </div>
 
     </div>
 
-    <!-- Log -->
-    <div class="log-header">
-      <span class="log-title">訊息紀錄 B</span>
-      <button class="btn-clear" onclick="clearLog('B')">清除</button>
+    <!-- 日誌 -->
+    <div class="log-toggle" onclick="toggleLog('B')">
+      <span id="logArrowB">▶</span> 原始訊息日誌
+      <div class="log-actions">
+        <button class="btn-clear" onclick="event.stopPropagation(); clearLog('B')">清除</button>
+      </div>
     </div>
-    <div class="log-box" id="logB"></div>
+    <div class="log-area" id="logAreaB">
+      <div class="log-area-inner" id="logB"></div>
+    </div>
   </div>
 
-</div><!-- /layout -->
+</div><!-- /columns -->
 
 <script>
+// 自動填入 wsUrl 預設值（根據當前頁面 host）
+document.getElementById('wsUrl').value =
+  window.location.protocol + '//' + window.location.host + '/ws';
+
 // ────────────────────────────────────────────────────────
 // State
 // ────────────────────────────────────────────────────────
 const state = {
-  A: { client: null, pc: null, localStream: null, camOn: false },
-  B: { client: null, pc: null, localStream: null, camOn: false },
+  A: { client: null, pc: null, localStream: null, camOn: false,
+       screenStream: null, micTestStream: null, micTestAnimFrame: null, micAudioCtx: null },
+  B: { client: null, pc: null, localStream: null, camOn: false,
+       screenStream: null, micTestStream: null, micTestAnimFrame: null, micAudioCtx: null },
 };
 
 function bookingId() { return document.getElementById('bookingId').value; }
@@ -491,15 +582,13 @@ function wsUrl()     { return document.getElementById('wsUrl').value;     }
 function log(panel, tag, msg) {
   const box  = document.getElementById('log' + panel);
   const time = new Date().toLocaleTimeString('zh-TW', { hour12: false });
-  const tagClass = { IN: 'tag-in', OUT: 'tag-out', SYS: 'tag-sys', ERR: 'tag-err' }[tag] || 'tag-sys';
-  const entry = document.createElement('div');
-  entry.className = 'log-entry';
-  entry.innerHTML =
-    `<span class="log-time">${time}</span>` +
-    `<span class="log-tag ${tagClass}">${tag}</span>` +
-    `<span class="log-msg">${escHtml(typeof msg === 'object' ? JSON.stringify(msg, null, 2) : String(msg))}</span>`;
-  box.appendChild(entry);
-  box.scrollTop = box.scrollHeight;
+  const cls  = { IN: 'in', OUT: 'out', SYS: 'sys', ERR: 'err' }[tag] || 'sys';
+  const line = document.createElement('div');
+  line.className = `log-line ${cls}`;
+  const text = typeof msg === 'object' ? JSON.stringify(msg, null, 2) : String(msg);
+  line.textContent = `${time} [${tag}] ${text}`;
+  box.appendChild(line);
+  box.parentElement.scrollTop = box.parentElement.scrollHeight;
 }
 
 function escHtml(s) {
@@ -508,6 +597,13 @@ function escHtml(s) {
 
 function clearLog(panel) {
   document.getElementById('log' + panel).innerHTML = '';
+}
+
+function toggleLog(panel) {
+  const area  = document.getElementById('logArea' + panel);
+  const arrow = document.getElementById('logArrow' + panel);
+  const open  = area.classList.toggle('open');
+  arrow.textContent = open ? '▼' : '▶';
 }
 
 // ────────────────────────────────────────────────────────
@@ -522,8 +618,17 @@ function connect(panel) {
 
   state[panel].client = client;
 
-  client.connect({}, () => {
-    document.getElementById('dot' + panel).classList.add('connected');
+  const token = document.getElementById('jwtToken').value.trim();
+  if (!token) {
+    log(panel, 'ERR', '請先在頂部填入 JWT Token');
+    return;
+  }
+  const connectHeaders = { Authorization: 'Bearer ' + token };
+
+  client.connect(connectHeaders, () => {
+    const pill = document.getElementById('pill' + panel);
+    pill.textContent = '連線中';
+    pill.classList.add('online');
     log(panel, 'SYS', `已連線至 ${wsUrl()}`);
 
     const bid = bookingId();
@@ -548,7 +653,9 @@ function connect(panel) {
     });
 
   }, (err) => {
-    document.getElementById('dot' + panel).classList.remove('connected');
+    const pill = document.getElementById('pill' + panel);
+    pill.textContent = '離線';
+    pill.classList.remove('online');
     log(panel, 'ERR', `連線失敗: ${err}`);
   });
 }
@@ -557,7 +664,9 @@ function disconnect(panel) {
   const s = state[panel];
   if (s.client?.connected) {
     s.client.disconnect(() => {
-      document.getElementById('dot' + panel).classList.remove('connected');
+      const pill = document.getElementById('pill' + panel);
+      pill.textContent = '離線';
+      pill.classList.remove('online');
       log(panel, 'SYS', '已斷線');
     });
   }
@@ -584,7 +693,6 @@ function sendSignal(panel) {
   const payload = { type, senderRole };
 
   if (type === 'candidate') {
-    // 嘗試解析 candidate JSON，若非 JSON 直接當字串
     try {
       const c = JSON.parse(sdpRaw);
       payload.candidate     = c.candidate;
@@ -736,7 +844,7 @@ async function handleIncomingSignal(panel, msg) {
     }
 
   } else if (msg.type === 'answer') {
-    if (s.pc) {
+    if (s.pc && s.pc.signalingState === 'have-local-offer') {
       await s.pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: msg.sdp }));
       log(panel, 'SYS', '[answer] remote description 已設定');
     }
@@ -753,6 +861,106 @@ async function handleIncomingSignal(panel, msg) {
       } catch(e) {
         log(panel, 'ERR', `ICE candidate 失敗: ${e.message}`);
       }
+    }
+  }
+}
+
+// ────────────────────────────────────────────────────────
+// Screen Sharing
+// ────────────────────────────────────────────────────────
+async function toggleScreen(panel) {
+  const s   = state[panel];
+  const btn = document.getElementById('btnScreen' + panel);
+  const vid = document.getElementById('localVideo' + panel);
+
+  if (s.screenStream) {
+    s.screenStream.getTracks().forEach(t => t.stop());
+    s.screenStream = null;
+    btn.textContent = '螢幕分享';
+    btn.classList.remove('screen-active');
+
+    vid.srcObject = s.camOn ? s.localStream : null;
+
+    if (s.pc && s.camOn && s.localStream) {
+      const camTrack = s.localStream.getVideoTracks()[0];
+      if (camTrack) {
+        const sender = s.pc.getSenders().find(sd => sd.track && sd.track.kind === 'video');
+        if (sender) sender.replaceTrack(camTrack).catch(e => log(panel, 'ERR', `replaceTrack (cam revert): ${e.message}`));
+      }
+    }
+    log(panel, 'SYS', '螢幕分享已停止');
+  } else {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      s.screenStream = stream;
+      btn.textContent = '停止分享';
+      btn.classList.add('screen-active');
+
+      vid.srcObject = stream;
+
+      if (s.pc) {
+        const screenTrack = stream.getVideoTracks()[0];
+        if (screenTrack) {
+          const sender = s.pc.getSenders().find(sd => sd.track && sd.track.kind === 'video');
+          if (sender) sender.replaceTrack(screenTrack).catch(e => log(panel, 'ERR', `replaceTrack (screen): ${e.message}`));
+        }
+      }
+
+      stream.getVideoTracks()[0].onended = () => toggleScreen(panel);
+      log(panel, 'SYS', '螢幕分享已開始');
+    } catch (e) {
+      log(panel, 'ERR', `getDisplayMedia failed: ${e.message}`);
+    }
+  }
+}
+
+// ────────────────────────────────────────────────────────
+// Microphone Test
+// ────────────────────────────────────────────────────────
+async function toggleMicTest(panel) {
+  const s   = state[panel];
+  const btn = document.getElementById('btnMic' + panel);
+  const bar = document.getElementById('micBar' + panel);
+
+  if (s.micTestStream) {
+    cancelAnimationFrame(s.micTestAnimFrame);
+    s.micTestAnimFrame = null;
+    s.micTestStream.getTracks().forEach(t => t.stop());
+    s.micTestStream = null;
+    if (s.micAudioCtx) { s.micAudioCtx.close(); s.micAudioCtx = null; }
+    bar.style.width = '0%';
+    btn.textContent = '測試麥克風';
+    btn.classList.remove('active');
+    log(panel, 'SYS', '麥克風測試已停止');
+  } else {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      s.micTestStream = stream;
+      btn.textContent = '停止測試';
+      btn.classList.add('active');
+
+      const ctx      = new AudioContext();
+      s.micAudioCtx  = ctx;
+      const source   = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      function drawLevel() {
+        if (!s.micTestStream) return;
+        s.micTestAnimFrame = requestAnimationFrame(drawLevel);
+        analyser.getByteFrequencyData(dataArray);
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+        const percent = Math.min(100, (sum / dataArray.length / 128) * 100);
+        bar.style.width = percent + '%';
+        bar.style.background = percent > 80 ? '#ea4335' : percent > 50 ? '#fbbc04' : '#34a853';
+      }
+      drawLevel();
+      log(panel, 'SYS', '麥克風測試已開始');
+    } catch (e) {
+      log(panel, 'ERR', `getUserMedia (mic) failed: ${e.message}`);
     }
   }
 }

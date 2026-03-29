@@ -14,7 +14,7 @@ public class TeacherCourseService {
     // 老師新增課程的商業邏輯
     public boolean addCourse(Course course) {
         // 1. 防呆檢查：有沒有漏填必填欄位
-        if (course.getTutorId() == null ||
+        if (course.getTutor() == null ||
                 course.getSubject() == null ||
                 /* course.getLevel() == null || */
                 course.getPrice() == null) {

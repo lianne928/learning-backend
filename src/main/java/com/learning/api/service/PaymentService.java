@@ -29,7 +29,7 @@ public class PaymentService {
         User user = userRepository.findById(order.getUserId()).orElse(null);
         if (user == null || user.getWallet() < totalCost) return false;// 餘額不足
 
-        user.setWallet((user.getWallet()-totalCost));
+        user.setWallet((int)(user.getWallet()-totalCost));
         userRepository.save(user);
 
         WalletLog log =new WalletLog();

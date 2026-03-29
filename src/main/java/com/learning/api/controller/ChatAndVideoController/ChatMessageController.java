@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.learning.api.dto.ChatRoom.ChatMessageRequest;
+import com.learning.api.dto.ChatRoom.ConversationDTO;
 import com.learning.api.entity.ChatMessage;
 import com.learning.api.enums.MessageType;
 import com.learning.api.service.Chat.ChatMessageService;
@@ -33,6 +34,16 @@ public class ChatMessageController {
     @GetMapping("/booking/{bookingId}")
     public ResponseEntity<List<ChatMessage>> getByBookingId(@PathVariable Long bookingId) {
         return ResponseEntity.ok(chatMessageService.findByBookingId(bookingId));
+    }
+
+    @GetMapping("/orders")
+    public ResponseEntity<List<ChatMessage>> getByOrderIds(@RequestParam("ids") List<Long> orderIds) {
+        return ResponseEntity.ok(chatMessageService.findByOrderIds(orderIds));
+    }
+
+    @GetMapping("/conversations/tutor/{tutorId}")
+    public ResponseEntity<List<ConversationDTO>> getConversationsByTutor(@PathVariable Long tutorId) {
+        return ResponseEntity.ok(chatMessageService.findConversationsByTutorId(tutorId));
     }
 
     @PostMapping("/upload")

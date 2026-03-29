@@ -6,6 +6,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,7 +14,9 @@ import com.learning.api.dto.ChatRoom.ChatMessageRequest;
 import com.learning.api.dto.ChatRoom.ConversationDTO;
 import com.learning.api.entity.ChatMessage;
 import com.learning.api.enums.MessageType;
+import com.learning.api.security.SecurityUser;
 import com.learning.api.service.Chat.ChatMessageService;
+import com.learning.api.service.Chat.ChatMessageService.StudentConversationDTO;
 import com.learning.api.service.Chat.FileStorageService;
 
 import java.net.URLEncoder;
@@ -42,7 +45,15 @@ public class ChatMessageController {
         return ResponseEntity.ok(chatMessageService.findByOrderIds(orderIds));
     }
 
-    // 🆕 新增端點：查詢對話列表（按學生分組）
+    // 🆕 新增端點：學生查詢對話列表（按老師分組）
+    @GetMapping("/conversations")
+    public ResponseEntity<List<StudentConversationDTO>> getConversationsByStudent(
+            @AuthenticationPrincipal SecurityUser securityUser) {
+        Long studentId = securityUser.getUser().getId();
+        return ResponseEntity.ok(chatMessageService.findConversationsByStudentId(studentId));
+    }
+
+    // ✅ 原有端點：老師查詢對話列表（按學生分組）
     @GetMapping("/conversations/tutor/{tutorId}")
     public ResponseEntity<List<ConversationDTO>> getConversationsByTutor(@PathVariable Long tutorId) {
         return ResponseEntity.ok(chatMessageService.findConversationsByTutorId(tutorId));

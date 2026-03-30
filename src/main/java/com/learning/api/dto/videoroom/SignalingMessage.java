@@ -10,6 +10,7 @@ import lombok.Data;
 public class SignalingMessage {
     private String type;          // offer / answer / candidate
     private String senderRole;    // student / tutor
+    private String senderSessionId; // STOMP sessionId，避免自己回自己
     private String sdp;           // SDP (offer / answer 使用)
     private String candidate;     // ICE candidate 字串
     private String sdpMid;        // ICE candidate sdpMid

@@ -568,9 +568,11 @@ document.getElementById('wsUrl').value =
 // ────────────────────────────────────────────────────────
 const state = {
   A: { client: null, pc: null, localStream: null, camOn: false,
-       screenStream: null, micTestStream: null, micTestAnimFrame: null, micAudioCtx: null },
+       screenStream: null, micTestStream: null, micTestAnimFrame: null, micAudioCtx: null,
+       sessionId: null },
   B: { client: null, pc: null, localStream: null, camOn: false,
-       screenStream: null, micTestStream: null, micTestAnimFrame: null, micAudioCtx: null },
+       screenStream: null, micTestStream: null, micTestAnimFrame: null, micAudioCtx: null,
+       sessionId: null },
 };
 
 function bookingId() { return document.getElementById('bookingId').value; }
@@ -625,11 +627,13 @@ function connect(panel) {
   }
   const connectHeaders = { Authorization: 'Bearer ' + token };
 
-  client.connect(connectHeaders, () => {
+  client.connect(connectHeaders, (frame) => {
+    state[panel].sessionId = frame.headers['session'] || null;
+
     const pill = document.getElementById('pill' + panel);
     pill.textContent = '連線中';
     pill.classList.add('online');
-    log(panel, 'SYS', `已連線至 ${wsUrl()}`);
+    log(panel, 'SYS', `已連線至 ${wsUrl()} | sessionId=${state[panel].sessionId}`);
 
     const bid = bookingId();
 
@@ -690,7 +694,11 @@ function sendSignal(panel) {
   const senderRole = parseInt(document.getElementById('sigRole' + panel).value);
   const sdpRaw     = document.getElementById('sigSdp' + panel).value.trim();
 
-  const payload = { type, senderRole };
+  const payload = {
+    type,
+    senderRole,
+    senderSessionId: state[panel].sessionId
+  };
 
   if (type === 'candidate') {
     try {
@@ -829,6 +837,12 @@ async function startCall(panel) {
 
 async function handleIncomingSignal(panel, msg) {
   const s = state[panel];
+
+  // 忽略自己發出的 signal（因為 /topic/room/{bookingId}/signal 會 echo 回 sender）
+  if (msg.senderSessionId && msg.senderSessionId === s.sessionId) {
+    log(panel, 'SYS', '忽略自己發出的 signal');
+    return;
+  }
 
   if (msg.type === 'offer') {
     if (!s.pc) makePeerConnection(panel);

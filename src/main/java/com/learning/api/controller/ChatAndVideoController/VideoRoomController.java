@@ -42,6 +42,7 @@ public class VideoRoomController {
                        SimpMessageHeaderAccessor accessor) {
         try {
             if (!validateBookingAndRole(bookingId, parseRole(message.getSenderRole()), accessor)) return;
+            message.setSenderSessionId(accessor.getSessionId());
             messagingTemplate.convertAndSend("/topic/room/" + bookingId + "/signal", message);
         } catch (Exception e) {
             sendError(bookingId, accessor.getSessionId(), "SIGNAL_ERROR", e.getMessage());
@@ -84,7 +85,8 @@ public class VideoRoomController {
                       RoomEvent event,
                       SimpMessageHeaderAccessor accessor) {
         try {
-            if (!validateBookingAndRole(bookingId, event.getRole(), accessor)) return;
+            Integer roleNum = parseRole(event.getRole());
+            if (!validateBookingAndRole(bookingId, roleNum, accessor)) return;
 
             String sessionId = accessor.getSessionId();
             Long userId = resolveUserId(accessor);
@@ -93,7 +95,7 @@ public class VideoRoomController {
             event.setUserId(userId);
 
             if ("joined".equals(event.getType())) {
-                roomService.joinRoom(bookingId, userId, event.getRole(), sessionId);
+                roomService.joinRoom(bookingId, userId, roleNum, sessionId);
             } else if ("left".equals(event.getType())) {
                 roomService.leaveRoom(bookingId, sessionId);
             }
@@ -121,10 +123,21 @@ public class VideoRoomController {
             return false;
         }
 
-        // 2. booking 未取消（status != 3）
-        if (orderOpt.get().getStatus() == 3) {  // ✅ 改這裡
+        // 2. booking 狀態必須為 1（排程中），2=完成 / 3=取消 皆不允許
+        int status = orderOpt.get().getStatus();
+        if (status == 3) {
             sendError(bookingId, sessionId, "BOOKING_CANCELLED",
                     "Booking " + bookingId + " 已取消");
+            return false;
+        }
+        if (status == 2) {
+            sendError(bookingId, sessionId, "BOOKING_COMPLETED",
+                    "Booking " + bookingId + " 已完成，無法再進入視訊房間");
+            return false;
+        }
+        if (status != 1) {
+            sendError(bookingId, sessionId, "BOOKING_INVALID_STATUS",
+                    "Booking " + bookingId + " 狀態異常 (status=" + status + ")");
             return false;
         }
 

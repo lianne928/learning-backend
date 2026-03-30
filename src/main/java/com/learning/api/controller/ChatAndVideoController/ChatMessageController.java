@@ -2,18 +2,21 @@ package com.learning.api.controller.ChatAndVideoController;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
-/* import org.springframework.core.io.UrlResource; */
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.learning.api.dto.ChatRoom.ChatMessageRequest;
+import com.learning.api.dto.ChatRoom.ConversationDTO;
 import com.learning.api.entity.ChatMessage;
 import com.learning.api.enums.MessageType;
+import com.learning.api.security.SecurityUser;
 import com.learning.api.service.Chat.ChatMessageService;
+import com.learning.api.service.Chat.ChatMessageService.StudentConversationDTO;
 import com.learning.api.service.Chat.FileStorageService;
 
 import java.net.URLEncoder;
@@ -30,11 +33,33 @@ public class ChatMessageController {
     private final ChatMessageService chatMessageService;
     private final FileStorageService fileStorageService;
 
+    // ✅ 原有端點：查詢單一預約的訊息
     @GetMapping("/booking/{bookingId}")
     public ResponseEntity<List<ChatMessage>> getByBookingId(@PathVariable Long bookingId) {
         return ResponseEntity.ok(chatMessageService.findByBookingId(bookingId));
     }
 
+    // 🆕 新增端點：查詢多個預約的訊息（合併）
+    @GetMapping("/orders")
+    public ResponseEntity<List<ChatMessage>> getByOrderIds(@RequestParam("ids") List<Long> orderIds) {
+        return ResponseEntity.ok(chatMessageService.findByOrderIds(orderIds));
+    }
+
+    // 🆕 新增端點：學生查詢對話列表（按老師分組）
+    @GetMapping("/conversations")
+    public ResponseEntity<List<StudentConversationDTO>> getConversationsByStudent(
+            @AuthenticationPrincipal SecurityUser securityUser) {
+        Long studentId = securityUser.getUser().getId();
+        return ResponseEntity.ok(chatMessageService.findConversationsByStudentId(studentId));
+    }
+
+    // ✅ 原有端點：老師查詢對話列表（按學生分組）
+    @GetMapping("/conversations/tutor/{tutorId}")
+    public ResponseEntity<List<ConversationDTO>> getConversationsByTutor(@PathVariable Long tutorId) {
+        return ResponseEntity.ok(chatMessageService.findConversationsByTutorId(tutorId));
+    }
+
+    // ✅ 原有端點：上傳檔案
     @PostMapping("/upload")
     public ResponseEntity<?> upload(
             @RequestParam("file") MultipartFile file,
@@ -49,9 +74,10 @@ public class ChatMessageController {
             int messageType = fileStorageService.detectMessageType(file);
             String originalFileName = file.getOriginalFilename();
             String textMessage = (message != null && !message.isBlank()) ? message : originalFileName;
+            Integer roleValue = Integer.parseInt(role);
 
             ChatMessage chatMessage = chatMessageService.save(
-                    bookingId, role, messageType, textMessage, mediaUrl);
+                    bookingId, roleValue, messageType, textMessage, mediaUrl);
             return ResponseEntity.status(HttpStatus.CREATED).body(chatMessage);
 
         } catch (NoSuchElementException e) {
@@ -65,6 +91,7 @@ public class ChatMessageController {
         }
     }
 
+    // ✅ 原有端點：下載檔案
     @GetMapping("/download/{filename:.+}")
     public ResponseEntity<Resource> download(
             @PathVariable String filename,
@@ -90,57 +117,62 @@ public class ChatMessageController {
         }
     }
 
+    // ✅ 原有端點：建立訊息
     @PostMapping
     public ResponseEntity<?> create(@RequestBody ChatMessageRequest request) {
         try {
             String validationError = validateRequest(request);
             if (validationError != null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorResponse("驗證失敗: " + validationError));
+                        .body(new ErrorResponse("驗證失敗: " + validationError));
             }
 
+            Integer roleValue = Integer.parseInt(request.getRole().toString());
+
             ChatMessage chatMessage = chatMessageService.save(
-                request.getBookingId(),
-                request.getRole(),
-                request.getMessageType(),
-                request.getMessage(),
-                request.getMediaUrl()
+                    request.getBookingId(),
+                    roleValue,
+                    request.getMessageType(),
+                    request.getMessage(),
+                    request.getMediaUrl()
             );
 
             return ResponseEntity.status(HttpStatus.CREATED).body(chatMessage);
 
         } catch (NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse("錯誤: " + e.getMessage()));
+                    .body(new ErrorResponse("錯誤: " + e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse("驗證失敗: " + e.getMessage()));
+                    .body(new ErrorResponse("驗證失敗: " + e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("伺服器錯誤: " + e.getMessage()));
+                    .body(new ErrorResponse("伺服器錯誤: " + e.getMessage()));
         }
     }
 
+    // ✅ 原有端點：更新訊息
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Map<String, String> body) {
         try {
             String message = body.get("message");
             if (message == null || message.trim().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorResponse("驗證失敗: 消息內容不能為空"));
+                        .body(new ErrorResponse("驗證失敗: 消息內容不能為空"));
             }
             return chatMessageService.update(id, message)
                     .map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse("驗證失敗: " + e.getMessage()));
+                    .body(new ErrorResponse("驗證失敗: " + e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("伺服器錯誤: " + e.getMessage()));
+                    .body(new ErrorResponse("伺服器錯誤: " + e.getMessage()));
         }
     }
 
+    // ✅ 原有端點：刪除訊息
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         return chatMessageService.deleteById(id)
@@ -148,6 +180,7 @@ public class ChatMessageController {
                 : ResponseEntity.notFound().build();
     }
 
+    // ✅ 原有方法：驗證請求
     private String validateRequest(ChatMessageRequest request) {
         if (request.getBookingId() == null) return "Booking ID 不能為空";
         if (request.getRole() == null) return "Role 不能為空";
@@ -173,6 +206,7 @@ public class ChatMessageController {
         return null;
     }
 
+    // ✅ 原有方法：類型名稱
     private String typeName(MessageType type) {
         return switch (type) {
             case STICKER -> "貼圖";
@@ -183,12 +217,14 @@ public class ChatMessageController {
         };
     }
 
+    // ✅ 原有錯誤處理
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(new ErrorResponse("伺服器錯誤: " + e.getMessage()));
+                .body(new ErrorResponse("伺服器錯誤: " + e.getMessage()));
     }
 
+    // ✅ 原有錯誤回應類別
     public static class ErrorResponse {
         public String message;
 

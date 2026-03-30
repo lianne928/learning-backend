@@ -1,17 +1,28 @@
+// ==========================================
+// OrderRepository.java 需要新增的方法
+// 加到你現有的 OrderRepository.java 裡面
+// ==========================================
+
 package com.learning.api.repo;
 
+import com.learning.api.entity.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import com.learning.api.entity.Order;
-
 import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    List<Order> findByUserId(Long userId);
-    List<Order> findByCourseId(Long courseId);
-    List<Order> findByCourseIdIn(List<Long> courseIds);
-    @Query("SELECT COALESCE(SUM(o.lessonCount - o.lessonUsed), 0) FROM Order o " +
-       "WHERE o.userId = :userId AND o.courseId = :courseId AND o.status = 2")
-    int sumRemainingLessons(@Param("userId") Long userId, @Param("courseId") Long courseId);
+
+    // ... 你原有的方法 ...
+
+    // 🆕 新增：查詢學生的所有訂單
+    @Query("SELECT o FROM Order o WHERE o.userId = :studentId")
+    List<Order> findByUserId(@Param("studentId") Long studentId);
+
+    // 🆕 新增：查詢老師的所有訂單（透過 bookings 表關聯）
+    @Query(value = "SELECT DISTINCT o.* FROM orders o " +
+            "INNER JOIN bookings b ON b.order_id = o.id " +
+            "WHERE b.tutor_id = :tutorId",
+            nativeQuery = true)
+    List<Order> findByTutorId(@Param("tutorId") Long tutorId);
 }

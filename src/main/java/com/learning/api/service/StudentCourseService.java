@@ -192,22 +192,32 @@ public class StudentCourseService {
 
         Map<Long, String> userNameMap = usersRepo.findAllById(allUserIds).stream()
                 .collect(Collectors.toMap(User::getId, User::getName));
-        Map<Long, Integer> courseSubjectMap = coursesRepo.findAllById(courseIds).stream()
+        List<Course> courseEntities = coursesRepo.findAllById(courseIds);
+        Map<Long, Integer> courseSubjectMap = courseEntities.stream()
                 .collect(Collectors.toMap(Course::getId, Course::getSubject));
+        Map<Long, String> courseNameMap = courseEntities.stream()
+                .collect(Collectors.toMap(Course::getId, Course::getName));
+        Map<Long, Long> orderIdToCourseIdMap = orders.stream()
+                .collect(Collectors.toMap(Order::getId, Order::getCourseId));
         Map<Long, Integer> orderIdToSubjectMap = orders.stream()
                 .collect(Collectors.toMap(
                         Order::getId,
                         o -> courseSubjectMap.getOrDefault(o.getCourseId(), null)));
 
         return bookingsRepo.findByStudentId(userId).stream()
-                .map(b -> new BookingResponseDTO(
-                        userNameMap.getOrDefault(userId, "找不到學生姓名"), // 學生姓名
-                        b.getId(), // 預約 ID
-                        userNameMap.getOrDefault(b.getTutorId(), "找不到老師姓名"), // 老師姓名
-                        orderIdToSubjectMap.getOrDefault(b.getOrderId(), null), // 跨表抓：訂單 -> 課程 -> 科目
-                        b.getDate(),
-                        b.getHour(),
-                        b.getStatus()))
+                .map(b -> {
+                    Long cId = orderIdToCourseIdMap.getOrDefault(b.getOrderId(), null);
+                    return new BookingResponseDTO(
+                            userNameMap.getOrDefault(userId, "找不到學生姓名"),
+                            b.getId(),
+                            userNameMap.getOrDefault(b.getTutorId(), "找不到老師姓名"),
+                            orderIdToSubjectMap.getOrDefault(b.getOrderId(), null),
+                            b.getDate(),
+                            b.getHour(),
+                            b.getStatus(),
+                            cId,
+                            cId != null ? courseNameMap.getOrDefault(cId, "未知課程") : "未知課程");
+                })
                 .toList();
     }
 
@@ -224,22 +234,32 @@ public class StudentCourseService {
                 .collect(Collectors.toMap(User::getId, User::getName));
         Map<Long, String> tutorNameMap = usersRepo.findAllById(tutorIds).stream()
                 .collect(Collectors.toMap(User::getId, User::getName));
-        Map<Long, Integer> courseSubjectMap = coursesRepo.findAllById(courseIds).stream()
+        List<Course> courseEntities2 = coursesRepo.findAllById(courseIds);
+        Map<Long, Integer> courseSubjectMap = courseEntities2.stream()
                 .collect(Collectors.toMap(Course::getId, Course::getSubject));
+        Map<Long, String> courseNameMap2 = courseEntities2.stream()
+                .collect(Collectors.toMap(Course::getId, Course::getName));
+        Map<Long, Long> orderIdToCourseIdMap2 = orders.stream()
+                .collect(Collectors.toMap(Order::getId, Order::getCourseId));
         Map<Long, Integer> orderIdToSubjectMap = orders.stream()
                 .collect(Collectors.toMap(
                         Order::getId,
                         o -> courseSubjectMap.getOrDefault(o.getCourseId(), null)));
 
         return bookingsRepo.findByOrderId(orderId).stream()
-                .map(b -> new BookingResponseDTO(
-                        studentNameMap.getOrDefault(b.getStudentId(), "找不到學生姓名"),
-                        b.getId(),
-                        tutorNameMap.getOrDefault(b.getTutorId(), "找不到老師姓名"),
-                        orderIdToSubjectMap.getOrDefault(b.getOrderId(), null),
-                        b.getDate(),
-                        b.getHour(),
-                        b.getStatus()))
+                .map(b -> {
+                    Long cId = orderIdToCourseIdMap2.getOrDefault(b.getOrderId(), null);
+                    return new BookingResponseDTO(
+                            studentNameMap.getOrDefault(b.getStudentId(), "找不到學生姓名"),
+                            b.getId(),
+                            tutorNameMap.getOrDefault(b.getTutorId(), "找不到老師姓名"),
+                            orderIdToSubjectMap.getOrDefault(b.getOrderId(), null),
+                            b.getDate(),
+                            b.getHour(),
+                            b.getStatus(),
+                            cId,
+                            cId != null ? courseNameMap2.getOrDefault(cId, "未知課程") : "未知課程");
+                })
                 .toList();
     }
 

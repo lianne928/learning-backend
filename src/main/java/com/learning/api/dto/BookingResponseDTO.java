@@ -6,8 +6,10 @@ public record BookingResponseDTO(
 	    String studentName,
 	    Long bookingId,
 	    String tutorName,
-	    Integer subject,       
+	    Integer subject,
 	    LocalDate date,
-	    Integer hour,      
-	    Integer status     
+	    Integer hour,
+	    Integer status,
+	    Long courseId,
+	    String courseName
 	) {}

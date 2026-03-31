@@ -25,4 +25,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "WHERE b.tutor_id = :tutorId",
             nativeQuery = true)
     List<Order> findByTutorId(@Param("tutorId") Long tutorId);
+
+    // 檢查學生是否已購買過體驗課
+    boolean existsByUserIdAndIsExperiencedTrue(Long userId);
 }

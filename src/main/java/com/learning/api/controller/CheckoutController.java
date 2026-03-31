@@ -37,6 +37,13 @@ public class CheckoutController {
         );
     }
 
+    @GetMapping("/trial/eligible")
+    public ResponseEntity<?> isTrialEligible(@AuthenticationPrincipal SecurityUser me) {
+        Long studentId = me.getUser().getId();
+        boolean eligible = checkoutService.isTrialEligible(studentId);
+        return ResponseEntity.ok(Map.of("eligible", eligible));
+    }
+
     @GetMapping("me/futurebookings")
     public ResponseEntity<?> getStudentFutureBookings(@AuthenticationPrincipal SecurityUser me) {
         Long studentId = me.getUser().getId(); 

@@ -45,6 +45,10 @@ public class CheckoutService {
     @Autowired
     private BookingService bookingService;
 
+    public boolean isTrialEligible(Long studentId) {
+        return !orderRepo.existsByUserIdAndIsExperiencedTrue(studentId);
+    }
+
     public List<CheckoutReq.Slot> getStudentFutureBookings(Long studentId) {
 
         // 1️⃣ 先拿 tutorId（這裡才需要 Optional）
@@ -108,17 +112,32 @@ public class CheckoutService {
         Course course = courseRepo.findById(req.getCourseId())
                 .orElseThrow(() -> new IllegalArgumentException("找不到課程資料"));
 
-        if (req.getLessonCount() != 1 && req.getLessonCount() != 5 && req.getLessonCount() != 10)
-            throw new IllegalArgumentException("無此數量方案");
+        boolean isTrial = Boolean.TRUE.equals(req.getIsExperienced());
 
         int totalSlots = req.getSelectedSlots().size();
-        if (totalSlots != req.getLessonCount())
-            throw new IllegalArgumentException("選擇時段數量與課程不相符");
         if (totalSlots == 0)
             throw new IllegalArgumentException("請至少選擇一個時段");
+        if (totalSlots != req.getLessonCount())
+            throw new IllegalArgumentException("選擇時段數量與課程不相符");
 
-        int unitDiscountPrice = calculateUnitDiscountPrice(course.getPrice(), totalSlots);
-        int totalPrice = unitDiscountPrice * totalSlots;
+        int unitDiscountPrice;
+        int totalPrice;
+
+        if (isTrial) {
+            // ── 體驗課 ──
+            if (totalSlots != 1)
+                throw new IllegalArgumentException("體驗課只能購買 1 堂");
+            if (orderRepo.existsByUserIdAndIsExperiencedTrue(studentId))
+                throw new IllegalArgumentException("每個帳號只能購買一次體驗課");
+            unitDiscountPrice = 200;
+            totalPrice        = 200;
+        } else {
+            // ── 正式課程 ──
+            if (req.getLessonCount() != 1 && req.getLessonCount() != 5 && req.getLessonCount() != 10)
+                throw new IllegalArgumentException("無此數量方案");
+            unitDiscountPrice = calculateUnitDiscountPrice(course.getPrice(), totalSlots);
+            totalPrice        = unitDiscountPrice * totalSlots;
+        }
 
         if (student.getWallet() < totalPrice) return "餘額不足";
 
@@ -186,6 +205,7 @@ public class CheckoutService {
         order.setDiscountPrice(unitDiscountPrice);  // 實際折扣後單堂價
         order.setLessonCount(totalSlots);           // 購買堂數
         order.setLessonUsed(0);                     // 已使用堂數，初始為 0
+        order.setIsExperienced(isTrial);            // 是否為體驗課
         order.setStatus(2);                         // 2 = 成交（deal）
         Order savedOrder = orderRepo.save(order);   // 儲存並取得含 ID 的訂單
 

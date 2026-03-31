@@ -12,6 +12,7 @@ public class CheckoutReq {
     private Long courseId;
     private Integer lessonCount;
     private List<Slot> selectedSlots; // 學生選的多個時段
+    private Boolean isExperienced;    // 是否為體驗課（前端傳 true 時啟用）
 
     @Getter
     @Setter

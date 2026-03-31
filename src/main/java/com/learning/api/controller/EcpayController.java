@@ -49,7 +49,7 @@ public class EcpayController {
 
     
     @PostMapping("/pay")
-    public String pay(@RequestBody EcPayRequestDto payRequest, HttpServletRequest request) throws Exception {
+    public String pay(EcPayRequestDto payRequest, HttpServletRequest request) throws Exception {
     	String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             throw new RuntimeException("No token");
@@ -66,7 +66,6 @@ public class EcpayController {
         Map<String, String> params = new LinkedHashMap<>();
 
         params.put("CustomField1", String.valueOf(userId));
-        params.put("CustomField2", String.valueOf(payRequest.getDType()));
         //商店代號
         params.put("MerchantID", MERCHANT_ID);
         //訂單編號
@@ -87,7 +86,7 @@ public class EcpayController {
                 "https://subjugable-uncreditably-ignacia.ngrok-free.dev/api/ecpay/return");
         //前端返回 URL
         params.put("ClientBackURL",
-                "https://subjugable-uncreditably-ignacia.ngrok-free.dev/ecpay.html");
+                "http://localhost:5173/student-credits.html?success=yes");
         //付款方式
         params.put("ChoosePayment", "ALL");
         //加密方式
@@ -152,7 +151,6 @@ public class EcpayController {
         dto.setRtnCode(data.get("RtnCode"));
         dto.setTradeAmt(data.get("TradeAmt"));
         dto.setCustomField1(data.get("CustomField1"));
-        dto.setCustomField2(data.get("CustomField2"));
         if ("1".equals(dto.getRtnCode())) {
             try {
                 walletLogsService.processWalletDeposit(dto);

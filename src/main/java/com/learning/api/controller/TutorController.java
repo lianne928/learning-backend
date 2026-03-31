@@ -10,12 +10,15 @@ import java.time.ZoneId;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.learning.api.security.SecurityUser;
 
 import com.learning.api.dto.BookingDTO;
 import com.learning.api.dto.ReviewDTO;
@@ -38,6 +41,12 @@ public class TutorController {
     @Autowired private TutorService tutorService;
     @Autowired private BookingService bookingService;
     @Autowired private WalletLogsService walletLogsService;
+
+    @GetMapping("/bookings")
+    public ResponseEntity<?> getMyBookings(@AuthenticationPrincipal SecurityUser me) {
+        if (me == null) return ResponseEntity.status(401).body("未登入");
+        return ResponseEntity.ok(bookingService.getTutorBookings(me.getUser().getId()));
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getTutorProfile(

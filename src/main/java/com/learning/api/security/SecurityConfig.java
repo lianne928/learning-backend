@@ -37,6 +37,7 @@ public class SecurityConfig {
                 // 授權設定
                 .authorizeHttpRequests(auth -> auth
                         // 完全公開
+                		.requestMatchers("/ecpay.html").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/view/**").permitAll()
                         .requestMatchers("/api/tutor/**").permitAll()  // 前台老師資料頁公開
@@ -55,6 +56,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/shop/**").authenticated()
                         // 學生專用
                         .requestMatchers("/api/student/**").hasRole("STUDENT")
+                        .requestMatchers("/api/ecpay/return").permitAll()
+                        .requestMatchers("/api/ecpay/**").hasRole("STUDENT")
+                        
 
                         // 管理者
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

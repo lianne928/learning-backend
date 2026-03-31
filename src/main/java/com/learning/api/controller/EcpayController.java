@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +19,9 @@ import com.example.WebSocket.util.EcpayUtil;
 import com.learning.api.dto.EcPayRequestDto;
 import com.learning.api.dto.EcpayReturnDto;
 import com.learning.api.entity.User;
+import com.learning.api.entity.WalletLog;
 import com.learning.api.repo.UserRepo;
+import com.learning.api.repo.WalletLogsRepo;
 import com.learning.api.security.JwtService;
 import com.learning.api.service.WalletLogsService;
 
@@ -29,6 +32,8 @@ import jakarta.servlet.http.HttpServletRequest;
 @RestController
 @RequestMapping("/api/ecpay")
 public class EcpayController {
+
+    private final WalletLogsRepo walletLogsRepo;
 	@Autowired
 	private JwtService jwtService;
 	@Autowired
@@ -42,6 +47,10 @@ public class EcpayController {
     private final String ECPAY_URL
     =
             "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5";
+
+    EcpayController(WalletLogsRepo walletLogsRepo) {
+        this.walletLogsRepo = walletLogsRepo;
+    }
 
     // =========================
     // 付款入口
@@ -86,7 +95,7 @@ public class EcpayController {
                 "https://subjugable-uncreditably-ignacia.ngrok-free.dev/api/ecpay/return");
         //前端返回 URL
         params.put("ClientBackURL",
-                "http://localhost:5173/student-credits.html?success=yes");
+        		"http://localhost:5173/credits-success.html?tradeNo=" + params.get("MerchantTradeNo"));
         //付款方式
         params.put("ChoosePayment", "ALL");
         //加密方式
@@ -161,5 +170,10 @@ public class EcpayController {
 
         // ⚠️ 綠界規定一定要回
         return "1|OK";
+    }
+    @GetMapping("/wallet/byTradeNo")
+    public WalletLog getWalletLogByTradeNo(@RequestParam String tradeNo) {
+        return walletLogsRepo.findByMerchantTradeNo(tradeNo)
+                .orElse(null);
     }
 }

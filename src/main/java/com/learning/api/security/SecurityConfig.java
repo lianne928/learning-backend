@@ -57,6 +57,7 @@ public class SecurityConfig {
                         // 學生專用
                         .requestMatchers("/api/student/**").hasRole("STUDENT")
                         .requestMatchers("/api/ecpay/return").permitAll()
+                        .requestMatchers("/api/ecpay/simulate").authenticated()
                         .requestMatchers("/api/ecpay/**").hasRole("STUDENT")
                         
 

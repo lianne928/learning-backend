@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -92,10 +93,10 @@ public class EcpayController {
         params.put("ItemName", "儲值交易");
         //背景通知 URL
         params.put("ReturnURL",
-                "https://subjugable-uncreditably-ignacia.ngrok-free.dev/api/ecpay/return");
+                "https://gw2rw8cd-5173.asse.devtunnels.ms/api/ecpay/return");
         //前端返回 URL
         params.put("ClientBackURL",
-        		"http://localhost:5173/credits-success.html?tradeNo=" + params.get("MerchantTradeNo"));
+                "http://localhost:5173/student-credits.html?success=yes&amount=" + payRequest.getEcpayprice());
         //付款方式
         params.put("ChoosePayment", "ALL");
         //加密方式
@@ -131,6 +132,28 @@ public class EcpayController {
         sb.append("<script>document.getElementById('ecpay').submit();</script>");
 
         return sb.toString();
+    }
+
+    // 測試用模擬入帳（開發環境專用）
+    @PostMapping("/simulate")
+    public ResponseEntity<?> simulate(HttpServletRequest request,
+                                      @RequestParam String amount) throws Exception {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).body("No token");
+        }
+        String token = authHeader.substring(7);
+        String email = jwtService.email(token);
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        EcpayReturnDto dto = new EcpayReturnDto();
+        dto.setMerchantTradeNo("SIM" + System.currentTimeMillis());
+        dto.setRtnCode("1");
+        dto.setTradeAmt(amount);
+        dto.setCustomField1(String.valueOf(user.getId()));
+        walletLogsService.processWalletDeposit(dto);
+        return ResponseEntity.ok(Map.of("msg", "模擬入帳成功"));
     }
 
     // 綠界前端給我

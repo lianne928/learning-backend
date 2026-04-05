@@ -6,6 +6,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,6 +33,7 @@ public class ChatMessageController {
 
     private final ChatMessageService chatMessageService;
     private final FileStorageService fileStorageService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     // ✅ 原有端點：查詢單一預約的訊息
     @GetMapping("/booking/{bookingId}")
@@ -74,10 +76,11 @@ public class ChatMessageController {
             int messageType = fileStorageService.detectMessageType(file);
             String originalFileName = file.getOriginalFilename();
             String textMessage = (message != null && !message.isBlank()) ? message : originalFileName;
-            Integer roleValue = Integer.parseInt(role);
+            Integer roleValue = parseRole(role);
 
             ChatMessage chatMessage = chatMessageService.save(
                     bookingId, roleValue, messageType, textMessage, mediaUrl);
+            messagingTemplate.convertAndSend("/topic/room/" + bookingId + "/chat", chatMessage);
             return ResponseEntity.status(HttpStatus.CREATED).body(chatMessage);
 
         } catch (NoSuchElementException e) {
@@ -127,7 +130,7 @@ public class ChatMessageController {
                         .body(new ErrorResponse("驗證失敗: " + validationError));
             }
 
-            Integer roleValue = Integer.parseInt(request.getRole().toString());
+            Integer roleValue = parseRole(request.getRole());
 
             ChatMessage chatMessage = chatMessageService.save(
                     request.getBookingId(),
@@ -136,7 +139,7 @@ public class ChatMessageController {
                     request.getMessage(),
                     request.getMediaUrl()
             );
-
+            messagingTemplate.convertAndSend("/topic/room/" + request.getBookingId() + "/chat", chatMessage);
             return ResponseEntity.status(HttpStatus.CREATED).body(chatMessage);
 
         } catch (NoSuchElementException e) {
@@ -178,6 +181,15 @@ public class ChatMessageController {
         return chatMessageService.deleteById(id)
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
+    }
+
+    // ✅ 角色解析：支援字串 ("student"/"tutor") 和數字 ("1"/"2")
+    private Integer parseRole(String role) {
+        if (role == null) throw new IllegalArgumentException("Role 不能為空");
+        String r = role.trim().toLowerCase();
+        if ("student".equals(r) || "1".equals(r)) return 1;
+        if ("tutor".equals(r)   || "2".equals(r)) return 2;
+        throw new IllegalArgumentException("Role 必須為 student/tutor 或 1/2，收到: " + role);
     }
 
     // ✅ 原有方法：驗證請求

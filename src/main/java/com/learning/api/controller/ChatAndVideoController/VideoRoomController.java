@@ -123,19 +123,14 @@ public class VideoRoomController {
             return false;
         }
 
-        // 2. booking 狀態必須為 1（排程中），2=完成 / 3=取消 皆不允許
+        // 2. booking 狀態：1=pending / 2=deal（進行中）允許進入，3=complete（已完成）不允許
         int status = orderOpt.get().getStatus();
         if (status == 3) {
-            sendError(bookingId, sessionId, "BOOKING_CANCELLED",
-                    "Booking " + bookingId + " 已取消");
-            return false;
-        }
-        if (status == 2) {
             sendError(bookingId, sessionId, "BOOKING_COMPLETED",
                     "Booking " + bookingId + " 已完成，無法再進入視訊房間");
             return false;
         }
-        if (status != 1) {
+        if (status != 1 && status != 2) {
             sendError(bookingId, sessionId, "BOOKING_INVALID_STATUS",
                     "Booking " + bookingId + " 狀態異常 (status=" + status + ")");
             return false;

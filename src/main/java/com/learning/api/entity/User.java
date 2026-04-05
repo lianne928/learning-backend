@@ -38,6 +38,9 @@ public class User {
     @Column(nullable = false)
     private UserRole role;
 
+    @Column(length = 500)
+    private String avatar;
+
     @Column(nullable = false)
     private Integer wallet = 0;
 

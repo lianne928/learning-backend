@@ -86,7 +86,7 @@ public class ChatMessageService {
             ConversationDTO conversation = ConversationDTO.builder()
                     .studentId(studentId)
                     .studentName(student.getName())
-                    .studentAvatar("")
+                    .studentAvatar(student.getAvatar() != null ? student.getAvatar() : "")
                     .orderIds(orderIds)
                     .courses(courseNames)
                     .lastMessage(lastMsg.map(ChatMessage::getMessage).orElse(""))

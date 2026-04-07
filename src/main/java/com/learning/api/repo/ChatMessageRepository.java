@@ -5,8 +5,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import com.learning.api.entity.ChatMessage;
 import java.util.List;
+import java.util.Optional;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
     @Query("SELECT c FROM ChatMessage c WHERE c.orderId = :orderId ORDER BY c.createdAt ASC")
     List<ChatMessage> findByBookingIdOrderByCreatedAtAsc(@Param("orderId") Long orderId);
+
+    @Query("SELECT c FROM ChatMessage c WHERE c.orderId IN :orderIds ORDER BY c.createdAt ASC")
+    List<ChatMessage> findByOrderIds(@Param("orderIds") List<Long> orderIds);
+
+    @Query("SELECT c FROM ChatMessage c WHERE c.orderId = :orderId ORDER BY c.createdAt DESC LIMIT 1")
+    Optional<ChatMessage> findLatestByOrderId(@Param("orderId") Long orderId);
 }

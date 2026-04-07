@@ -36,4 +36,43 @@ src/main/resources/application.properties
 
 ### VS Code ###
 .vscode/
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+# ignore application.properties in project root
+application.properties
+
+# =========================
+# Additional recommended ignores from README
+# =========================
+# Sensitive settings and passwords
+application.properties
+.env
+
+# Build and package directories
+# backend (Java/Spring Boot)
+target/
+out/
+# frontend (Vite)
+node_modules/
+dist/
+
+# IDE and development tool hidden files
+# IntelliJ IDEA
+.idea/
+*.iml
+# VS Code
+.vscode/
+*.code-workspace
+
+# OS generated files
+# macOS
+.DS_Store
+# Windows
+Thumbs.db
+=======
+src/main/resources/application.properties.example.properties
+>>>>>>> upstream/feature/Review
+=======
 *.md
+>>>>>>> feature/developChatUpdate

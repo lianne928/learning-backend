@@ -42,6 +42,6 @@ public class StudentController {
     @GetMapping("/bookings")
     public ResponseEntity<List<BookingDTO>> getBookings(@AuthenticationPrincipal SecurityUser securityUser) {
         Long studentId = securityUser.getUser().getId();
-        return ResponseEntity.ok(bookingService.getTutorBookings(studentId));
+        return ResponseEntity.ok(bookingService.getStudentBookings(studentId));
     }
 }

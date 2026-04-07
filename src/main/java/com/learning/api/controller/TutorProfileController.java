@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.learning.api.dto.TutorUpdateDTO;
 import com.learning.api.security.SecurityUser;
-import com.learning.api.service.Chat.FileStorageService;
 import com.learning.api.service.TutorService;
 
 @RestController
@@ -22,9 +21,6 @@ public class TutorProfileController {
 
     @Autowired
     private TutorService tutorService;
-
-    @Autowired
-    private FileStorageService fileStorageService;
 
     // GET /api/tutor/me/profile
     @GetMapping
@@ -38,26 +34,7 @@ public class TutorProfileController {
     public ResponseEntity<String> updateProfile(
             @AuthenticationPrincipal SecurityUser me,
             @RequestBody TutorUpdateDTO dto) {
-
-        Long tutorId = me.getUser().getId();
-        TutorUpdateDTO current = tutorService.getProfileDTO(tutorId);
-
-        // 若有新的 URL 且與舊的不同，刪除舊的實體檔案
-        deleteOldFileIfReplaced(current.getAvatar(),       dto.getAvatar());
-        deleteOldFileIfReplaced(current.getCertificate1(), dto.getCertificate1());
-        deleteOldFileIfReplaced(current.getCertificate2(), dto.getCertificate2());
-        deleteOldFileIfReplaced(current.getVideoUrl1(),    dto.getVideoUrl1());
-        deleteOldFileIfReplaced(current.getVideoUrl2(),    dto.getVideoUrl2());
-
-        tutorService.updateProfile(tutorId, dto);
+        tutorService.updateProfile(me.getUser().getId(), dto);
         return ResponseEntity.ok("個人資料已更新");
-    }
-
-    // ── 私有輔助方法 ──────────────────────────────────────────────────
-
-    private void deleteOldFileIfReplaced(String oldUrl, String newUrl) {
-        if (oldUrl != null && !oldUrl.equals(newUrl)) {
-            fileStorageService.deleteFileByUrl(oldUrl);
-        }
     }
 }

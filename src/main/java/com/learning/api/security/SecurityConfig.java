@@ -39,9 +39,22 @@ public class SecurityConfig {
                         // 完全公開
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/view/**").permitAll()
-                        .requestMatchers("/api/tutor/**").permitAll()  // 前台老師資料頁公開
+                        .requestMatchers("/api/tutor/**").permitAll()
+                        .requestMatchers("/api/reviews/**").permitAll()
+                        .requestMatchers("/api/chat-messages/**").permitAll()
+                        .requestMatchers("/api/lesson-feedbacks/**").permitAll()
+
+                        // WebSocket
                         .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers("/api/teacher/schedules/*").permitAll()  // 查詢課表公開
+
+                        // 靜態資源
+                        .requestMatchers("/*.html").permitAll()
+                        .requestMatchers("/favicon.ico").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/test-email/**").permitAll()
+
+                        // Swagger / Actuator（開發階段）
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
 
                         // 老師後台專用
                         .requestMatchers("/api/teacher/**").hasRole("TUTOR")
@@ -49,8 +62,10 @@ public class SecurityConfig {
                         // 登入才能預約
                         .requestMatchers(HttpMethod.GET, "/api/bookings/tutor/**").permitAll()
                         .requestMatchers("/api/bookings/**").authenticated()
+
                         // 登入才能結帳
                         .requestMatchers("/api/shop/**").authenticated()
+
                         // 學生專用
                         .requestMatchers("/api/student/**").hasRole("STUDENT")
 

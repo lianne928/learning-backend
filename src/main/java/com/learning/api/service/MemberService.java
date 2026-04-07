@@ -1,74 +1,96 @@
 package com.learning.api.service;
 
 import com.learning.api.dto.auth.*;
+import com.learning.api.dto.auth.RegisterReq.RegisterReqV2;
 import com.learning.api.entity.*;
+import com.learning.api.enums.UserRole;
 import com.learning.api.repo.*;
-import com.learning.api.security.JwtService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/* import java.time.LocalDate; */
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class MemberService {
+    private static final Logger log =
+            LoggerFactory.getLogger(MemberService.class);
+
+
     @Autowired
     private UserRepo memberRepo;
 
     @Autowired
-    private JwtService jwtService;
+    private TutorRepo tutorRepo;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    /**
+     * 註冊新會員 - 所有人都先註冊為 STUDENT
+     */
+    @Transactional
     public void register(RegisterReq registerReq) {
         String email = registerReq.getEmail().trim().toLowerCase();
 
-        // check email
-        if (memberRepo.existsByEmail(email)) throw new IllegalArgumentException("此 email 已被註冊");
+        // 檢查 Email 是否已存在
+        if (memberRepo.existsByEmail(email)) {
+            throw new IllegalArgumentException("此 email 已被註冊");
+        }
 
-        // password
-        String rawPassword = registerReq.getPassword();
-        // String password = rawPassword.trim();
-        String hashPassword = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
+        // 使用 PasswordEncoder 加密密碼
+        String hashPassword = passwordEncoder.encode(registerReq.getPassword());
 
-        User user = buildMember(registerReq, email, hashPassword);
+        // 建立 User - 所有人都先註冊為 STUDENT
+        User user = new User();
+        user.setName(registerReq.getName());
+        user.setEmail(email);
+        user.setPassword(hashPassword);
+        user.setBirthday(registerReq.getBirthday());
+        user.setRole(UserRole.STUDENT);  // ← 固定為 STUDENT
+        user.setWallet(0);
+
         memberRepo.save(user);
     }
 
-    public User buildMember(RegisterReq registerReq, String email, String hashPassword){
-        User newMember = new User();
-        newMember.setName(registerReq.getName());
-        newMember.setEmail(email);
-        newMember.setPassword(hashPassword);
-        newMember.setBirthday(registerReq.getBirthday());
-        newMember.setRole(registerReq.getRole());
-        newMember.setWallet(0);
-        return newMember;
-    }
+   @Transactional
+    public void register(RegisterReqV2 registerReq) {
+        String email = registerReq.getEmail().trim().toLowerCase();
 
-    // login
-    public LoginResp login(LoginReq loginReq) {
-        String rawEmail = loginReq.getEmail().trim().toLowerCase();
-        //String rawPassword = loginReq.getPassword().trim();
-        String rawPassword = loginReq.getPassword();
+        if (memberRepo.existsByEmail(email)) {
+            throw new IllegalArgumentException("此 email 已被註冊");
+        }
 
-        User user = memberRepo.findByEmail(rawEmail).orElse(null);
+        String hashPassword = passwordEncoder.encode(registerReq.getPassword());
 
-        if (user == null) throw new IllegalArgumentException("你沒有註冊喔");
+    
+        // 1. 建立 User 實體
+        User user = new User();
+        user.setName(registerReq.getName());
+        user.setEmail(email);
+        user.setPassword(hashPassword);
+        user.setBirthday(registerReq.getBirthday());
+        
+        // 判斷角色：若前端有傳且為 TUTOR 則設定，否則預設為 STUDENT
+        UserRole targetRole = (registerReq.getRole() == UserRole.TUTOR) ? UserRole.TUTOR : UserRole.STUDENT;
+        log.info("Target Role: {}", targetRole);
+        user.setRole(targetRole);
+        user.setWallet(0);
 
-        if (!BCrypt.checkpw(rawPassword, user.getPassword())) throw new IllegalArgumentException("密碼錯誤");
+        // 儲存 User 以取得 ID
+        User savedUser = memberRepo.save(user);
 
-        // token JwtService
-        String token = jwtService.generateToken(user);
-
-        UserResp userResp = new UserResp(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getBirthday(),
-                user.getRole(),
-                user.getWallet(),
-                user.getCreatedAt(),
-                user.getUpdatedAt()
-        );
-
-
-        return new LoginResp(token);
+        // 2. 如果是 TUTOR，同步存入 tutors 表
+        if (targetRole == UserRole.TUTOR) {
+            Tutor tutor = new Tutor();
+            tutor.setUser(savedUser); // 建立 OneToOne 關聯
+            tutor.setStatus(1); // 預設審核中狀態
+            
+            tutorRepo.save(tutor);
+        }
     }
 }

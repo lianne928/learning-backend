@@ -51,6 +51,27 @@ public class BookingService {
                 .collect(Collectors.toList());
     }
 
+    public List<BookingDTO> getStudentBookings(Long studentId) {
+        return bookingRepo.findByStudentId(studentId).stream()
+                .map(b -> {
+                    String studentName = userRepo.findById(b.getStudentId())
+                            .map(User::getName)
+                            .orElse("學生 #" + b.getStudentId());
+                    String courseName = orderRepo.findById(b.getOrderId())
+                            .flatMap(o -> courseRepo.findById(o.getCourseId()))
+                            .map(Course::getName)
+                            .orElse("課程");
+                    return new BookingDTO(
+                            b.getId(), b.getOrderId(), b.getTutorId(),
+                            b.getStudentId(), studentName,
+                            courseName,
+                            b.getDate(), b.getHour(), b.getStatus(), b.getSlotLocked(),
+                            null
+                    );
+                })
+                .collect(Collectors.toList());
+    }
+
     /**
      * 建立單筆預約紀錄（由 CheckoutService 呼叫，不對外開放）
      * 把建立 Booking 的邏輯集中在這裡，讓 CheckoutService 職責更單純

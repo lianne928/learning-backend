@@ -15,29 +15,30 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.learning.api.dto.CourseDTO;
+import com.learning.api.dto.CourseDto;
 import com.learning.api.dto.CourseReq;
 import com.learning.api.security.SecurityUser;
 import com.learning.api.service.CourseService;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/tutor/me/courses")
 @CrossOrigin(origins = "http://localhost:5173")
+@RequiredArgsConstructor
 public class CourseController {
 
-    @Autowired
-    private CourseService courseService;
+    private final CourseService courseService;
 
     // GET /api/tutor/me/courses
     @GetMapping
-    public ResponseEntity<List<CourseDTO>> getCourses(
+    public ResponseEntity<List<CourseDto>> getCourses(
             @AuthenticationPrincipal SecurityUser me) {
         return ResponseEntity.ok(courseService.getCoursesByTutorId(me.getUser().getId()));
     }
 
     // GET /api/tutor/me/courses/{courseId}
     @GetMapping("/{courseId}")
-    public ResponseEntity<CourseDTO> getCourse(
+    public ResponseEntity<CourseDto> getCourse(
             @AuthenticationPrincipal SecurityUser me,
             @PathVariable Long courseId) {
         return ResponseEntity.ok(courseService.getCourse(me.getUser().getId(), courseId));
@@ -45,7 +46,7 @@ public class CourseController {
 
     // POST /api/tutor/me/courses
     @PostMapping
-    public ResponseEntity<CourseDTO> createCourse(
+    public ResponseEntity<CourseDto> createCourse(
             @AuthenticationPrincipal SecurityUser me,
             @RequestBody CourseReq dto) {
         return ResponseEntity.ok(courseService.createCourse(me.getUser().getId(), dto));
@@ -53,7 +54,7 @@ public class CourseController {
 
     // PUT /api/tutor/me/courses/{courseId}
     @PutMapping("/{courseId}")
-    public ResponseEntity<CourseDTO> updateCourse(
+    public ResponseEntity<CourseDto> updateCourse(
             @AuthenticationPrincipal SecurityUser me,
             @PathVariable Long courseId,
             @RequestBody CourseReq dto) {

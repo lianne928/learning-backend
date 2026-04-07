@@ -39,7 +39,7 @@ public class CheckoutController {
 
     @GetMapping("me/futurebookings")
     public ResponseEntity<?> getStudentFutureBookings(@AuthenticationPrincipal SecurityUser me) {
-        Long studentId = me.getUser().getId();
+        Long studentId = me.getUser().getId(); 
         return ResponseEntity.ok(
                 checkoutService.getStudentFutureBookings(studentId)
         );
@@ -59,7 +59,6 @@ public class CheckoutController {
             return ResponseEntity.badRequest().body(Map.of("msg", result));
         }
     }
-    
 
 
 }

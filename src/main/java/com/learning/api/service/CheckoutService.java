@@ -1,8 +1,8 @@
 package com.learning.api.service;
 
 import com.learning.api.dto.CheckoutReq;
-import com.learning.api.dto.EmailBookingDTO;
-import com.learning.api.dto.EmailBookingTimeDTO;
+import com.learning.api.dto.booking.EmailBookingDTO;
+import com.learning.api.dto.booking.EmailBookingTimeDTO;
 import com.learning.api.entity.*;
 import com.learning.api.enums.UserRole;
 import com.learning.api.repo.*;
@@ -40,14 +40,15 @@ public class CheckoutService {
     @Autowired
     private WalletLogsRepo walletLogRepo;
 
+
     // 1. 注入 BookingService，讓建立預約的邏輯集中在那裡
     @Autowired
     private BookingService bookingService;
 
     public List<CheckoutReq.Slot> getStudentFutureBookings(Long studentId) {
 
-        // 1️⃣ 先拿 tutorId（這裡才需要 Optional）
-        var student = userRepo.findById(studentId)
+        // 1️⃣ 先拿學生是否存在
+        userRepo.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("查無此人"));
 
         // 2️⃣ 時間區間
@@ -59,14 +60,14 @@ public class CheckoutService {
                 ? start.getHour()
                 : start.getHour() + 1;
 
-        // 3️⃣ 查 booking（已被預約的）
+        // 3️⃣ 查 booking（已被預約的），並轉成 CheckoutReq.Slot
         return bookingRepo.findStudentFutureBookings(
                 studentId,
                 start.toLocalDate(),
                 end.toLocalDate(),
                 startHour,
                 end.getHour()
-        );
+        ).stream().map(b -> new CheckoutReq.Slot(b.getDate(), b.getHour())).toList();
     }
 
 
@@ -87,14 +88,14 @@ public class CheckoutService {
                 ? start.getHour()
                 : start.getHour() + 1;
 
-        // 3️⃣ 查 booking（已被預約的）
+        // 3️⃣ 查 booking（已被預約的），並轉成 CheckoutReq.Slot
         return bookingRepo.findTutorFutureBookings(
                 tutorId,
                 start.toLocalDate(),
                 end.toLocalDate(),
                 startHour,
                 end.getHour()
-        );
+        ).stream().map(b -> new CheckoutReq.Slot(b.getDate(), b.getHour())).toList();
     }
 
 
@@ -130,21 +131,21 @@ public class CheckoutService {
         for (CheckoutReq.Slot slot : req.getSelectedSlots()) {
 
             LocalDateTime lessonTime = LocalDateTime.of(
-                    slot.getDate(),
-                    LocalTime.of(slot.getHour(), 0)
+                slot.getDate(),
+                LocalTime.of(slot.getHour(), 0)
             );
 
             // ✅ 至少提前 24 小時
             if (lessonTime.isBefore(now.plusHours(24))) {
                 throw new IllegalArgumentException(
-                        "時段 " + slot.getDate() + " " + slot.getHour() + ":00 需提前24小時預約"
+                    "時段 " + slot.getDate() + " " + slot.getHour() + ":00 需提前24小時預約"
                 );
             }
 
             // ✅ 最多 4 週（28 天）
             if (lessonTime.isAfter(now.plusDays(28))) {
                 throw new IllegalArgumentException(
-                        "時段 " + slot.getDate() + " " + slot.getHour() + ":00 超過可預約範圍（4週內）"
+                    "時段 " + slot.getDate() + " " + slot.getHour() + ":00 超過可預約範圍（4週內）"
                 );
             }
 

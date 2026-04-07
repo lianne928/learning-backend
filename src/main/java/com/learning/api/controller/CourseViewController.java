@@ -44,6 +44,7 @@ public class CourseViewController {
     @GetMapping("/api/view/courses")
     public ResponseEntity<Page<CourseSearchDTO>> searchCourses(
             @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String teacherName,
             @RequestParam(required = false) String courseName,
             @RequestParam(required = false) Integer subjectCategory,
@@ -52,7 +53,7 @@ public class CourseViewController {
             @RequestParam(required = false) Integer weekday,
             @RequestParam(required = false) String timeSlot) {
 
-        Pageable pageable = PageRequest.of(page, 10);
+        Pageable pageable = PageRequest.of(page, size);
 
         // 1. 執行查詢
         Page<Course> coursePage = courseRepo.findAll(
